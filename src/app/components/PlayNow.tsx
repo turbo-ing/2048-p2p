@@ -1,8 +1,11 @@
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { createChannel, createClient } from "nice-grpc-web";
 
 import Modal from "./Modal";
+
+import { NodeDefinition } from "@/pb/query";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -22,23 +25,48 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
 
   const connectWallet = async () => {
     try {
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
 
-      const connectedAccount = await signer.getAddress();
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+        const userAccount = await signer.getAddress();
 
-      setAccount(connectedAccount);
+        setAccount(userAccount);
+      } else {
+        alert(
+          "MetaMask is not installed. Please install MetaMask and try again.",
+        );
+      }
     } catch (error) {
-      console.log(error);
+      console.error("Error connecting to MetaMask:", error);
     }
   };
 
-  const playWith = (address: string) => {
-    router.push(`/play?whitePlayer=${account}&blackPlayer=${address}`);
-  };
+  const channel = createChannel(`http://127.0.0.1:50050`);
+  const client = createClient(NodeDefinition, channel);
+
+  useEffect(() => {
+    const f = async () => {
+      if (account) {
+        const response = await client.isInGame({
+          player: account,
+        });
+
+        if (response.state) {
+          sessionStorage.setItem("whitePlayer", response.state.whitePlayer);
+          sessionStorage.setItem("blackPlayer", response.state.blackPlayer);
+          router.push("/play");
+        }
+      }
+    };
+
+    const interval = setInterval(() => {
+      f();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [account]);
 
   return (
     <>
@@ -121,6 +149,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
               <button
                 className="hover:bg-red-600 flex py-2.5 px-4 bg-[#F23939] rounded-full items-center gap-1.5 w-full justify-center"
                 onClick={() => {
+                  connectWallet();
                   setSelectedMode(1);
                 }}
               >
@@ -156,7 +185,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                     placeholder="Enter your friend's address"
                     type="text"
                     value={address}
-                    onChange={() => setAddress(address)}
+                    onChange={(e) => setAddress(e.target.value)}
                   />
                 </div>
               </div>
@@ -164,7 +193,15 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             <div className="mt-8">
               <button
                 className="hover:bg-red-600 py-2.5 px-4 bg-[#F23939] rounded-full w-full justify-center"
-                onClick={() => playWith(address)}
+                onClick={async () => {
+                  await client.start({
+                    whitePlayer: account,
+                    blackPlayer: address,
+                  });
+                  sessionStorage.setItem("whitePlayer", account);
+                  sessionStorage.setItem("blackPlayer", address);
+                  router.push(`/play`);
+                }}
               >
                 <div className="font-semibold text-base">Join Game</div>
               </button>

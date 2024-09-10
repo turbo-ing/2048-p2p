@@ -9,6 +9,7 @@
   "eslint.options": {
     "configFile": "./.eslintrc.json"
   },
+  "prettier.trailingComma": "all",
   "eslint.format.enable": true,
   "editor.formatOnSave": true,
   "eslint.validate": ["typescript", "javascriptreact", "typescriptreact"],

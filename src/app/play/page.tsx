@@ -1,22 +1,21 @@
 "use client";
 
 import { Card } from "@nextui-org/react";
-import * as secp256k1 from "@noble/secp256k1";
 import cx from "classnames";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
 import { createChannel, createClient } from "nice-grpc-web";
-import { hmac } from "noble-hashes/lib/hmac";
-import { sha256 } from "noble-hashes/lib/sha256";
 import { useEffect, useState } from "react";
+import { ethers } from "ethers";
 
 import { Color, GameState } from "../../pb/game";
 import { Navbar } from "../components/Navbar";
-
-import { PlayerCard } from "./playerCard";
+import { PlayerCard } from "../components/playerCard";
+import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
 
 import { NodeDefinition, Position } from "@/pb/query";
+
+const SEQUENCER_WALLET = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
 const pieceToSvg: Record<string, string> = {
   r: "/assets/rook-b.svg",
@@ -33,61 +32,30 @@ const pieceToSvg: Record<string, string> = {
   P: "/assets/pawn-w.svg",
 };
 
-secp256k1.etc.hmacSha256Sync = (key: Uint8Array, ...msgs: Uint8Array[]) => {
-  const h = hmac.create(sha256, key);
-
-  msgs.forEach((msg) => h.update(msg));
-
-  return h.digest();
-};
-
-async function signMessage(
-  privateKey: Uint8Array,
-  message: any
-): Promise<string> {
-  const messageString = JSON.stringify(message);
-  const messageHash = sha256(Buffer.from(messageString));
-  const signature = secp256k1.sign(messageHash, privateKey);
-
-  return signature.toCompactHex();
-}
-
 export default function Play() {
   const [gameState, setGameState] = useState<GameState>({} as GameState);
   const [selectedCell, setSelectedCell] = useState<Position | null>(null);
   const [isBoardReversed, setIsBoardReversed] = useState(false);
+  const [whitePlayer, setWhitePlayer] = useState("");
+  const [blackPlayer, setBlackPlayer] = useState("");
+  const [publicKey, setPublicKey] = useState("");
+  const [provider, setProvider] =
+    useState<ethers.providers.Web3Provider | null>(null);
 
-  const publicKeyString = "ADSD";
-  const privateKeyString = "ASDSADS";
-  const privateKey = Uint8Array.from(Buffer.from(privateKeyString, "hex"));
-  const addr = sessionStorage.getItem("addr") || "";
-  const whitePlayer = useSearchParams().get("white_player") || "";
-  const blackPlayer = useSearchParams().get("black_player") || "";
-
-  const channel = createChannel(`http://${addr}`);
+  const channel = createChannel(`http://127.0.0.1:50050`);
   const client = createClient(NodeDefinition, channel);
 
-  useEffect(() => {
-    const fetchGameState = async () => {
-      try {
-        const response = await client.state({ whitePlayer, blackPlayer });
-
-        if (response.state) {
-          setGameState(response.state);
-        }
-      } catch (e) {
-        console.error("Error fetching game state:", e);
-      }
-    };
-
-    const intervalId = setInterval(fetchGameState, 500);
-
-    return () => clearInterval(intervalId);
-  }, [client, whitePlayer, blackPlayer]);
+  usePeersFetcher(setPublicKey, setProvider);
+  useGameStateFetcher(setGameState, client, whitePlayer, blackPlayer);
 
   useEffect(() => {
-    setIsBoardReversed(publicKeyString === gameState.whitePlayer);
-  }, [gameState, publicKeyString]);
+    setIsBoardReversed(publicKey === gameState.whitePlayer);
+  }, [gameState, publicKey]);
+
+  useEffect(() => {
+    setWhitePlayer(sessionStorage.getItem("whitePlayer") || "");
+    setBlackPlayer(sessionStorage.getItem("blackPlayer") || "");
+  }, []);
 
   const handleCellClick = async (pos: Position) => {
     if (selectedCell) {
@@ -99,19 +67,21 @@ export default function Play() {
       await makeMove(actualFromPos, actualToPos);
       setSelectedCell(null);
 
-      const signature = await signMessage(privateKey, {
+      const message = {
         whitePlayer,
         blackPlayer,
         action: [actualFromPos, actualToPos],
-      });
+      };
+
+      const signature = await provider
+        ?.getSigner()
+        .signMessage(JSON.stringify(message));
 
       try {
         const response = await client.transact({
-          whitePlayer,
-          blackPlayer,
-          action: [actualFromPos, actualToPos],
+          ...message,
           signature,
-          pubKey: publicKeyString,
+          pubKey: publicKey,
         });
       } catch (e) {
         console.error("Error making move:", e);
@@ -128,8 +98,6 @@ export default function Play() {
     if (piece) {
       newBoard.rows[to.x].cells[to.y].piece = piece;
       newBoard.rows[from.x].cells[from.y].piece = null;
-
-      const pieceKey = `${piece.color}${piece.kind}${from.y}${from.x}`;
 
       setGameState({ ...gameState, board: newBoard });
     }
@@ -181,12 +149,6 @@ export default function Play() {
           </div>
         </div>
         <Card className="mx-6 p-10 bg-[#CFD1D21A] shadow-lg rounded-lg">
-          {/* <h1 className="text-3xl font-semibold text-center mb-6">
-            Playing with
-          </h1>
-          <ul className="text-xs text-center indent-0 pb-5 mr-4 -mt-2 -ml-2">
-            {publicKeyString === whitePlayer ? blackPlayer : whitePlayer}
-          </ul> */}
           <div className="grid grid-cols-8 gap-0 relative">
             {gameState.board?.rows.map((row, rowIndex) =>
               row.cells.map((_, colIndex) => {
@@ -204,18 +166,14 @@ export default function Play() {
                         : "",
                       (rowIndex + colIndex) % 2 === 0
                         ? "bg-[#929292]"
-                        : "bg-[#F0EBE3]"
+                        : "bg-[#F0EBE3]",
                     )}
                     role="button"
                     tabIndex={0}
                     onClick={() =>
                       handleCellClick({ x: rowIndex, y: colIndex })
                     }
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleCellClick({ x: rowIndex, y: colIndex });
-                      }
-                    }}
+                    onKeyDown={() => {}}
                   >
                     {pieceSrc && (
                       <motion.div
@@ -230,7 +188,7 @@ export default function Play() {
                     )}
                   </div>
                 );
-              })
+              }),
             )}
           </div>
         </Card>
