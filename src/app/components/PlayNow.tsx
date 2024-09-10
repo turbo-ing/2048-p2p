@@ -1,6 +1,6 @@
-import * as secp256k1 from "@noble/secp256k1";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ethers } from "ethers";
 
 import Modal from "./Modal";
 
@@ -11,8 +11,8 @@ interface PlayNowProps {
 export const PlayNow = ({ activeIndex }: PlayNowProps) => {
   const [selectedMode, setSelectedMode] = useState(0);
   const [isShowModal, setIsShowModal] = useState(false);
-  const [addr, setAddr] = useState<string>("");
-  const [username, setUsername] = useState<string>("");
+  const [account, setAccount] = useState("");
+  const [address, setAddress] = useState("");
   const router = useRouter();
 
   const onClose = () => {
@@ -20,16 +20,24 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
     setSelectedMode(0);
   };
 
-  const handleNextPage = () => {
-    const privateKey = secp256k1.utils.randomPrivateKey();
-    const publicKey = secp256k1.getPublicKey(privateKey);
+  const connectWallet = async () => {
+    try {
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
 
-    sessionStorage.setItem(
-      "privateKey",
-      Buffer.from(privateKey).toString("hex")
-    );
-    sessionStorage.setItem("publicKey", Buffer.from(publicKey).toString("hex"));
-    router.push(`/lobby?addr=${addr}`);
+      const connectedAccount = await signer.getAddress();
+
+      setAccount(connectedAccount);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const playWith = (address: string) => {
+    router.push(`/play?whitePlayer=${account}&blackPlayer=${address}`);
   };
 
   return (
@@ -106,8 +114,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 Play with friend
               </div>
               <div className="mt-1 text-sm text-[#94969C]">
-                Invite your friends to a private chess battle or join an
-                existing game room.
+                Connect your MetaMask wallet and start playing with friends!
               </div>
             </div>
             <div className="mt-5">
@@ -118,16 +125,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 }}
               >
                 <img alt="" src="/svg/magnifier.svg" />
-                <div className="font-semibold text-base">Join Game</div>
-              </button>
-              <button
-                className="hover:bg-red-600 mt-4 flex py-2.5 px-4 bg-[#F23939] rounded-full items-center gap-1.5 w-full justify-center"
-                onClick={() => {
-                  setSelectedMode(2);
-                }}
-              >
-                <img alt="" src="/svg/circle-plus.svg" />
-                <div className="font-semibold text-base">Ceate Room</div>
+                <div className="font-semibold text-base">Connect wallet</div>
               </button>
             </div>
           </div>
@@ -144,41 +142,29 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             </div>
             <div className="mt-5">
               <div>
-                <label className="text-[#CECFD2] text-sm font-medium">
-                  Your name
+                <label
+                  className="text-[#CECFD2] text-sm font-medium"
+                  htmlFor="wallet"
+                >
+                  Invite your friend below or wait for an invitation here.
+                  <br />
+                  Your address: {account}
                 </label>
                 <div>
                   <input
                     className="bg-[#0C111D] border border-[#333741] rounded-full shadow text-md text-[#85888E] py-2.5 px-3.5 w-full mt-1.5"
-                    placeholder="Enter your name"
+                    placeholder="Enter your friend's address"
                     type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={address}
+                    onChange={() => setAddress(address)}
                   />
                 </div>
-              </div>
-              <div className="mt-5">
-                <label className="text-[#CECFD2] text-sm font-medium">
-                  URL
-                </label>
-                <div>
-                  <input
-                    className="bg-[#0C111D] border border-[#333741] rounded-full shadow text-md text-[#85888E] py-2.5 px-3.5 w-full mt-1.5"
-                    placeholder="Enter URL"
-                    type="text"
-                    value={addr}
-                    onChange={(e) => setAddr(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="mt-1.5 text-[#94969C] text-sm">
-                Paste the game room code here to join your friend&apos;s match.
               </div>
             </div>
             <div className="mt-8">
               <button
                 className="hover:bg-red-600 py-2.5 px-4 bg-[#F23939] rounded-full w-full justify-center"
-                onClick={handleNextPage}
+                onClick={() => playWith(address)}
               >
                 <div className="font-semibold text-base">Join Game</div>
               </button>
@@ -197,7 +183,10 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             </div>
             <div className="mt-5">
               <div>
-                <label className="text-[#CECFD2] text-sm font-medium">
+                <label
+                  className="text-[#CECFD2] text-sm font-medium"
+                  htmlFor="username"
+                >
                   Your name
                 </label>
                 <div>
@@ -209,7 +198,10 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 </div>
               </div>
               <div className="mt-5">
-                <label className="text-[#CECFD2] text-sm font-medium">
+                <label
+                  className="text-[#CECFD2] text-sm font-medium"
+                  htmlFor="gameMode"
+                >
                   Choose Game Mode
                 </label>
                 <div>

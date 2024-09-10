@@ -47,8 +47,6 @@ async function signMessage(
 ): Promise<string> {
   const messageString = JSON.stringify(message);
   const messageHash = sha256(Buffer.from(messageString));
-
-  console.log(Buffer.from(messageHash).toString("hex"), messageString);
   const signature = secp256k1.sign(messageHash, privateKey);
 
   return signature.toCompactHex();
@@ -59,8 +57,8 @@ export default function Play() {
   const [selectedCell, setSelectedCell] = useState<Position | null>(null);
   const [isBoardReversed, setIsBoardReversed] = useState(false);
 
-  const publicKeyString = sessionStorage.getItem("publicKey")!;
-  const privateKeyString = sessionStorage.getItem("privateKey")!;
+  const publicKeyString = "ADSD";
+  const privateKeyString = "ASDSADS";
   const privateKey = Uint8Array.from(Buffer.from(privateKeyString, "hex"));
   const addr = sessionStorage.getItem("addr") || "";
   const whitePlayer = useSearchParams().get("white_player") || "";
@@ -90,18 +88,6 @@ export default function Play() {
   useEffect(() => {
     setIsBoardReversed(publicKeyString === gameState.whitePlayer);
   }, [gameState, publicKeyString]);
-
-  useEffect(() => {
-    if (gameState.board) {
-      gameState.board.rows.forEach((row, rowIndex) => {
-        row.cells.forEach((cell, colIndex) => {
-          if (cell.piece) {
-            const pieceKey = `${cell.piece.color}${cell.piece.kind}${rowIndex}${colIndex}`;
-          }
-        });
-      });
-    }
-  }, [gameState]);
 
   const handleCellClick = async (pos: Position) => {
     if (selectedCell) {
@@ -220,9 +206,16 @@ export default function Play() {
                         ? "bg-[#929292]"
                         : "bg-[#F0EBE3]"
                     )}
+                    role="button"
+                    tabIndex={0}
                     onClick={() =>
                       handleCellClick({ x: rowIndex, y: colIndex })
                     }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleCellClick({ x: rowIndex, y: colIndex });
+                      }
+                    }}
                   >
                     {pieceSrc && (
                       <motion.div

@@ -31,7 +31,7 @@ export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
       <div className="z-50 max-w-5xl mx-auto">
         <div className=" text-[#101828] text-7xl text-center font-semibold">
           Experience Chess in the
-          <span className="text-[#DC3434]">Decentralized</span> Web3 Era!
+          <span className="text-[#DC3434]"> Decentralized</span> Web3 Era!
         </div>
         <div className="mt-6 max-w-2xl mx-auto mb-12">
           <p className="text-[#475467] text-xl font-medium text-center">
