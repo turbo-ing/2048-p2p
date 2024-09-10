@@ -9,9 +9,9 @@ export const Navbar = ({ isDark }: NavbarProps) => {
       <div className="flex justify-between h-20 max-w-7xl mx-auto items-center px-8">
         <div className="flex gap-10 items-center">
           <img
-            src={isDark ? "/img/chessLogoDark.svg " : "/img/chessLogo.svg"}
             alt=""
             className="w-52"
+            src={isDark ? "/img/chessLogoDark.svg " : "/img/chessLogo.svg"}
           />
           <Link
             className={`${

@@ -10,22 +10,22 @@ export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
       }`}
     >
       <img
-        src="/img/backgroundPattern.png"
         alt=""
         className="w-full h-full absolute left-0"
+        src="/img/backgroundPattern.png"
       />
       <div className="absolute left-0 top-1/2 -translate-y-[45%]">
         <img
-          src="/img/chess.png"
-          className="w-[160px] h-[580px] xl:w-[206px] xl:h-full"
           alt=""
+          className="w-[160px] h-[580px] xl:w-[206px] xl:h-full"
+          src="/img/chess.png"
         />
       </div>
       <div className="absolute right-0 top-1/2 -translate-y-[45%]">
         <img
-          src="/img/chess-horse.png"
-          className="w-[160px] h-[580px] xl:w-[206px] xl:h-full"
           alt=""
+          className="w-[160px] h-[580px] xl:w-[206px] xl:h-full"
+          src="/img/chess-horse.png"
         />
       </div>
       <div className="z-50 max-w-5xl mx-auto">
@@ -42,7 +42,7 @@ export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
         </div>
         <div className="flex gap-3 justify-center">
           <button className="py-4 px-[22px] shadow-sm border border-[#D0D5DD] bg-white rounded-full flex items-center text-[##344054]">
-            <img src="/svg/play.svg" alt="" className="w-6 h-6" />
+            <img alt="" className="w-6 h-6" src="/svg/play.svg" />
             <div className="text-lg text-[#344054]">Demo</div>
           </button>
           <button

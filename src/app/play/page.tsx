@@ -1,6 +1,5 @@
 "use client";
 
-import { NodeDefinition, Position } from "@/pb/query";
 import { Card } from "@nextui-org/react";
 import * as secp256k1 from "@noble/secp256k1";
 import cx from "classnames";
@@ -11,9 +10,13 @@ import { createChannel, createClient } from "nice-grpc-web";
 import { hmac } from "noble-hashes/lib/hmac";
 import { sha256 } from "noble-hashes/lib/sha256";
 import { useEffect, useState } from "react";
+
 import { Color, GameState } from "../../pb/game";
 import { Navbar } from "../components/Navbar";
+
 import { PlayerCard } from "./playerCard";
+
+import { NodeDefinition, Position } from "@/pb/query";
 
 const pieceToSvg: Record<string, string> = {
   r: "/assets/rook-b.svg",
@@ -32,7 +35,9 @@ const pieceToSvg: Record<string, string> = {
 
 secp256k1.etc.hmacSha256Sync = (key: Uint8Array, ...msgs: Uint8Array[]) => {
   const h = hmac.create(sha256, key);
+
   msgs.forEach((msg) => h.update(msg));
+
   return h.digest();
 };
 
@@ -42,6 +47,7 @@ async function signMessage(
 ): Promise<string> {
   const messageString = JSON.stringify(message);
   const messageHash = sha256(Buffer.from(messageString));
+
   console.log(Buffer.from(messageHash).toString("hex"), messageString);
   const signature = secp256k1.sign(messageHash, privateKey);
 
@@ -77,6 +83,7 @@ export default function Play() {
     };
 
     const intervalId = setInterval(fetchGameState, 500);
+
     return () => clearInterval(intervalId);
   }, [client, whitePlayer, blackPlayer]);
 
@@ -137,6 +144,7 @@ export default function Play() {
       newBoard.rows[from.x].cells[from.y].piece = null;
 
       const pieceKey = `${piece.color}${piece.kind}${from.y}${from.x}`;
+
       setGameState({ ...gameState, board: newBoard });
     }
   };
@@ -145,7 +153,9 @@ export default function Play() {
     const actualRow = isBoardReversed ? 7 - row : row;
     const actualCol = isBoardReversed ? col : col;
     const fig = gameState.board?.rows[actualRow].cells[actualCol].piece;
+
     if (!fig) return "";
+
     return fig.color === Color.WHITE
       ? pieceToSvg[fig.kind.toUpperCase()]
       : pieceToSvg[fig.kind.toLowerCase()];
@@ -157,9 +167,9 @@ export default function Play() {
       <main className="flex items-center justify-between min-h-screen gap-6 max-w-7xl mx-auto">
         <div>
           <PlayerCard
-            image="/img/avatar.png"
             address="0x2546BcD3c84621e976D8185a91A922aE77ECEc30"
             amount="42.069 ETH"
+            image="/img/avatar.png"
           />
           <div className="py-5 text-center">
             <div className="text-[#FCFCFD] text-lg font-semibold">You Turn</div>
@@ -168,18 +178,18 @@ export default function Play() {
             </div>
           </div>
           <PlayerCard
-            image="/img/avatar.png"
+            opponent
             address="0x2546BcD3c84621e976D8185a91A922aE77ECEc30"
             amount="42.069 ETH"
-            opponent
+            image="/img/avatar.png"
           />
           <div className="mt-8 px-6 flex justify-between">
             <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center">
-              <img src="/svg/close.svg" alt="" />
+              <img alt="" src="/svg/close.svg" />
               <div>End Game</div>
             </button>
             <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center">
-              <img src="/svg/rematch.svg" alt="" />
+              <img alt="" src="/svg/rematch.svg" />
               <div>Rematch</div>
             </button>
           </div>
@@ -196,12 +206,10 @@ export default function Play() {
               row.cells.map((_, colIndex) => {
                 const pieceSrc = getFigSrc(rowIndex, colIndex);
                 const pieceKey = `${gameState.board?.rows[rowIndex].cells[colIndex].piece?.color}${gameState.board?.rows[rowIndex].cells[colIndex].piece?.kind}${rowIndex}${colIndex}`;
+
                 return (
                   <div
                     key={`${rowIndex}-${colIndex}`}
-                    onClick={() =>
-                      handleCellClick({ x: rowIndex, y: colIndex })
-                    }
                     className={cx(
                       "w-20 h-20 flex items-center justify-center",
                       selectedCell?.x === rowIndex &&
@@ -212,16 +220,19 @@ export default function Play() {
                         ? "bg-[#929292]"
                         : "bg-[#F0EBE3]"
                     )}
+                    onClick={() =>
+                      handleCellClick({ x: rowIndex, y: colIndex })
+                    }
                   >
                     {pieceSrc && (
                       <motion.div
-                        layoutId={pieceKey}
-                        initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
+                        initial={{ opacity: 0 }}
+                        layoutId={pieceKey}
                         style={{ position: "absolute" }}
+                        transition={{ duration: 0.3 }}
                       >
-                        <Image src={pieceSrc} alt="" width={50} height={50} />
+                        <Image alt="" height={50} src={pieceSrc} width={50} />
                       </motion.div>
                     )}
                   </div>

@@ -1,0 +1,16 @@
+{
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.enable": true,
+  "eslint.options": {
+    "configFile": "./.eslintrc.json"
+  },
+  "eslint.format.enable": true,
+  "editor.formatOnSave": true,
+  "eslint.validate": ["typescript", "javascriptreact", "typescriptreact"],
+  "eslint.debug": true
+}

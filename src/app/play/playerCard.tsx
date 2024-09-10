@@ -24,6 +24,7 @@ export const PlayerCard = ({
     // Return the shortened version with "..."
     return `${start}...${end}`;
   }
+
   return (
     <div className={`flex flex-col ${opponent && "flex-col-reverse"}`}>
       <div
@@ -33,15 +34,15 @@ export const PlayerCard = ({
       >
         <div className="relative">
           <img
-            src={image}
             alt=""
             className="w-16 h-16 rounded-full object-cover"
+            src={image}
           />
           <div className="absolute right-0 -bottom-1 border border-black bg-[#D8E3DA] w-6 h-6 rounded-full">
             <img
-              src="/svg/chess-queen.svg"
               alt=""
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+              src="/svg/chess-queen.svg"
             />
           </div>
         </div>

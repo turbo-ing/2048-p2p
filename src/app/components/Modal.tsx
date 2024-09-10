@@ -13,8 +13,8 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, children }) => {
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-[#0C111D] p-6 rounded-lg shadow-lg max-w-lg w-full relative">
         <button
-          onClick={onClose}
           className="absolute top-2 right-2 text-[#85888E] hover:text-gray-700"
+          onClick={onClose}
         >
           ✖
         </button>

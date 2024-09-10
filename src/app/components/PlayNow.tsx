@@ -1,6 +1,7 @@
 import * as secp256k1 from "@noble/secp256k1";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
 import Modal from "./Modal";
 
 interface PlayNowProps {
@@ -22,6 +23,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
   const handleNextPage = () => {
     const privateKey = secp256k1.utils.randomPrivateKey();
     const publicKey = secp256k1.getPublicKey(privateKey);
+
     sessionStorage.setItem(
       "privateKey",
       Buffer.from(privateKey).toString("hex")
@@ -41,9 +43,9 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
           <div className="absolute max-w-7xl mx-auto w-full left-1/2 -translate-x-1/2 md:px-16 px-2 z-40">
             <div className="flex items-center gap-4">
               <img
-                src="/svg/playnow.svg"
                 alt=""
                 className="w-[72px] h-[72px]"
+                src="/svg/playnow.svg"
               />
               <div className="text-6xl font-semibold">Play Now</div>
             </div>
@@ -58,7 +60,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                   setIsShowModal(true);
                 }}
               >
-                <img src="/svg/Chess-Board.svg" alt="" />
+                <img alt="" src="/svg/Chess-Board.svg" />
                 <div className="text-[#FCFCFD]">
                   <div className="text-5xl font-semibold">Play with friend</div>
                   <div className="text-[#E4E7EC] text-xl font-medium mt-1">
@@ -72,7 +74,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                   router.push("/find-match");
                 }}
               >
-                <img src="/svg/quickMatch.svg" alt="" />
+                <img alt="" src="/svg/quickMatch.svg" />
                 <div className="text-[#FCFCFD]">
                   <div className="text-5xl font-semibold">Quick match</div>
                   <div className="text-[#E4E7EC] text-xl font-medium mt-1">
@@ -82,23 +84,23 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
               </button>
             </div>
           </div>
-          <div className="md:w-2/5 bg-black h-screen flex"></div>
+          <div className="md:w-2/5 bg-black h-screen flex" />
           <div className="w-full md:w-3/5 h-screen relative">
             <div className="absolute w-full h-full bg-gradient" />
             <video
-              src="/video/chess.mp4"
-              className="w-full object-cover h-full"
               autoPlay
               loop
               muted
-            ></video>
+              className="w-full object-cover h-full"
+              src="/video/chess.mp4"
+            />
           </div>
         </div>
       </div>
       <Modal show={isShowModal} onClose={onClose}>
         {selectedMode === 0 ? (
           <div>
-            <img src="/svg/chessboardIcon.svg" alt="" />
+            <img alt="" src="/svg/chessboardIcon.svg" />
             <div className="mt-4">
               <div className="text-[#F5F5F6] font-semibold text-lg">
                 Play with friend
@@ -115,7 +117,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                   setSelectedMode(1);
                 }}
               >
-                <img src="/svg/magnifier.svg" alt="" />
+                <img alt="" src="/svg/magnifier.svg" />
                 <div className="font-semibold text-base">Join Game</div>
               </button>
               <button
@@ -124,14 +126,14 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                   setSelectedMode(2);
                 }}
               >
-                <img src="/svg/circle-plus.svg" alt="" />
+                <img alt="" src="/svg/circle-plus.svg" />
                 <div className="font-semibold text-base">Ceate Room</div>
               </button>
             </div>
           </div>
         ) : selectedMode === 1 ? (
           <div>
-            <img src="/svg/find-friend.svg" alt="" />
+            <img alt="" src="/svg/find-friend.svg" />
             <div className="mt-4">
               <div className="text-[#F5F5F6] font-semibold text-lg">
                 Join Game
@@ -147,11 +149,11 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 </label>
                 <div>
                   <input
-                    type="text"
                     className="bg-[#0C111D] border border-[#333741] rounded-full shadow text-md text-[#85888E] py-2.5 px-3.5 w-full mt-1.5"
+                    placeholder="Enter your name"
+                    type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter your name"
                   />
                 </div>
               </div>
@@ -161,9 +163,9 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 </label>
                 <div>
                   <input
-                    type="text"
                     className="bg-[#0C111D] border border-[#333741] rounded-full shadow text-md text-[#85888E] py-2.5 px-3.5 w-full mt-1.5"
                     placeholder="Enter URL"
+                    type="text"
                     value={addr}
                     onChange={(e) => setAddr(e.target.value)}
                   />
@@ -184,7 +186,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
           </div>
         ) : (
           <div>
-            <img src="/svg/create-room.svg" alt="" />
+            <img alt="" src="/svg/create-room.svg" />
             <div className="mt-4">
               <div className="text-[#F5F5F6] font-semibold text-lg">
                 Create a Room
@@ -200,9 +202,9 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 </label>
                 <div>
                   <input
-                    type="text"
                     className="bg-[#0C111D] border border-[#333741] rounded-full shadow text-md text-[#85888E] py-2.5 px-3.5 w-full mt-1.5"
                     placeholder="Enter your name"
+                    type="text"
                   />
                 </div>
               </div>
