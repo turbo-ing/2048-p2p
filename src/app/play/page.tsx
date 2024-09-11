@@ -15,8 +15,6 @@ import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
 
 import { NodeDefinition, Position } from "@/pb/query";
 
-const SEQUENCER_WALLET = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-
 const pieceToSvg: Record<string, string> = {
   r: "/assets/rook-b.svg",
   n: "/assets/knight-b.svg",

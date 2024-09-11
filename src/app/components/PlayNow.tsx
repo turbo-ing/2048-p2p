@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { createChannel, createClient } from "nice-grpc-web";
 
+import { linkToWallet } from "../core/link";
+
 import Modal from "./Modal";
 
 import { NodeDefinition } from "@/pb/query";
@@ -16,6 +18,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
   const [isShowModal, setIsShowModal] = useState(false);
   const [account, setAccount] = useState("");
   const [address, setAddress] = useState("");
+  const [localPrivate, setLocalPrivate] = useState("");
   const router = useRouter();
 
   const onClose = () => {
@@ -26,6 +29,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
   const connectWallet = async () => {
     try {
       if (window.ethereum) {
+        setLocalPrivate(await linkToWallet());
         const provider = new ethers.providers.Web3Provider(window.ethereum);
 
         await provider.send("eth_requestAccounts", []);
@@ -148,8 +152,8 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             <div className="mt-5">
               <button
                 className="hover:bg-red-600 flex py-2.5 px-4 bg-[#F23939] rounded-full items-center gap-1.5 w-full justify-center"
-                onClick={() => {
-                  connectWallet();
+                onClick={async () => {
+                  await connectWallet();
                   setSelectedMode(1);
                 }}
               >
