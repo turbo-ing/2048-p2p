@@ -12,6 +12,7 @@ import { Color, GameState } from "../../pb/game";
 import { Navbar } from "../components/Navbar";
 import { PlayerCard } from "../components/playerCard";
 import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
+import { onCellClick } from "../core/play";
 
 import { NodeDefinition, Position } from "@/pb/query";
 
@@ -33,12 +34,14 @@ const pieceToSvg: Record<string, string> = {
 export default function Play() {
   const [gameState, setGameState] = useState<GameState>({} as GameState);
   const [selectedCell, setSelectedCell] = useState<Position | null>(null);
-  const [isBoardReversed, setIsBoardReversed] = useState(false);
-  const [whitePlayer, setWhitePlayer] = useState("");
-  const [blackPlayer, setBlackPlayer] = useState("");
-  const [publicKey, setPublicKey] = useState("");
+  const [isBoardReversed, setIsBoardReversed] = useState<Boolean>(false);
+  const [whitePlayer, setWhitePlayer] = useState<string>("");
+  const [blackPlayer, setBlackPlayer] = useState<string>("");
+  const [publicKey, setPublicKey] = useState<string>("");
+  const [localPrivateKey, setLocalPrivateKey] = useState<string>("");
   const [provider, setProvider] =
     useState<ethers.providers.Web3Provider | null>(null);
+  const [wallet, setWallet] = useState<ethers.Wallet | null>(null);
 
   const channel = createChannel(`http://127.0.0.1:50050`);
   const client = createClient(NodeDefinition, channel);
@@ -47,47 +50,22 @@ export default function Play() {
   useGameStateFetcher(setGameState, client, whitePlayer, blackPlayer);
 
   useEffect(() => {
-    setIsBoardReversed(publicKey === gameState.whitePlayer);
-  }, [gameState, publicKey]);
-
-  useEffect(() => {
-    setWhitePlayer(sessionStorage.getItem("whitePlayer") || "");
-    setBlackPlayer(sessionStorage.getItem("blackPlayer") || "");
+    setLocalPrivateKey(sessionStorage.getItem("localPrivateKey")!);
+    setWhitePlayer(sessionStorage.getItem("whitePlayer")!);
+    setBlackPlayer(sessionStorage.getItem("blackPlayer")!);
   }, []);
 
-  const handleCellClick = async (pos: Position) => {
-    if (selectedCell) {
-      const actualFromPos = isBoardReversed
-        ? { x: 7 - selectedCell.x, y: selectedCell.y }
-        : selectedCell;
-      const actualToPos = isBoardReversed ? { x: 7 - pos.x, y: pos.y } : pos;
+  useEffect(() => {
+    setIsBoardReversed(publicKey === whitePlayer);
+  }, [whitePlayer, publicKey]);
 
-      await makeMove(actualFromPos, actualToPos);
-      setSelectedCell(null);
-
-      const message = {
-        whitePlayer,
-        blackPlayer,
-        action: [actualFromPos, actualToPos],
-      };
-
-      const signature = await provider
-        ?.getSigner()
-        .signMessage(JSON.stringify(message));
-
-      try {
-        const response = await client.transact({
-          ...message,
-          signature,
-          pubKey: publicKey,
-        });
-      } catch (e) {
-        console.error("Error making move:", e);
+  useEffect(() => {
+    if (provider) {
+      if (localPrivateKey) {
+        setWallet(new ethers.Wallet(localPrivateKey).connect(provider!));
       }
-    } else {
-      setSelectedCell(pos);
     }
-  };
+  }, [provider, localPrivateKey]);
 
   const makeMove = async (from: Position, to: Position) => {
     const newBoard = JSON.parse(JSON.stringify(gameState.board));
@@ -168,10 +146,21 @@ export default function Play() {
                     )}
                     role="button"
                     tabIndex={0}
-                    onClick={() =>
-                      handleCellClick({ x: rowIndex, y: colIndex })
+                    onClick={async () =>
+                      await onCellClick({
+                        selectedCell,
+                        setSelectedCell,
+                        makeMove,
+                        whitePlayer,
+                        blackPlayer,
+                        client,
+                        wallet,
+                        player: publicKey,
+                        isBoardReversed,
+                        pos: { x: rowIndex, y: colIndex },
+                      })
                     }
-                    onKeyDown={() => {}}
+                    onKeyDown={() => null}
                   >
                     {pieceSrc && (
                       <motion.div

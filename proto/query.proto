@@ -39,8 +39,10 @@ message Transaction {
     string black_player = 2;
     optional string game_state_hash = 3;
     repeated Position action = 4;
-    string signature = 5;
-    string pub_key = 6;
+    string player = 5;
+    string sequencerFeeHash =  6;
+    string signature = 7;
+    string publicKey = 8;
 }
 
 message Position {

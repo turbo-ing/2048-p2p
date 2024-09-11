@@ -1,14 +1,13 @@
 import { ethers } from "ethers";
 
+import { abi } from "./abi/Chess.json";
+
 const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 const sequencerWallet = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
-const abi = [
-  "function getValue() public view returns (uint256)",
-  "function setValue(uint256) public returns (uint256)",
-];
-
-async function linkToWallet(): Promise<string> {
+async function linkToWallet(
+  provider: ethers.providers.Web3Provider,
+): Promise<string> {
   if (typeof window.ethereum === "undefined") {
     alert("MetaMask is not installed. Please install MetaMask and try again.");
 
@@ -17,7 +16,6 @@ async function linkToWallet(): Promise<string> {
 
   try {
     await window.ethereum.request({ method: "eth_requestAccounts" });
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
     const contract = new ethers.Contract(contractAddress, abi, signer);
 
@@ -25,29 +23,18 @@ async function linkToWallet(): Promise<string> {
     const privateKey = wallet.privateKey;
     const privateKeyNumber = ethers.BigNumber.from(privateKey);
 
-    let value = await contract.getValue();
-
-    if (value.eq(0)) {
-      console.log("Generated Private Key:", privateKeyNumber.toString());
+    try {
       const tx = await contract.setValue(privateKeyNumber);
 
-      try {
-        await tx.wait();
-      } catch (e) {
-        console.error("Error while waiting for transaction confirmation:", e);
-      }
-
-      value = await contract.getValue();
-    } else {
-      console.log("Value is already set, skipping setValue.");
+      await tx.wait();
+    } catch (e) {
+      console.error("Error while waiting for transaction confirmation:", e);
     }
 
-    console.log("setValue transaction completed, returned value: ", value);
+    const value = await contract.getValue();
 
     const retrievedPrivateKey =
       "0x" + value.toHexString().slice(2).padStart(64, "0");
-
-    console.log("Retrieved private key:", retrievedPrivateKey);
 
     return retrievedPrivateKey;
   } catch (error) {
@@ -57,4 +44,40 @@ async function linkToWallet(): Promise<string> {
   }
 }
 
-export { linkToWallet };
+interface DepositVaultParams {
+  provider: ethers.providers.Web3Provider;
+  to: string;
+  value: ethers.BigNumberish;
+}
+
+async function depositVault({
+  provider,
+  to,
+  value = ethers.utils.parseEther("0.0001"),
+}: DepositVaultParams): Promise<string> {
+  if (typeof window.ethereum === "undefined") {
+    alert("MetaMask is not installed. Please install MetaMask and try again.");
+
+    return "";
+  }
+
+  try {
+    const txn = await provider.getSigner().sendTransaction({
+      to,
+      value,
+      maxPriorityFeePerGas: ethers.utils.parseUnits("1", "gwei"),
+      gasLimit: ethers.BigNumber.from(21000),
+      type: 2,
+    });
+
+    await txn.wait();
+
+    return txn.hash;
+  } catch (e) {
+    console.error("Error while waiting for transaction confirmation:", e);
+
+    return "";
+  }
+}
+
+export { linkToWallet, depositVault, sequencerWallet };

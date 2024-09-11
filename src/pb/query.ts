@@ -34,8 +34,10 @@ export interface Transaction {
   blackPlayer: string;
   gameStateHash?: string | undefined;
   action: Position[];
+  player: string;
+  sequencerFeeHash: string;
   signature: string;
-  pubKey: string;
+  publicKey: string;
 }
 
 export interface Position {
@@ -322,7 +324,16 @@ export const StartResponse = {
 };
 
 function createBaseTransaction(): Transaction {
-  return { whitePlayer: "", blackPlayer: "", gameStateHash: undefined, action: [], signature: "", pubKey: "" };
+  return {
+    whitePlayer: "",
+    blackPlayer: "",
+    gameStateHash: undefined,
+    action: [],
+    player: "",
+    sequencerFeeHash: "",
+    signature: "",
+    publicKey: "",
+  };
 }
 
 export const Transaction = {
@@ -339,11 +350,17 @@ export const Transaction = {
     for (const v of message.action) {
       Position.encode(v!, writer.uint32(34).fork()).ldelim();
     }
-    if (message.signature !== "") {
-      writer.uint32(42).string(message.signature);
+    if (message.player !== "") {
+      writer.uint32(42).string(message.player);
     }
-    if (message.pubKey !== "") {
-      writer.uint32(50).string(message.pubKey);
+    if (message.sequencerFeeHash !== "") {
+      writer.uint32(50).string(message.sequencerFeeHash);
+    }
+    if (message.signature !== "") {
+      writer.uint32(58).string(message.signature);
+    }
+    if (message.publicKey !== "") {
+      writer.uint32(66).string(message.publicKey);
     }
     return writer;
   },
@@ -388,14 +405,28 @@ export const Transaction = {
             break;
           }
 
-          message.signature = reader.string();
+          message.player = reader.string();
           continue;
         case 6:
           if (tag !== 50) {
             break;
           }
 
-          message.pubKey = reader.string();
+          message.sequencerFeeHash = reader.string();
+          continue;
+        case 7:
+          if (tag !== 58) {
+            break;
+          }
+
+          message.signature = reader.string();
+          continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.publicKey = reader.string();
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -412,8 +443,10 @@ export const Transaction = {
       blackPlayer: isSet(object.blackPlayer) ? globalThis.String(object.blackPlayer) : "",
       gameStateHash: isSet(object.gameStateHash) ? globalThis.String(object.gameStateHash) : undefined,
       action: globalThis.Array.isArray(object?.action) ? object.action.map((e: any) => Position.fromJSON(e)) : [],
+      player: isSet(object.player) ? globalThis.String(object.player) : "",
+      sequencerFeeHash: isSet(object.sequencerFeeHash) ? globalThis.String(object.sequencerFeeHash) : "",
       signature: isSet(object.signature) ? globalThis.String(object.signature) : "",
-      pubKey: isSet(object.pubKey) ? globalThis.String(object.pubKey) : "",
+      publicKey: isSet(object.publicKey) ? globalThis.String(object.publicKey) : "",
     };
   },
 
@@ -431,11 +464,17 @@ export const Transaction = {
     if (message.action?.length) {
       obj.action = message.action.map((e) => Position.toJSON(e));
     }
+    if (message.player !== "") {
+      obj.player = message.player;
+    }
+    if (message.sequencerFeeHash !== "") {
+      obj.sequencerFeeHash = message.sequencerFeeHash;
+    }
     if (message.signature !== "") {
       obj.signature = message.signature;
     }
-    if (message.pubKey !== "") {
-      obj.pubKey = message.pubKey;
+    if (message.publicKey !== "") {
+      obj.publicKey = message.publicKey;
     }
     return obj;
   },
@@ -449,8 +488,10 @@ export const Transaction = {
     message.blackPlayer = object.blackPlayer ?? "";
     message.gameStateHash = object.gameStateHash ?? undefined;
     message.action = object.action?.map((e) => Position.fromPartial(e)) || [];
+    message.player = object.player ?? "";
+    message.sequencerFeeHash = object.sequencerFeeHash ?? "";
     message.signature = object.signature ?? "";
-    message.pubKey = object.pubKey ?? "";
+    message.publicKey = object.publicKey ?? "";
     return message;
   },
 };

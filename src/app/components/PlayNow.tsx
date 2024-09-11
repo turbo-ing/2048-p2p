@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { createChannel, createClient } from "nice-grpc-web";
 
-import { linkToWallet } from "../core/link";
+import { depositVault, linkToWallet } from "../core/link";
 
 import Modal from "./Modal";
 
@@ -18,7 +18,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
   const [isShowModal, setIsShowModal] = useState(false);
   const [account, setAccount] = useState("");
   const [address, setAddress] = useState("");
-  const [localPrivate, setLocalPrivate] = useState("");
+  const [localPrivateKey, setLocalPrivateKey] = useState("");
   const router = useRouter();
 
   const onClose = () => {
@@ -29,8 +29,11 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
   const connectWallet = async () => {
     try {
       if (window.ethereum) {
-        setLocalPrivate(await linkToWallet());
         const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const localPrivate = await linkToWallet(provider);
+
+        setLocalPrivateKey(localPrivate);
+        sessionStorage.setItem("localPrivateKey", localPrivate);
 
         await provider.send("eth_requestAccounts", []);
         const signer = provider.getSigner();
@@ -154,6 +157,17 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 className="hover:bg-red-600 flex py-2.5 px-4 bg-[#F23939] rounded-full items-center gap-1.5 w-full justify-center"
                 onClick={async () => {
                   await connectWallet();
+
+                  // todo! make normal vault deposit
+                  const wallet = new ethers.Wallet(localPrivateKey);
+                  const to = await wallet.getAddress();
+                  const value = ethers.utils.parseEther("0.1");
+                  const provider = new ethers.providers.Web3Provider(
+                    window.ethereum,
+                  );
+
+                  await depositVault({ provider, to, value });
+
                   setSelectedMode(1);
                 }}
               >

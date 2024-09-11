@@ -41,8 +41,8 @@ const usePeersFetcher = async (
 const useGameStateFetcher = async (
   setGameState: Dispatch<SetStateAction<GameState>>,
   client: any,
-  whitePlayer: string,
-  blackPlayer: string,
+  whitePlayer: String,
+  blackPlayer: String,
 ) => {
   useEffect(() => {
     const fetchGameState = async () => {
