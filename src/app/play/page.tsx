@@ -2,19 +2,20 @@
 
 import { Card } from "@nextui-org/react";
 import cx from "classnames";
+import { ethers } from "ethers";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { createChannel, createClient } from "nice-grpc-web";
 import { useEffect, useState } from "react";
-import { ethers } from "ethers";
 
 import { Color, GameState } from "../../pb/game";
 import { Navbar } from "../components/Navbar";
-import { PlayerCard } from "../components/playerCard";
-import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
+import { PlayerCard, PlayerMobileCard } from "../components/playerCard";
 import { onCellClick } from "../core/play";
+import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
 
 import { NodeDefinition, Position } from "@/pb/query";
+import useIsMobile from "../hooks/useIsMobile";
 
 const pieceToSvg: Record<string, string> = {
   r: "/assets/rook-b.svg",
@@ -45,6 +46,9 @@ export default function Play() {
 
   const channel = createChannel(`http://127.0.0.1:50050`);
   const client = createClient(NodeDefinition, channel);
+  const isMobile = useIsMobile();
+  const letters = ["A", "B", "C", "D", "E", "F", "G", "H"];
+  const numbers = [8, 7, 6, 5, 4, 3, 2, 1];
 
   usePeersFetcher(setPublicKey, setProvider);
   useGameStateFetcher(setGameState, client, whitePlayer, blackPlayer);
@@ -94,91 +98,151 @@ export default function Play() {
   return (
     <div className="bg-black">
       <Navbar isDark />
-      <main className="flex items-center justify-between min-h-screen gap-6 max-w-7xl mx-auto">
-        <div>
-          <PlayerCard
-            address="0x2546BcD3c84621e976D8185a91A922aE77ECEc30"
-            amount="42.069 ETH"
-            image="/img/avatar.png"
-          />
-          <div className="py-5 text-center">
+      <main className="flex items-center justify-between min-h-screen gap-6 max-w-7xl mx-auto lg:flex-nowrap flex-wrap pt-20">
+        {isMobile ? (
+          <div className="py-5 text-center w-full">
             <div className="text-[#FCFCFD] text-lg font-semibold">You Turn</div>
             <div className="text-[#FCFCFD] mt-2 text-6xl font-semibold">
               0:12
             </div>
           </div>
-          <PlayerCard
-            opponent
-            address="0x2546BcD3c84621e976D8185a91A922aE77ECEc30"
-            amount="42.069 ETH"
-            image="/img/avatar.png"
-          />
-          <div className="mt-8 px-6 flex justify-between">
-            <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center">
+        ) : (
+          <div className="lg:block hidden w-96">
+            <PlayerCard
+              address="0x2546BcD3c84621e976D8185a91A922aE77ECEc30"
+              amount="42.069 ETH"
+              image="/img/avatar.png"
+            />
+            <div className="py-5 text-center">
+              <div className="text-[#FCFCFD] text-lg font-semibold">
+                You Turn
+              </div>
+              <div className="text-[#FCFCFD] mt-2 text-6xl font-semibold">
+                0:12
+              </div>
+            </div>
+            <PlayerCard
+              opponent
+              address="0x2546BcD3c84621e976D8185a91A922aE77ECEc30"
+              amount="42.069 ETH"
+              image="/img/avatar.png"
+            />
+            <div className="mt-8 px-6 flex justify-between">
+              <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center">
+                <img alt="" src="/svg/close.svg" />
+                <div>End Game</div>
+              </button>
+              <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center">
+                <img alt="" src="/svg/rematch.svg" />
+                <div>Rematch</div>
+              </button>
+            </div>
+          </div>
+        )}
+        <div className="flex justify-center w-full">
+          <Card className="mx-2 lg:mx-6 md:pl-2.5 md:pb-2.5 md:pt-10 md:pr-10 pt-4 pr-4 bg-[#CFD1D21A] shadow-lg rounded-lg w-full lg:w-[720px] lg:h-[720px] md:max-w-4xl lg:max-w-screen-2xl">
+            <div className="grid-container gap-0 relative w-full aspect-square">
+              {/* Main Chessboard */}
+              {gameState.board?.rows.map((row, rowIndex) => (
+                <>
+                  <div
+                    key={`number-${rowIndex}`}
+                    className="flex justify-center items-center text-sm md:text-xl font-bold text-[#D8E3DA]"
+                  >
+                    {numbers[rowIndex]}
+                  </div>
+                  {row.cells.map((_, colIndex) => {
+                    const pieceSrc = getFigSrc(rowIndex, colIndex);
+                    const pieceKey = `${gameState.board?.rows[rowIndex].cells[colIndex].piece?.color}${gameState.board?.rows[rowIndex].cells[colIndex].piece?.kind}${rowIndex}${colIndex}`;
+                    return (
+                      <div
+                        key={`${rowIndex}-${colIndex}`}
+                        className={cx(
+                          "w-full h-full flex items-center justify-center",
+                          selectedCell?.x === rowIndex &&
+                            selectedCell?.y === colIndex
+                            ? "border-2 border-blue-500"
+                            : "",
+                          (rowIndex + colIndex) % 2 === 0
+                            ? "bg-[#929292]"
+                            : "bg-[#F0EBE3]",
+                        )}
+                        role="button"
+                        tabIndex={0}
+                        onClick={async () =>
+                          await onCellClick({
+                            selectedCell,
+                            setSelectedCell,
+                            makeMove,
+                            whitePlayer,
+                            blackPlayer,
+                            client,
+                            wallet,
+                            player: publicKey,
+                            isBoardReversed,
+                            pos: { x: rowIndex, y: colIndex },
+                          })
+                        }
+                        onKeyDown={() => null}
+                      >
+                        {pieceSrc && (
+                          <motion.div
+                            animate={{ opacity: 1 }}
+                            initial={{ opacity: 0 }}
+                            layoutId={pieceKey}
+                            style={{ position: "absolute" }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <Image
+                              alt=""
+                              height={50}
+                              src={pieceSrc}
+                              width={50}
+                            />
+                          </motion.div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </>
+              ))}
+              <div></div>
+              {letters.map((letter, index) => (
+                <div
+                  key={index}
+                  className="flex justify-center items-center text-sm md:text-xl font-bold text-[#D8E3DA]"
+                >
+                  {letter}
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+        {isMobile && (
+          <div className="flex w-full flex-col px-4">
+            <div className="flex justify-between items-center font-semibold w-full">
+              <PlayerMobileCard
+                address="0x2546BcD3c84621e976D8185a91A922aE77ECEc30"
+                image="/img/avatar.png"
+              />
+              <div className="text-[#FCFCFD] text-5xl">Vs</div>
+              <PlayerMobileCard
+                address="0x2546BcD3c84621e976D8185a91A922aE77ECEc30"
+                image="/img/avatar.png"
+                opponent
+              />
+            </div>
+            <hr className="border-[#D8E3DA] my-5" />
+            <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center">
               <img alt="" src="/svg/close.svg" />
               <div>End Game</div>
             </button>
-            <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center">
+            <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center mt-4">
               <img alt="" src="/svg/rematch.svg" />
               <div>Rematch</div>
             </button>
           </div>
-        </div>
-        <Card className="mx-6 p-10 bg-[#CFD1D21A] shadow-lg rounded-lg">
-          <div className="grid grid-cols-8 gap-0 relative">
-            {gameState.board?.rows.map((row, rowIndex) =>
-              row.cells.map((_, colIndex) => {
-                const pieceSrc = getFigSrc(rowIndex, colIndex);
-                const pieceKey = `${gameState.board?.rows[rowIndex].cells[colIndex].piece?.color}${gameState.board?.rows[rowIndex].cells[colIndex].piece?.kind}${rowIndex}${colIndex}`;
-
-                return (
-                  <div
-                    key={`${rowIndex}-${colIndex}`}
-                    className={cx(
-                      "w-20 h-20 flex items-center justify-center",
-                      selectedCell?.x === rowIndex &&
-                        selectedCell?.y === colIndex
-                        ? "border-2 border-blue-500"
-                        : "",
-                      (rowIndex + colIndex) % 2 === 0
-                        ? "bg-[#929292]"
-                        : "bg-[#F0EBE3]",
-                    )}
-                    role="button"
-                    tabIndex={0}
-                    onClick={async () =>
-                      await onCellClick({
-                        selectedCell,
-                        setSelectedCell,
-                        makeMove,
-                        whitePlayer,
-                        blackPlayer,
-                        client,
-                        wallet,
-                        player: publicKey,
-                        isBoardReversed,
-                        pos: { x: rowIndex, y: colIndex },
-                      })
-                    }
-                    onKeyDown={() => null}
-                  >
-                    {pieceSrc && (
-                      <motion.div
-                        animate={{ opacity: 1 }}
-                        initial={{ opacity: 0 }}
-                        layoutId={pieceKey}
-                        style={{ position: "absolute" }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <Image alt="" height={50} src={pieceSrc} width={50} />
-                      </motion.div>
-                    )}
-                  </div>
-                );
-              }),
-            )}
-          </div>
-        </Card>
+        )}
       </main>
     </div>
   );

@@ -1,7 +1,7 @@
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { useRouter } from "next/navigation";
 import { createChannel, createClient } from "nice-grpc-web";
+import { useEffect, useState } from "react";
 
 import { depositVault, linkToWallet } from "../core/link";
 
@@ -40,6 +40,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
         const userAccount = await signer.getAddress();
 
         setAccount(userAccount);
+        return localPrivate;
       } else {
         alert(
           "MetaMask is not installed. Please install MetaMask and try again.",
@@ -156,19 +157,21 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
               <button
                 className="hover:bg-red-600 flex py-2.5 px-4 bg-[#F23939] rounded-full items-center gap-1.5 w-full justify-center"
                 onClick={async () => {
-                  await connectWallet();
+                  const localPrivateKey = await connectWallet();
 
                   // todo! make normal vault deposit
-                  const wallet = new ethers.Wallet(localPrivateKey);
-                  const to = await wallet.getAddress();
-                  const value = ethers.utils.parseEther("0.1");
-                  const provider = new ethers.providers.Web3Provider(
-                    window.ethereum,
-                  );
+                  if (localPrivateKey) {
+                    const wallet = new ethers.Wallet(localPrivateKey);
+                    const to = await wallet.getAddress();
+                    const value = ethers.utils.parseEther("0.1");
+                    const provider = new ethers.providers.Web3Provider(
+                      window.ethereum,
+                    );
 
-                  await depositVault({ provider, to, value });
+                    await depositVault({ provider, to, value });
 
-                  setSelectedMode(1);
+                    setSelectedMode(1);
+                  }
                 }}
               >
                 <img alt="" src="/svg/magnifier.svg" />
