@@ -29,8 +29,15 @@ body {
   }
 }
 
+
 .bg-gradient{
   background: linear-gradient(224deg, rgba(0, 0, 0, 0.00) 17.67%, rgba(0, 0, 0, 0.70) 77.47%);
+}
+
+@media only screen and (max-width: 1024px) {
+  .bg-gradient{
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.70) 0%, rgba(0, 0, 0, 0.70) 100%);
+  }
 }
 
 .grid-container {

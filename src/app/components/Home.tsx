@@ -29,7 +29,7 @@ export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
         />
       </div>
       <div className="z-50 max-w-5xl mx-auto">
-        <div className=" text-[#101828] text-7xl text-center font-semibold">
+        <div className=" text-[#101828] text-5xl lg:text-7xl text-center font-semibold">
           Experience Chess in the
           <span className="text-[#DC3434]"> Decentralized</span> Web3 Era!
         </div>

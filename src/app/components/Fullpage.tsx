@@ -16,7 +16,12 @@ const FullPageSlides = () => {
 
   return (
     <div className="relative w-screen h-screen">
-      <Navbar isDark={activeIndex === 0 ? false : true} />
+      <Navbar
+        isDark={activeIndex === 0 ? false : true}
+        onClick={() => {
+          goToSlide(0);
+        }}
+      />
       <Home activeIndex={activeIndex} goToSlide={goToSlide} />
       <PlayNow activeIndex={activeIndex} goToSlide={goToSlide} />
     </div>

@@ -88,10 +88,10 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             <div className="flex items-center gap-4">
               <img
                 alt=""
-                className="w-[72px] h-[72px]"
+                className="lg:w-[72px] lg:h-[72px] w-16 h-16"
                 src="/svg/playnow.svg"
               />
-              <div className="text-6xl font-semibold">Play Now</div>
+              <div className="lg:text-6xl text-4xl font-semibold">Play Now</div>
             </div>
             <div className="mt-4 text-2xl font-semibold max-w-[598px]">
               Start a quick match against a random opponent or play with
@@ -99,29 +99,41 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             </div>
             <div className="mt-12">
               <button
-                className="py-6 px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center"
+                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center"
                 onClick={() => {
                   setIsShowModal(true);
                 }}
               >
-                <img alt="" src="/svg/Chess-Board.svg" />
-                <div className="text-[#FCFCFD]">
-                  <div className="text-5xl font-semibold">Play with friend</div>
-                  <div className="text-[#E4E7EC] text-xl font-medium mt-1">
+                <img
+                  alt=""
+                  src="/svg/Chess-Board.svg"
+                  className="w-16 h-16 lg:w-auto lg:h-auto"
+                />
+                <div className="text-[#FCFCFD] text-left lg:text-center">
+                  <div className="text-2xl lg:text-5xl font-semibold">
+                    Play with friend
+                  </div>
+                  <div className="text-[#E4E7EC] text-base lg:text-xl font-medium mt-1">
                     Invite a friend for a private match!
                   </div>
                 </div>
               </button>
               <button
-                className="py-6 px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8"
+                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8"
                 onClick={() => {
-                  router.push("/find-match");
+                  setIsShowModal(true);
                 }}
               >
-                <img alt="" src="/svg/quickMatch.svg" />
-                <div className="text-[#FCFCFD]">
-                  <div className="text-5xl font-semibold">Quick match</div>
-                  <div className="text-[#E4E7EC] text-xl font-medium mt-1">
+                <img
+                  alt=""
+                  src="/svg/quickMatch.svg"
+                  className="w-16 h-16 lg:w-auto lg:h-auto"
+                />
+                <div className="text-[#FCFCFD] text-left lg:text-center">
+                  <div className="text-2xl lg:text-5xl font-semibold">
+                    Quick match
+                  </div>
+                  <div className="text-[#E4E7EC] text-base lg:text-xl font-medium mt-1">
                     Find an opponent and start instantly!
                   </div>
                 </div>
