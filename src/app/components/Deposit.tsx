@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { useState } from "react";
+
 import { depositVault } from "../core/link";
 
 interface DepositVaultProps {
@@ -57,7 +58,7 @@ export const DepositVault = ({
           depositVault({
             provider: provider!,
             to: (await wallet?.getAddress()) ?? "",
-            value: Number(amount),
+            value: ethers.utils.parseEther(amount),
           });
           onCLick1();
         }}

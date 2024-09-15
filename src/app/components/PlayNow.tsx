@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
 import { depositVault, linkToWallet } from "../core/link";
 
 import Modal from "./Modal";
+import { DepositVault } from "./Deposit";
 
 import { NodeDefinition } from "@/pb/query";
-import { DepositVault } from "./Deposit";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -47,13 +47,13 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
 
       setLocalPrivateKey(localPrivate);
       sessionStorage.setItem("localPrivateKey", localPrivate);
-      await handleDepositVault({ wallet });
+      // await handleDepositVault({ wallet });
     } catch (error) {
       console.error("Error connecting to MetaMask:", error);
     }
   };
 
-  const handleDepositVault = async ({ wallet }: { wallet: ethers.Wallet }) => {
+  const _handleDepositVault = async ({ wallet }: { wallet: ethers.Wallet }) => {
     if (wallet && provider) {
       const to = await wallet.getAddress();
       const value = ethers.utils.parseEther("0.2");
@@ -199,13 +199,13 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
         ) : selectedMode === 1 ? (
           <DepositVault
             provider={provider}
+            wallet={wallet}
             onCLick1={() => {
               setSelectedMode(2);
             }}
             onCLick2={() => {
               setSelectedMode(2);
             }}
-            wallet={wallet}
           />
         ) : selectedMode === 2 ? (
           <div>
