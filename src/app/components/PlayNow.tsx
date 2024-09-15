@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 
 import { depositVault, linkToWallet } from "../core/link";
 
-import Modal from "./Modal";
 import { DepositVault } from "./Deposit";
+import Modal from "./Modal";
 
 import { NodeDefinition } from "@/pb/query";
 
@@ -136,21 +136,22 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 </div>
               </button>
               <button
-                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8"
+                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8 disabled:bg-[#F2F4F7] disabled:text-[#A3ACBB]"
                 onClick={() => {
                   setIsShowModal(true);
                 }}
+                disabled
               >
                 <img
                   alt=""
                   className="w-16 h-16 lg:w-auto lg:h-auto"
                   src="/svg/quickMatch.svg"
                 />
-                <div className="text-[#FCFCFD] text-left lg:text-center">
+                <div className="text-[#FCFCFD] text-left lg:text-center disabled:text-[#A3ACBB]">
                   <div className="text-2xl lg:text-5xl font-semibold">
                     Quick match
                   </div>
-                  <div className="text-[#E4E7EC] text-base lg:text-xl font-medium mt-1">
+                  <div className="text-[#E4E7EC] text-base lg:text-xl font-medium mt-1 disabled:text-[#A3ACBB]">
                     Find an opponent and start instantly!
                   </div>
                 </div>
@@ -200,10 +201,10 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
           <DepositVault
             provider={provider}
             wallet={wallet}
-            onCLick1={() => {
+            onDepositSubmit={() => {
               setSelectedMode(2);
             }}
-            onCLick2={() => {
+            onDepositCancel={() => {
               setSelectedMode(2);
             }}
           />
