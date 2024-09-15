@@ -62,7 +62,7 @@ const useGameStateFetcher = async (
 
     const interval = setInterval(() => {
       fetchGameState();
-    }, 5000);
+    }, 1000);
 
     return () => clearInterval(interval);
   });
