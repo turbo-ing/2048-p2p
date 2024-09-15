@@ -1,8 +1,11 @@
+import useIsMobile from "../hooks/useIsMobile";
+
 interface HomeProps {
   activeIndex: number;
   goToSlide: (index: number) => void;
 }
 export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
+  const isMobile = useIsMobile();
   return (
     <div
       className={`absolute inset-0 w-full h-full flex items-center justify-center text-white text-4xl transition-opacity duration-1000 ${
@@ -14,20 +17,25 @@ export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
         className="w-full h-full absolute left-0"
         src="/img/backgroundPattern.png"
       />
-      <div className="absolute left-0 top-1/2 -translate-y-[45%]">
-        <img
-          alt=""
-          className="w-[160px] h-[580px] xl:w-[206px] xl:h-full"
-          src="/img/chess.png"
-        />
-      </div>
-      <div className="absolute right-0 top-1/2 -translate-y-[45%]">
-        <img
-          alt=""
-          className="w-[160px] h-[580px] xl:w-[206px] xl:h-full"
-          src="/img/chess-horse.png"
-        />
-      </div>
+      {!isMobile && (
+        <>
+          <div className="absolute left-0 top-1/2 -translate-y-[45%]">
+            <img
+              alt=""
+              className="w-[160px] h-[580px] xl:w-[206px] xl:h-full"
+              src="/img/chess.png"
+            />
+          </div>
+          <div className="absolute right-0 top-1/2 -translate-y-[45%]">
+            <img
+              alt=""
+              className="w-[160px] h-[580px] xl:w-[206px] xl:h-full"
+              src="/img/chess-horse.png"
+            />
+          </div>
+        </>
+      )}
+
       <div className="z-50 max-w-5xl mx-auto">
         <div className=" text-[#101828] text-5xl lg:text-7xl text-center font-semibold">
           Experience Chess in the

@@ -41,13 +41,13 @@ const onCellClick = async ({
 
     const sentTx = await wallet?.sendTransaction({
       to: sequencerWallet,
-      value: ethers.utils.parseEther("0.0001"),
+      value: ethers.utils.parseEther("0.00001"),
       maxPriorityFeePerGas: ethers.utils.parseUnits("1", "gwei"),
       gasLimit: ethers.BigNumber.from(21000),
       type: 2,
     });
 
-    await sentTx?.wait();
+    // await sentTx?.wait();
 
     const sequencerFeeHash = sentTx?.hash;
 

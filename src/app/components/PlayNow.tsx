@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { depositVault, linkToWallet } from "../core/link";
 
 import Modal from "./Modal";
+import { DepositVault } from "./Deposit";
 
 import { NodeDefinition } from "@/pb/query";
 
@@ -15,10 +16,14 @@ interface PlayNowProps {
 }
 export const PlayNow = ({ activeIndex }: PlayNowProps) => {
   const [selectedMode, setSelectedMode] = useState(0);
+  const [isdepositModal, setIsdepositModal] = useState(false);
   const [isShowModal, setIsShowModal] = useState(false);
   const [account, setAccount] = useState("");
   const [address, setAddress] = useState("");
   const [localPrivateKey, setLocalPrivateKey] = useState("");
+  const [provider, setProvider] =
+    useState<ethers.providers.Web3Provider | null>(null);
+  const [wallet, setWallet] = useState<ethers.Wallet | null>(null);
   const router = useRouter();
 
   const onClose = () => {
@@ -26,28 +31,34 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
     setSelectedMode(0);
   };
 
-  const connectWallet = async () => {
+  const connectWallet = async ({
+    provider,
+  }: {
+    provider: ethers.providers.Web3Provider;
+  }) => {
     try {
-      if (window.ethereum) {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const localPrivate = await linkToWallet(provider);
+      const localPrivate = await linkToWallet({ provider });
 
-        setLocalPrivateKey(localPrivate);
-        sessionStorage.setItem("localPrivateKey", localPrivate);
+      setAccount(await provider.getSigner().getAddress());
 
-        await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
-        const userAccount = await signer.getAddress();
+      const wallet = new ethers.Wallet(localPrivate);
 
-        setAccount(userAccount);
-        return localPrivate;
-      } else {
-        alert(
-          "MetaMask is not installed. Please install MetaMask and try again.",
-        );
-      }
+      setWallet(wallet);
+
+      setLocalPrivateKey(localPrivate);
+      sessionStorage.setItem("localPrivateKey", localPrivate);
+      // await handleDepositVault({ wallet });
     } catch (error) {
       console.error("Error connecting to MetaMask:", error);
+    }
+  };
+
+  const _handleDepositVault = async ({ wallet }: { wallet: ethers.Wallet }) => {
+    if (wallet && provider) {
+      const to = await wallet.getAddress();
+      const value = ethers.utils.parseEther("0.2");
+
+      console.log(await depositVault({ provider, to, value }));
     }
   };
 
@@ -75,6 +86,12 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
 
     return () => clearInterval(interval);
   }, [account]);
+
+  useEffect(() => {
+    const p = new ethers.providers.Web3Provider(window.ethereum);
+
+    setProvider(p);
+  }, []);
 
   return (
     <>
@@ -106,8 +123,8 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
               >
                 <img
                   alt=""
-                  src="/svg/Chess-Board.svg"
                   className="w-16 h-16 lg:w-auto lg:h-auto"
+                  src="/svg/Chess-Board.svg"
                 />
                 <div className="text-[#FCFCFD] text-left lg:text-center">
                   <div className="text-2xl lg:text-5xl font-semibold">
@@ -126,8 +143,8 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
               >
                 <img
                   alt=""
-                  src="/svg/quickMatch.svg"
                   className="w-16 h-16 lg:w-auto lg:h-auto"
+                  src="/svg/quickMatch.svg"
                 />
                 <div className="text-[#FCFCFD] text-left lg:text-center">
                   <div className="text-2xl lg:text-5xl font-semibold">
@@ -169,21 +186,9 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
               <button
                 className="hover:bg-red-600 flex py-2.5 px-4 bg-[#F23939] rounded-full items-center gap-1.5 w-full justify-center"
                 onClick={async () => {
-                  const localPrivateKey = await connectWallet();
+                  await connectWallet({ provider: provider! });
 
-                  // todo! make normal vault deposit
-                  if (localPrivateKey) {
-                    const wallet = new ethers.Wallet(localPrivateKey);
-                    const to = await wallet.getAddress();
-                    const value = ethers.utils.parseEther("0.1");
-                    const provider = new ethers.providers.Web3Provider(
-                      window.ethereum,
-                    );
-
-                    await depositVault({ provider, to, value });
-
-                    setSelectedMode(1);
-                  }
+                  setSelectedMode(1);
                 }}
               >
                 <img alt="" src="/svg/magnifier.svg" />
@@ -192,6 +197,17 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             </div>
           </div>
         ) : selectedMode === 1 ? (
+          <DepositVault
+            provider={provider}
+            wallet={wallet}
+            onCLick1={() => {
+              setSelectedMode(2);
+            }}
+            onCLick2={() => {
+              setSelectedMode(2);
+            }}
+          />
+        ) : selectedMode === 2 ? (
           <div>
             <img alt="" src="/svg/find-friend.svg" />
             <div className="mt-4">
@@ -291,48 +307,6 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             </div>
           </div>
         )}
-      </Modal>
-      <Modal show={true} onClose={onClose}>
-        <div>
-          <img alt="" src="/svg/wallet-icon.svg" />
-          <div className="mt-4">
-            <div className="text-[#F5F5F6] font-semibold text-lg">
-              Deposit to Vault
-            </div>
-            <div className="mt-1 text-sm text-[#94969C]">
-              Ensure smooth transactions by depositing for gas fees. (Minimum
-              $5).
-            </div>
-          </div>
-          <div className="mt-4 border border-[#1F242F] bg-[#161B26] p-4 rounded-[20px]">
-            <div className="flex justify-between items-center">
-              <input
-                type="text"
-                className="bg-transparent text-2xl font-bold w-1/4"
-                placeholder="0.005"
-              />
-              <div className="font-medium text-[#94969C] text-sm">$5.08</div>
-              <div className="rounded-full py-2 px-3 justify-center items-center gap-1 border-2 border-[#FFFFFF1F] bg-[#F23939] shadow flex">
-                <img src="/svg/eth.svg" alt="" />
-                <div className="text-lg font-semibold">ETH</div>
-              </div>
-            </div>
-            <div className="text-sm font-semibold text-right mt-3">
-              <span className="text-[#94969C]">Bal: </span>
-              <span className="text-[#F5F5F6]">200.852 ETH </span>
-              <span className="text-[#CECFD2] ml-2">Max</span>
-            </div>
-          </div>
-          <button className="rounded-full py-2.5 px-4 text-white flex justify-center bg-[#F23939] w-full mt-4">
-            Deposit
-          </button>
-          <button className="rounded-full py-2.5 px-4 text-[#344054] flex justify-center bg-white w-full my-4">
-            Faucet token
-          </button>
-          <div className="text-center text-xs">
-            Low on funds? Use the faucet to get some tokens and keep playing.
-          </div>
-        </div>
       </Modal>
     </>
   );

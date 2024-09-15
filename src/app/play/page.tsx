@@ -13,9 +13,9 @@ import { Navbar } from "../components/Navbar";
 import { PlayerCard, PlayerMobileCard } from "../components/playerCard";
 import { onCellClick } from "../core/play";
 import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
+import useIsMobile from "../hooks/useIsMobile";
 
 import { NodeDefinition, Position } from "@/pb/query";
-import useIsMobile from "../hooks/useIsMobile";
 
 const pieceToSvg: Record<string, string> = {
   r: "/assets/rook-b.svg",
@@ -154,6 +154,7 @@ export default function Play() {
                   {row.cells.map((_, colIndex) => {
                     const pieceSrc = getFigSrc(rowIndex, colIndex);
                     const pieceKey = `${gameState.board?.rows[rowIndex].cells[colIndex].piece?.color}${gameState.board?.rows[rowIndex].cells[colIndex].piece?.kind}${rowIndex}${colIndex}`;
+
                     return (
                       <div
                         key={`${rowIndex}-${colIndex}`}
@@ -206,7 +207,7 @@ export default function Play() {
                   })}
                 </>
               ))}
-              <div></div>
+              <div />
               {letters.map((letter, index) => (
                 <div
                   key={index}
@@ -227,9 +228,9 @@ export default function Play() {
               />
               <div className="text-[#FCFCFD] text-5xl">Vs</div>
               <PlayerMobileCard
+                opponent
                 address="0x2546BcD3c84621e976D8185a91A922aE77ECEc30"
                 image="/img/avatar.png"
-                opponent
               />
             </div>
             <hr className="border-[#D8E3DA] my-5" />
