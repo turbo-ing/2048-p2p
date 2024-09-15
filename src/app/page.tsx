@@ -6,7 +6,6 @@ export default function Home() {
   return (
     <>
       <FullPageSlides />
-      {/* <ResultModal isWinner onClose={() => {}} open={true} /> */}
     </>
   );
 }

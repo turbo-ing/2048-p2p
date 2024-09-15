@@ -1,64 +1,66 @@
-'use client';
+"use client";
 
-import { Card } from '@nextui-org/react';
-import cx from 'classnames';
-import { ethers } from 'ethers';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
-import { createChannel, createClient } from 'nice-grpc-web';
-import { useEffect, useState } from 'react';
+import { Card } from "@nextui-org/react";
+import cx from "classnames";
+import { ethers } from "ethers";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { createChannel, createClient } from "nice-grpc-web";
+import { useEffect, useState } from "react";
 
-import { Color, GameState } from '../../pb/game';
-import { Navbar } from '../components/Navbar';
-import { PlayerCard, PlayerMobileCard } from '../components/playerCard';
-import { onCellClick } from '../core/play';
-import { useGameStateFetcher, usePeersFetcher } from '../hooks/gameHooks';
-import useIsMobile from '../hooks/useIsMobile';
+import { Color, GameState } from "../../pb/game";
+import { Navbar } from "../components/Navbar";
+import { PlayerCard, PlayerMobileCard } from "../components/playerCard";
+import { onCellClick } from "../core/play";
+import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
+import useIsMobile from "../hooks/useIsMobile";
+import { ResultModal } from "../components/ResultModal";
 
-import { NodeDefinition, Position } from '@/pb/query';
+import { NodeDefinition, Position } from "@/pb/query";
 
 const pieceToSvg: Record<string, string> = {
-  r: '/assets/rook-b.svg',
-  n: '/assets/knight-b.svg',
-  b: '/assets/bishop-b.svg',
-  q: '/assets/queen-b.svg',
-  k: '/assets/king-b.svg',
-  p: '/assets/pawn-b.svg',
-  R: '/assets/rook-w.svg',
-  N: '/assets/knight-w.svg',
-  B: '/assets/bishop-w.svg',
-  Q: '/assets/queen-w.svg',
-  K: '/assets/king-w.svg',
-  P: '/assets/pawn-w.svg',
+  r: "/assets/rook-b.svg",
+  n: "/assets/knight-b.svg",
+  b: "/assets/bishop-b.svg",
+  q: "/assets/queen-b.svg",
+  k: "/assets/king-b.svg",
+  p: "/assets/pawn-b.svg",
+  R: "/assets/rook-w.svg",
+  N: "/assets/knight-w.svg",
+  B: "/assets/bishop-w.svg",
+  Q: "/assets/queen-w.svg",
+  K: "/assets/king-w.svg",
+  P: "/assets/pawn-w.svg",
 };
 
 export default function Play() {
   const [gameState, setGameState] = useState<GameState>({} as GameState);
   const [selectedCell, setSelectedCell] = useState<Position | null>(null);
   const [isBoardReversed, setIsBoardReversed] = useState<Boolean>(false);
-  const [whitePlayer, setWhitePlayer] = useState<string>('');
-  const [blackPlayer, setBlackPlayer] = useState<string>('');
-  const [publicKey, setPublicKey] = useState<string>('');
-  const [localPrivateKey, setLocalPrivateKey] = useState<string>('');
+  const [whitePlayer, setWhitePlayer] = useState<string>("");
+  const [blackPlayer, setBlackPlayer] = useState<string>("");
+  const [publicKey, setPublicKey] = useState<string>("");
+  const [localPrivateKey, setLocalPrivateKey] = useState<string>("");
   const [provider, setProvider] =
     useState<ethers.providers.Web3Provider | null>(null);
   const [wallet, setWallet] = useState<ethers.Wallet | null>(null);
+  const [resultModal, setResultModal] = useState(false);
 
   const channel = createChannel(
-    (process.env.NEXT_PUBLIC_CHANNEL as string) || 'http://127.0.0.1:50050',
+    (process.env.NEXT_PUBLIC_CHANNEL as string) || "http://127.0.0.1:50050",
   );
   const client = createClient(NodeDefinition, channel);
   const isMobile = useIsMobile();
-  const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  const letters = ["A", "B", "C", "D", "E", "F", "G", "H"];
   const numbers = [8, 7, 6, 5, 4, 3, 2, 1];
 
   usePeersFetcher(setPublicKey, setProvider);
   useGameStateFetcher(setGameState, client, whitePlayer, blackPlayer);
 
   useEffect(() => {
-    setLocalPrivateKey(sessionStorage.getItem('localPrivateKey')!);
-    setWhitePlayer(sessionStorage.getItem('whitePlayer')!);
-    setBlackPlayer(sessionStorage.getItem('blackPlayer')!);
+    setLocalPrivateKey(sessionStorage.getItem("localPrivateKey")!);
+    setWhitePlayer(sessionStorage.getItem("whitePlayer")!);
+    setBlackPlayer(sessionStorage.getItem("blackPlayer")!);
   }, []);
 
   useEffect(() => {
@@ -90,11 +92,35 @@ export default function Play() {
     const actualCol = isBoardReversed ? col : col;
     const fig = gameState.board?.rows[actualRow].cells[actualCol].piece;
 
-    if (!fig) return '';
+    if (!fig) return "";
 
     return fig.color === Color.WHITE
       ? pieceToSvg[fig.kind.toUpperCase()]
       : pieceToSvg[fig.kind.toLowerCase()];
+  };
+
+  const onEndGameClick = async () => {
+    try {
+      const signer = provider?.getSigner();
+
+      const message = JSON.stringify({
+        whitePlayer,
+        blackPlayer,
+        action: "endGame",
+      });
+
+      const signature = await signer?.signMessage(message);
+
+      const _response = await client.endGame({
+        whitePlayer,
+        blackPlayer,
+        signature,
+      });
+    } catch (err) {
+      console.log(err);
+    }
+
+    setResultModal(true);
   };
 
   return (
@@ -130,7 +156,10 @@ export default function Play() {
               image="/img/avatar.png"
             />
             <div className="mt-8 px-6 flex justify-between">
-              <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center">
+              <button
+                className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center"
+                onClick={onEndGameClick}
+              >
                 <img alt="" src="/svg/close.svg" />
                 <div>End Game</div>
               </button>
@@ -141,6 +170,11 @@ export default function Play() {
             </div>
           </div>
         )}
+        <ResultModal
+          isWinner={false}
+          open={resultModal}
+          onClose={() => setResultModal(false)}
+        />
         <div className="flex justify-center w-full">
           <Card className="mx-2 lg:mx-6 md:pl-2.5 md:pb-2.5 md:pt-10 md:pr-10 pt-4 pr-4 bg-[#CFD1D21A] shadow-lg rounded-lg w-full lg:w-[720px] lg:h-[720px] md:max-w-4xl lg:max-w-screen-2xl">
             <div className="grid-container gap-0 relative w-full aspect-square">
@@ -161,14 +195,14 @@ export default function Play() {
                       <div
                         key={`${rowIndex}-${colIndex}`}
                         className={cx(
-                          'w-full h-full flex items-center justify-center',
+                          "w-full h-full flex items-center justify-center",
                           selectedCell?.x === rowIndex &&
                             selectedCell?.y === colIndex
-                            ? 'border-2 border-blue-500'
-                            : '',
+                            ? "border-2 border-blue-500"
+                            : "",
                           (rowIndex + colIndex) % 2 === 0
-                            ? 'bg-[#929292]'
-                            : 'bg-[#F0EBE3]',
+                            ? "bg-[#929292]"
+                            : "bg-[#F0EBE3]",
                         )}
                         role="button"
                         tabIndex={0}
@@ -193,7 +227,7 @@ export default function Play() {
                             animate={{ opacity: 1 }}
                             initial={{ opacity: 0 }}
                             layoutId={pieceKey}
-                            style={{ position: 'absolute' }}
+                            style={{ position: "absolute" }}
                             transition={{ duration: 0.3 }}
                           >
                             <Image
@@ -236,7 +270,10 @@ export default function Play() {
               />
             </div>
             <hr className="border-[#D8E3DA] my-5" />
-            <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center">
+            <button
+              className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center"
+              onClick={onEndGameClick}
+            >
               <img alt="" src="/svg/close.svg" />
               <div>End Game</div>
             </button>

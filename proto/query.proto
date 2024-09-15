@@ -6,6 +6,7 @@ import "game.proto";
 service Node {
     rpc State(StateRequest) returns (StateResponse);
     rpc Start(StartRequest) returns (StartResponse);
+    rpc EndGame(EndGameRequest) returns (EndGameResponse);
     rpc Transact(Transaction) returns (TransactionResponse);
     rpc IsInGame(IsInGameRequest) returns (IsInGameResponse);
 }
@@ -30,6 +31,18 @@ message StartRequest {
 
 message StartResponse {
     game.GameState state = 1;
+}
+
+// ---------- EndGame ----------
+
+message EndGameRequest {
+    string white_player = 1;
+    string black_player = 2;
+    string signature = 3;
+}
+
+message EndGameResponse {
+    bool ok = 1;
 }
 
 // ---------- Transaction ----------

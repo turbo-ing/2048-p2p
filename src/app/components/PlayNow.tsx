@@ -4,12 +4,12 @@ import { createChannel, createClient } from "nice-grpc-web";
 import { useEffect, useState } from "react";
 
 import { depositVault, linkToWallet } from "../core/link";
+import swithChain from "../core/switchChain";
 
 import { DepositVault } from "./Deposit";
 import Modal from "./Modal";
 
 import { NodeDefinition } from "@/pb/query";
-import swithChain from "../core/switchChain";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -56,7 +56,6 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
       setLocalPrivateKey(localPrivate);
       sessionStorage.setItem("localPrivateKey", localPrivate);
       sessionStorage.setItem("localPublicKey", localPublic);
-      // await handleDepositVault({ wallet });
     } catch (error) {
       console.error("Error connecting to MetaMask:", error);
     }
@@ -118,20 +117,19 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
   }, []);
 
   const joinGame = async () => {
-    async () => {
-      await client.start({
-        whitePlayer: account,
-        blackPlayer: address,
-      });
-      sessionStorage.setItem("whitePlayer", account);
-      sessionStorage.setItem("blackPlayer", address);
-      router.push(`/play`);
-    };
+    await client.start({
+      whitePlayer: account,
+      blackPlayer: address,
+    });
+    sessionStorage.setItem("whitePlayer", account);
+    sessionStorage.setItem("blackPlayer", address);
+    router.push(`/play`);
   };
 
   const playWithFriend = async () => {
     if (window.ethereum) {
       const chainInvalid = await swithChain();
+
       if (!chainInvalid) {
         return;
       } else {
@@ -186,18 +184,30 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 </div>
               </button>
               <button
-                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8 disabled:bg-[#F2F4F7] disabled:text-[#A3ACBB]"
+                disabled
+                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8 disabled:bg-[#b6b7b9] disabled:text-[#A3ACBB]"
                 onClick={() => {
                   setIsShowModal(true);
                 }}
-                disabled
               >
                 <img
                   alt=""
                   className="w-16 h-16 lg:w-auto lg:h-auto"
                   src="/svg/quickMatch.svg"
                 />
-                <div className="text-[#FCFCFD] text-left lg:text-center disabled:text-[#A3ACBB]">
+                <div
+                  className="text-[#FCFCFD] text-left lg:text-center disabled:text-[#A3ACBB]"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    router.push("find-match");
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      router.push("find-match");
+                    }
+                  }}
+                >
                   <div className="text-2xl lg:text-5xl font-semibold">
                     Quick match
                   </div>
@@ -247,10 +257,10 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
           <DepositVault
             provider={provider}
             wallet={wallet}
-            onDepositSubmit={() => {
+            onDepositCancel={() => {
               setSelectedMode(2);
             }}
-            onDepositCancel={() => {
+            onDepositSubmit={() => {
               setSelectedMode(2);
             }}
           />
