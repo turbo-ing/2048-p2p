@@ -6,10 +6,8 @@ import { Navbar } from "./Navbar";
 import { PlayNow } from "./PlayNow";
 
 const FullPageSlides = () => {
-  // Track the currently active slide
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // Function to navigate to the next slide
   const goToSlide = (index: number) => {
     setActiveIndex(index);
   };
