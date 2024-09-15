@@ -31,7 +31,6 @@ export const DepositVault = ({
 
       const localPublicKey = await wallet?.getAddress();
       if (!localPublicKey) return;
-      console.log('localPublicKey', localPublicKey);
       const walletBalance = await provider.getBalance(localPublicKey!);
       const walletBalanceInEth = ethers.utils.formatEther(walletBalance);
       setWalletBalance(walletBalanceInEth);
