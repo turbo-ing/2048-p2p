@@ -1,8 +1,8 @@
-import { ethers } from 'ethers';
-import { useEffect, useState } from 'react';
+import { ethers } from "ethers";
+import { useEffect, useState } from "react";
 
-import { depositVault } from '../core/link';
-import { useUsdtPrice } from '../contexts/UsdtPriceContext';
+import { depositVault } from "../core/link";
+import { useUsdtPrice } from "../contexts/UsdtPriceContext";
 
 interface DepositVaultProps {
   provider: ethers.providers.Web3Provider | null;
@@ -17,22 +17,25 @@ export const DepositVault = ({
   onDepositCancel,
   wallet,
 }: DepositVaultProps) => {
-  const [amount, setAmount] = useState('');
-  const [balance, setBalance] = useState('');
-  const [walletBalance, setWalletBalance] = useState('0');
+  const [amount, setAmount] = useState("");
+  const [balance, setBalance] = useState("");
+  const [walletBalance, setWalletBalance] = useState("0");
 
-  const usdtPrice = useUsdtPrice('ETH');
+  const usdtPrice = useUsdtPrice("ETH");
 
   const fetchBalance = async () => {
     if (provider && wallet) {
       const balance = await provider.getBalance(wallet.address);
       const balanceInEth = ethers.utils.formatEther(balance);
+
       setBalance(balanceInEth);
 
       const localPublicKey = await wallet?.getAddress();
+
       if (!localPublicKey) return;
       const walletBalance = await provider.getBalance(localPublicKey!);
       const walletBalanceInEth = ethers.utils.formatEther(walletBalance);
+
       setWalletBalance(walletBalanceInEth);
     }
   };
@@ -47,11 +50,13 @@ export const DepositVault = ({
 
   const getAmountInUsdt = () => {
     if (!amount) return 0;
+
     return usdtPrice ? (parseFloat(amount) * usdtPrice).toFixed(2) : 0;
   };
 
   const getWalletBalanceInUsdt = () => {
     if (!walletBalance) return 0;
+
     return usdtPrice ? (parseFloat(walletBalance) * usdtPrice).toFixed(2) : 0;
   };
 
@@ -91,9 +96,9 @@ export const DepositVault = ({
         </div>
 
         <div className="text-sm font-semibold text-right mt-3">
-          <span className="text-[#94969C]">Valt balance: </span>
+          <span className="text-[#94969C]">Vault balance: </span>
           <span className="text-[#F5F5F6]">
-            {(+walletBalance).toFixed(4)} ETH{' '}
+            {(+walletBalance).toFixed(4)} ETH{" "}
             <span className="text-yellow-500">
               ($ {getWalletBalanceInUsdt()})
             </span>
@@ -105,7 +110,7 @@ export const DepositVault = ({
         onClick={async () => {
           depositVault({
             provider: provider!,
-            to: (await wallet?.getAddress()) ?? '',
+            to: (await wallet?.getAddress()) ?? "",
             value: ethers.utils.parseEther(amount),
           });
           onDepositSubmit();
