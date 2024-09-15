@@ -205,6 +205,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             onCLick2={() => {
               setSelectedMode(2);
             }}
+            wallet={wallet}
           />
         ) : selectedMode === 2 ? (
           <div>

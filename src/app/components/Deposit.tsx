@@ -4,6 +4,7 @@ import { depositVault } from "../core/link";
 
 interface DepositVaultProps {
   provider: ethers.providers.Web3Provider | null;
+  wallet: ethers.Wallet | null;
   onCLick1: () => void;
   onCLick2: () => void;
 }
@@ -12,6 +13,7 @@ export const DepositVault = ({
   provider,
   onCLick1,
   onCLick2,
+  wallet,
 }: DepositVaultProps) => {
   const [amount, setAmount] = useState("");
 
@@ -51,8 +53,12 @@ export const DepositVault = ({
       </div>
       <button
         className="rounded-full py-2.5 px-4 text-white flex justify-center bg-[#F23939] w-full mt-4"
-        onClick={() => {
-          depositVault({ provider: provider!, to: "", value: Number(amount) });
+        onClick={async () => {
+          depositVault({
+            provider: provider!,
+            to: (await wallet?.getAddress()) ?? "",
+            value: Number(amount),
+          });
           onCLick1();
         }}
       >
