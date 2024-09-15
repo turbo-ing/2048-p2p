@@ -29,6 +29,16 @@ export interface StartResponse {
   state: GameState | undefined;
 }
 
+export interface EndGameRequest {
+  whitePlayer: string;
+  blackPlayer: string;
+  signature: string;
+}
+
+export interface EndGameResponse {
+  ok: boolean;
+}
+
 export interface Transaction {
   whitePlayer: string;
   blackPlayer: string;
@@ -319,6 +329,152 @@ export const StartResponse = {
     message.state = (object.state !== undefined && object.state !== null)
       ? GameState.fromPartial(object.state)
       : undefined;
+    return message;
+  },
+};
+
+function createBaseEndGameRequest(): EndGameRequest {
+  return { whitePlayer: "", blackPlayer: "", signature: "" };
+}
+
+export const EndGameRequest = {
+  encode(message: EndGameRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.whitePlayer !== "") {
+      writer.uint32(10).string(message.whitePlayer);
+    }
+    if (message.blackPlayer !== "") {
+      writer.uint32(18).string(message.blackPlayer);
+    }
+    if (message.signature !== "") {
+      writer.uint32(26).string(message.signature);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): EndGameRequest {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEndGameRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 10) {
+            break;
+          }
+
+          message.whitePlayer = reader.string();
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.blackPlayer = reader.string();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.signature = reader.string();
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EndGameRequest {
+    return {
+      whitePlayer: isSet(object.whitePlayer) ? globalThis.String(object.whitePlayer) : "",
+      blackPlayer: isSet(object.blackPlayer) ? globalThis.String(object.blackPlayer) : "",
+      signature: isSet(object.signature) ? globalThis.String(object.signature) : "",
+    };
+  },
+
+  toJSON(message: EndGameRequest): unknown {
+    const obj: any = {};
+    if (message.whitePlayer !== "") {
+      obj.whitePlayer = message.whitePlayer;
+    }
+    if (message.blackPlayer !== "") {
+      obj.blackPlayer = message.blackPlayer;
+    }
+    if (message.signature !== "") {
+      obj.signature = message.signature;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<EndGameRequest>): EndGameRequest {
+    return EndGameRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<EndGameRequest>): EndGameRequest {
+    const message = createBaseEndGameRequest();
+    message.whitePlayer = object.whitePlayer ?? "";
+    message.blackPlayer = object.blackPlayer ?? "";
+    message.signature = object.signature ?? "";
+    return message;
+  },
+};
+
+function createBaseEndGameResponse(): EndGameResponse {
+  return { ok: false };
+}
+
+export const EndGameResponse = {
+  encode(message: EndGameResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.ok !== false) {
+      writer.uint32(8).bool(message.ok);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): EndGameResponse {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEndGameResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.ok = reader.bool();
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EndGameResponse {
+    return { ok: isSet(object.ok) ? globalThis.Boolean(object.ok) : false };
+  },
+
+  toJSON(message: EndGameResponse): unknown {
+    const obj: any = {};
+    if (message.ok !== false) {
+      obj.ok = message.ok;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<EndGameResponse>): EndGameResponse {
+    return EndGameResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<EndGameResponse>): EndGameResponse {
+    const message = createBaseEndGameResponse();
+    message.ok = object.ok ?? false;
     return message;
   },
 };
@@ -764,6 +920,14 @@ export const NodeDefinition = {
       responseStream: false,
       options: {},
     },
+    endGame: {
+      name: "EndGame",
+      requestType: EndGameRequest,
+      requestStream: false,
+      responseType: EndGameResponse,
+      responseStream: false,
+      options: {},
+    },
     transact: {
       name: "Transact",
       requestType: Transaction,
@@ -786,6 +950,7 @@ export const NodeDefinition = {
 export interface NodeServiceImplementation<CallContextExt = {}> {
   state(request: StateRequest, context: CallContext & CallContextExt): Promise<DeepPartial<StateResponse>>;
   start(request: StartRequest, context: CallContext & CallContextExt): Promise<DeepPartial<StartResponse>>;
+  endGame(request: EndGameRequest, context: CallContext & CallContextExt): Promise<DeepPartial<EndGameResponse>>;
   transact(request: Transaction, context: CallContext & CallContextExt): Promise<DeepPartial<TransactionResponse>>;
   isInGame(request: IsInGameRequest, context: CallContext & CallContextExt): Promise<DeepPartial<IsInGameResponse>>;
 }
@@ -793,6 +958,7 @@ export interface NodeServiceImplementation<CallContextExt = {}> {
 export interface NodeClient<CallOptionsExt = {}> {
   state(request: DeepPartial<StateRequest>, options?: CallOptions & CallOptionsExt): Promise<StateResponse>;
   start(request: DeepPartial<StartRequest>, options?: CallOptions & CallOptionsExt): Promise<StartResponse>;
+  endGame(request: DeepPartial<EndGameRequest>, options?: CallOptions & CallOptionsExt): Promise<EndGameResponse>;
   transact(request: DeepPartial<Transaction>, options?: CallOptions & CallOptionsExt): Promise<TransactionResponse>;
   isInGame(request: DeepPartial<IsInGameRequest>, options?: CallOptions & CallOptionsExt): Promise<IsInGameResponse>;
 }

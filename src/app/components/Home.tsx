@@ -6,6 +6,7 @@ interface HomeProps {
 }
 export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
   const isMobile = useIsMobile();
+
   return (
     <div
       className={`absolute inset-0 w-full h-full flex items-center justify-center text-white text-4xl transition-opacity duration-1000 ${
