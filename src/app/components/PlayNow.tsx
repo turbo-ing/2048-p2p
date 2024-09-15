@@ -9,6 +9,7 @@ import { DepositVault } from "./Deposit";
 import Modal from "./Modal";
 
 import { NodeDefinition } from "@/pb/query";
+import swithChain from "../core/switchChain";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -37,7 +38,14 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
     provider: ethers.providers.Web3Provider;
   }) => {
     try {
-      const localPrivate = await linkToWallet({ provider });
+      const randomWallet = await linkToWallet({ provider });
+
+      if (!randomWallet) {
+        throw new Error("Error linking to wallet");
+      }
+
+      const localPrivate = randomWallet.retrievedPrivateKey;
+      const localPublic = randomWallet.publicKey;
 
       setAccount(await provider.getSigner().getAddress());
 
@@ -47,6 +55,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
 
       setLocalPrivateKey(localPrivate);
       sessionStorage.setItem("localPrivateKey", localPrivate);
+      sessionStorage.setItem("localPublicKey", localPublic);
       // await handleDepositVault({ wallet });
     } catch (error) {
       console.error("Error connecting to MetaMask:", error);
@@ -62,7 +71,9 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
     }
   };
 
-  const channel = createChannel(`http://127.0.0.1:50050`);
+  const channel = createChannel(
+    (process.env.NEXT_PUBLIC_CHANNEL as string) || "http://127.0.0.1:50050",
+  );
   const client = createClient(NodeDefinition, channel);
 
   useEffect(() => {
@@ -87,11 +98,52 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
     return () => clearInterval(interval);
   }, [account]);
 
-  useEffect(() => {
+  const initChain = async () => {
+    console.log("Init chain");
+    const chainInvalid = await swithChain();
+
+    if (!chainInvalid) {
+      return;
+    }
+
     const p = new ethers.providers.Web3Provider(window.ethereum);
 
     setProvider(p);
+  };
+
+  useEffect(() => {
+    if (window.ethereum) {
+      initChain();
+    }
   }, []);
+
+  const joinGame = async () => {
+    async () => {
+      await client.start({
+        whitePlayer: account,
+        blackPlayer: address,
+      });
+      sessionStorage.setItem("whitePlayer", account);
+      sessionStorage.setItem("blackPlayer", address);
+      router.push(`/play`);
+    };
+  };
+
+  const playWithFriend = async () => {
+    if (window.ethereum) {
+      const chainInvalid = await swithChain();
+      if (!chainInvalid) {
+        return;
+      } else {
+        setIsShowModal(true);
+      }
+    }
+  };
+
+  const onClickConnectWallet = async () => {
+    await connectWallet({ provider: provider! });
+    setSelectedMode(1);
+  };
 
   return (
     <>
@@ -117,9 +169,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             <div className="mt-12">
               <button
                 className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center"
-                onClick={() => {
-                  setIsShowModal(true);
-                }}
+                onClick={playWithFriend}
               >
                 <img
                   alt=""
@@ -186,11 +236,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             <div className="mt-5">
               <button
                 className="hover:bg-red-600 flex py-2.5 px-4 bg-[#F23939] rounded-full items-center gap-1.5 w-full justify-center"
-                onClick={async () => {
-                  await connectWallet({ provider: provider! });
-
-                  setSelectedMode(1);
-                }}
+                onClick={onClickConnectWallet}
               >
                 <img alt="" src="/svg/magnifier.svg" />
                 <div className="font-semibold text-base">Connect wallet</div>
@@ -243,15 +289,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             <div className="mt-8">
               <button
                 className="hover:bg-red-600 py-2.5 px-4 bg-[#F23939] rounded-full w-full justify-center"
-                onClick={async () => {
-                  await client.start({
-                    whitePlayer: account,
-                    blackPlayer: address,
-                  });
-                  sessionStorage.setItem("whitePlayer", account);
-                  sessionStorage.setItem("blackPlayer", address);
-                  router.push(`/play`);
-                }}
+                onClick={joinGame}
               >
                 <div className="font-semibold text-base">Join Game</div>
               </button>
