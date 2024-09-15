@@ -236,8 +236,8 @@ export default function Play() {
                             ? "border-2 border-blue-500"
                             : "",
                           (rowIndex + colIndex) % 2 === 0
-                            ? "bg-[#929292]"
-                            : "bg-[#F0EBE3]",
+                            ? "bg-[#F24545]"
+                            : "bg-[#9B9B9B]",
                         )}
                         role="button"
                         tabIndex={0}
