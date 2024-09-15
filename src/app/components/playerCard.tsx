@@ -5,26 +5,26 @@ interface PlayerCardProps {
   opponent?: boolean;
 }
 
+function shortenAddress(address: string): string {
+  // Ensure that the address is long enough to be shortened
+  if (address.length <= 4 + 3) {
+    return address;
+  }
+
+  // Slice the start and end part of the string
+  const start = address.slice(0, 4);
+  const end = address.slice(-3);
+
+  // Return the shortened version with "..."
+  return `${start}...${end}`;
+}
+
 export const PlayerCard = ({
   image,
   address,
   amount,
   opponent = false,
 }: PlayerCardProps) => {
-  function shortenAddress(address: string): string {
-    // Ensure that the address is long enough to be shortened
-    if (address.length <= 4 + 3) {
-      return address;
-    }
-
-    // Slice the start and end part of the string
-    const start = address.slice(0, 4);
-    const end = address.slice(-3);
-
-    // Return the shortened version with "..."
-    return `${start}...${end}`;
-  }
-
   return (
     <div className={`flex w-96 flex-col ${opponent && "flex-col-reverse"}`}>
       <div
@@ -47,7 +47,9 @@ export const PlayerCard = ({
             <img
               alt=""
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              src="/svg/chess-queen.svg"
+              src={
+                opponent ? "/svg/red-team-icon.svg" : "/svg/black-team-icon.svg"
+              }
             />
           </div>
         </div>
@@ -105,17 +107,21 @@ export const PlayerMobileCard = ({
             <img
               alt=""
               className="w-16 h-16 rounded-full object-cover"
-              src={"/img/avatar.png"}
+              src={image}
             />
             <div className="absolute right-0 -bottom-1 border border-black bg-[#D8E3DA] w-6 h-6 rounded-full">
               <img
                 alt=""
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                src="/svg/chess-queen.svg"
+                src={
+                  opponent
+                    ? "/svg/red-team-icon.svg"
+                    : "/svg/black-team-icon.svg"
+                }
               />
             </div>
           </div>
-          {/* <div>poonpet...</div> */}
+          <div className="">{shortenAddress(address)}</div>
         </div>
       </div>
     </div>

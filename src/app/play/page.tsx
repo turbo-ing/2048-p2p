@@ -11,10 +11,10 @@ import { useEffect, useState } from "react";
 import { Color, GameState } from "../../pb/game";
 import { Navbar } from "../components/Navbar";
 import { PlayerCard, PlayerMobileCard } from "../components/playerCard";
+import { ResultModal } from "../components/ResultModal";
 import { onCellClick } from "../core/play";
 import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
 import useIsMobile from "../hooks/useIsMobile";
-import { ResultModal } from "../components/ResultModal";
 
 import { NodeDefinition, Position } from "@/pb/query";
 
@@ -53,6 +53,20 @@ export default function Play() {
   const isMobile = useIsMobile();
   const letters = ["A", "B", "C", "D", "E", "F", "G", "H"];
   const numbers = [8, 7, 6, 5, 4, 3, 2, 1];
+
+  function shortenAddress(address: string): string {
+    // Ensure that the address is long enough to be shortened
+    if (address.length <= 4 + 3) {
+      return address;
+    }
+
+    // Slice the start and end part of the string
+    const start = address.slice(0, 4);
+    const end = address.slice(-3);
+
+    // Return the shortened version with "..."
+    return `${start}...${end}`;
+  }
 
   usePeersFetcher(setPublicKey, setProvider);
   useGameStateFetcher(setGameState, client, whitePlayer, blackPlayer);
@@ -172,7 +186,7 @@ export default function Play() {
               opponent
               address={blackPlayer}
               amount="42.069 ETH"
-              image="/img/avatar.png"
+              image="/img/avatar2.png"
             />
             <div className="mt-8 px-6 flex justify-between">
               <button
@@ -293,7 +307,7 @@ export default function Play() {
               <PlayerMobileCard
                 opponent
                 address={blackPlayer}
-                image="/img/avatar.png"
+                image="/img/avatar2.png"
               />
             </div>
             <hr className="border-[#D8E3DA] my-5" />

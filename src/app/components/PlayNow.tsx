@@ -166,7 +166,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             </div>
             <div className="mt-12">
               <button
-                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center"
+                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center lg:w-[570px] w-[405px]"
                 onClick={playWithFriend}
               >
                 <img
@@ -174,7 +174,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                   className="w-16 h-16 lg:w-auto lg:h-auto"
                   src="/svg/Chess-Board.svg"
                 />
-                <div className="text-[#FCFCFD] text-left lg:text-center">
+                <div className="text-[#FCFCFD] text-left">
                   <div className="text-2xl lg:text-5xl font-semibold">
                     Play with friend
                   </div>
@@ -184,7 +184,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 </div>
               </button>
               <button
-                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8 disabled:bg-[#b6b7b9] disabled:text-[#A3ACBB]"
+                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8 disabled:bg-[#b6b7b9] disabled:text-[#A3ACBB] lg:w-[570px] w-[405px]"
                 onClick={() => {
                   setIsShowModal(true);
                 }}
@@ -195,7 +195,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                   src="/svg/quickMatch.svg"
                 />
                 <div
-                  className="text-[#FCFCFD] text-left lg:text-center disabled:text-[#A3ACBB]"
+                  className="text-[#FCFCFD] text-left disabled:text-[#A3ACBB]"
                   role="button"
                   tabIndex={0}
                   onClick={() => {
