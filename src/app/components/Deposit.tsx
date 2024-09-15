@@ -26,7 +26,7 @@ export const DepositVault = ({
   const fetchBalance = async () => {
     if (provider && wallet) {
       const balance = await provider.getBalance(wallet.address);
-      const balanceInEth = ethers.utils.formatEther(balance);
+      const balanceInEth = ethers.utils.formatUnits(balance, 'ether');
       setBalance(balanceInEth);
 
       const localPublicKey = await wallet?.getAddress();
