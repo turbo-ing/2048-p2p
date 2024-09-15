@@ -1,15 +1,15 @@
-import { ethers } from 'ethers';
-import { useRouter } from 'next/navigation';
-import { createChannel, createClient } from 'nice-grpc-web';
-import { useEffect, useState } from 'react';
+import { ethers } from "ethers";
+import { useRouter } from "next/navigation";
+import { createChannel, createClient } from "nice-grpc-web";
+import { useEffect, useState } from "react";
 
-import { depositVault, linkToWallet } from '../core/link';
+import { depositVault, linkToWallet } from "../core/link";
 
-import Modal from './Modal';
-import { DepositVault } from './Deposit';
+import { DepositVault } from "./Deposit";
+import Modal from "./Modal";
 
-import { NodeDefinition } from '@/pb/query';
-import swithChain from '../core/switchChain';
+import { NodeDefinition } from "@/pb/query";
+import swithChain from "../core/switchChain";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -19,9 +19,9 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
   const [selectedMode, setSelectedMode] = useState(0);
   const [isdepositModal, setIsdepositModal] = useState(false);
   const [isShowModal, setIsShowModal] = useState(false);
-  const [account, setAccount] = useState('');
-  const [address, setAddress] = useState('');
-  const [localPrivateKey, setLocalPrivateKey] = useState('');
+  const [account, setAccount] = useState("");
+  const [address, setAddress] = useState("");
+  const [localPrivateKey, setLocalPrivateKey] = useState("");
   const [provider, setProvider] =
     useState<ethers.providers.Web3Provider | null>(null);
   const [wallet, setWallet] = useState<ethers.Wallet | null>(null);
@@ -41,7 +41,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
       const randomWallet = await linkToWallet({ provider });
 
       if (!randomWallet) {
-        throw new Error('Error linking to wallet');
+        throw new Error("Error linking to wallet");
       }
 
       const localPrivate = randomWallet.retrievedPrivateKey;
@@ -54,25 +54,25 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
       setWallet(wallet);
 
       setLocalPrivateKey(localPrivate);
-      sessionStorage.setItem('localPrivateKey', localPrivate);
-      sessionStorage.setItem('localPublicKey', localPublic);
+      sessionStorage.setItem("localPrivateKey", localPrivate);
+      sessionStorage.setItem("localPublicKey", localPublic);
       // await handleDepositVault({ wallet });
     } catch (error) {
-      console.error('Error connecting to MetaMask:', error);
+      console.error("Error connecting to MetaMask:", error);
     }
   };
 
   const _handleDepositVault = async ({ wallet }: { wallet: ethers.Wallet }) => {
     if (wallet && provider) {
       const to = await wallet.getAddress();
-      const value = ethers.utils.parseEther('0.2');
+      const value = ethers.utils.parseEther("0.2");
 
       console.log(await depositVault({ provider, to, value }));
     }
   };
 
   const channel = createChannel(
-    (process.env.NEXT_PUBLIC_CHANNEL as string) || 'http://127.0.0.1:50050',
+    (process.env.NEXT_PUBLIC_CHANNEL as string) || "http://127.0.0.1:50050",
   );
   const client = createClient(NodeDefinition, channel);
 
@@ -84,9 +84,9 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
         });
 
         if (response.state) {
-          sessionStorage.setItem('whitePlayer', response.state.whitePlayer);
-          sessionStorage.setItem('blackPlayer', response.state.blackPlayer);
-          router.push('/play');
+          sessionStorage.setItem("whitePlayer", response.state.whitePlayer);
+          sessionStorage.setItem("blackPlayer", response.state.blackPlayer);
+          router.push("/play");
         }
       }
     };
@@ -99,7 +99,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
   }, [account]);
 
   const initChain = async () => {
-    console.log('Init chain');
+    console.log("Init chain");
     const chainInvalid = await swithChain();
 
     if (!chainInvalid) {
@@ -123,8 +123,8 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
         whitePlayer: account,
         blackPlayer: address,
       });
-      sessionStorage.setItem('whitePlayer', account);
-      sessionStorage.setItem('blackPlayer', address);
+      sessionStorage.setItem("whitePlayer", account);
+      sessionStorage.setItem("blackPlayer", address);
       router.push(`/play`);
     };
   };
@@ -149,7 +149,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
     <>
       <div
         className={`absolute inset-0 w-full h-full text-black text-4xl transition-opacity duration-1000 ${
-          activeIndex === 1 ? 'opacity-100 z-20' : 'opacity-0 z-10'
+          activeIndex === 1 ? "opacity-100 z-20" : "opacity-0 z-10"
         }`}
       >
         <div className="relative flex items-center text-[#D9D9D9]">
@@ -186,21 +186,22 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 </div>
               </button>
               <button
-                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8"
+                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8 disabled:bg-[#F2F4F7] disabled:text-[#A3ACBB]"
                 onClick={() => {
                   setIsShowModal(true);
                 }}
+                disabled
               >
                 <img
                   alt=""
                   className="w-16 h-16 lg:w-auto lg:h-auto"
                   src="/svg/quickMatch.svg"
                 />
-                <div className="text-[#FCFCFD] text-left lg:text-center">
+                <div className="text-[#FCFCFD] text-left lg:text-center disabled:text-[#A3ACBB]">
                   <div className="text-2xl lg:text-5xl font-semibold">
                     Quick match
                   </div>
-                  <div className="text-[#E4E7EC] text-base lg:text-xl font-medium mt-1">
+                  <div className="text-[#E4E7EC] text-base lg:text-xl font-medium mt-1 disabled:text-[#A3ACBB]">
                     Find an opponent and start instantly!
                   </div>
                 </div>
@@ -246,10 +247,10 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
           <DepositVault
             provider={provider}
             wallet={wallet}
-            onCLick1={() => {
+            onDepositSubmit={() => {
               setSelectedMode(2);
             }}
-            onCLick2={() => {
+            onDepositCancel={() => {
               setSelectedMode(2);
             }}
           />

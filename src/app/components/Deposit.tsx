@@ -7,14 +7,14 @@ import { useUsdtPrice } from '../contexts/UsdtPriceContext';
 interface DepositVaultProps {
   provider: ethers.providers.Web3Provider | null;
   wallet: ethers.Wallet | null;
-  onCLick1: () => void;
-  onCLick2: () => void;
+  onDepositSubmit: () => void;
+  onDepositCancel: () => void;
 }
 
 export const DepositVault = ({
   provider,
-  onCLick1,
-  onCLick2,
+  onDepositSubmit,
+  onDepositCancel,
   wallet,
 }: DepositVaultProps) => {
   const [amount, setAmount] = useState('');
@@ -70,7 +70,7 @@ export const DepositVault = ({
       <div className="mt-4 border border-[#1F242F] bg-[#161B26] p-4 rounded-[20px]">
         <div className="flex justify-between items-center">
           <input
-            className="bg-transparent text-2xl font-bold w-1/4"
+            className="bg-transparent text-2xl font-bold w-1/4 focus-visible:outline-none"
             placeholder="0.005"
             type="text"
             onChange={(e) => {
@@ -109,7 +109,7 @@ export const DepositVault = ({
             to: (await wallet?.getAddress()) ?? '',
             value: ethers.utils.parseEther(amount),
           });
-          onCLick1();
+          onDepositSubmit();
         }}
       >
         Deposit
@@ -117,7 +117,7 @@ export const DepositVault = ({
       <button
         className="rounded-full py-2.5 px-4 text-[#344054] flex justify-center bg-white w-full my-4"
         onClick={() => {
-          onCLick2();
+          onDepositCancel();
         }}
       >
         Skip
