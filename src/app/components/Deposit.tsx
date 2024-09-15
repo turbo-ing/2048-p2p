@@ -1,7 +1,8 @@
-import { ethers } from "ethers";
-import { useState } from "react";
+import { ethers } from 'ethers';
+import { useEffect, useState } from 'react';
 
-import { depositVault } from "../core/link";
+import { depositVault } from '../core/link';
+import { useUsdtPrice } from '../contexts/UsdtPriceContext';
 
 interface DepositVaultProps {
   provider: ethers.providers.Web3Provider | null;
@@ -16,7 +17,44 @@ export const DepositVault = ({
   onCLick2,
   wallet,
 }: DepositVaultProps) => {
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState('');
+  const [balance, setBalance] = useState('');
+  const [walletBalance, setWalletBalance] = useState('0');
+
+  const usdtPrice = useUsdtPrice('ETH');
+
+  const fetchBalance = async () => {
+    if (provider && wallet) {
+      const balance = await provider.getBalance(wallet.address);
+      const balanceInEth = ethers.utils.formatEther(balance);
+      setBalance(balanceInEth);
+
+      const localPublicKey = await wallet?.getAddress();
+      if (!localPublicKey) return;
+      console.log('localPublicKey', localPublicKey);
+      const walletBalance = await provider.getBalance(localPublicKey!);
+      const walletBalanceInEth = ethers.utils.formatEther(walletBalance);
+      setWalletBalance(walletBalanceInEth);
+    }
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchBalance();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [provider, wallet]);
+
+  const getAmountInUsdt = () => {
+    if (!amount) return 0;
+    return usdtPrice ? (parseFloat(amount) * usdtPrice).toFixed(2) : 0;
+  };
+
+  const getWalletBalanceInUsdt = () => {
+    if (!walletBalance) return 0;
+    return usdtPrice ? (parseFloat(walletBalance) * usdtPrice).toFixed(2) : 0;
+  };
 
   return (
     <div>
@@ -40,7 +78,9 @@ export const DepositVault = ({
               console.log(e.target.value);
             }}
           />
-          <div className="font-medium text-[#94969C] text-sm">$5.08</div>
+          <div className="font-medium text-[#94969C] text-sm">
+            ${getAmountInUsdt()}
+          </div>
           <div className="rounded-full py-2 px-3 justify-center items-center gap-1 border-2 border-[#FFFFFF1F] bg-[#F23939] shadow flex">
             <img alt="" src="/svg/eth.svg" />
             <div className="text-lg font-semibold">ETH</div>
@@ -48,8 +88,17 @@ export const DepositVault = ({
         </div>
         <div className="text-sm font-semibold text-right mt-3">
           <span className="text-[#94969C]">Bal: </span>
-          <span className="text-[#F5F5F6]">200.852 ETH </span>
-          <span className="text-[#CECFD2] ml-2">Max</span>
+          <span className="text-[#F5F5F6]">{(+balance).toFixed(4)} ETH </span>
+        </div>
+
+        <div className="text-sm font-semibold text-right mt-3">
+          <span className="text-[#94969C]">Valt balance: </span>
+          <span className="text-[#F5F5F6]">
+            {(+walletBalance).toFixed(4)} ETH{' '}
+            <span className="text-yellow-500">
+              ($ {getWalletBalanceInUsdt()})
+            </span>
+          </span>
         </div>
       </div>
       <button
@@ -57,7 +106,7 @@ export const DepositVault = ({
         onClick={async () => {
           depositVault({
             provider: provider!,
-            to: (await wallet?.getAddress()) ?? "",
+            to: (await wallet?.getAddress()) ?? '',
             value: ethers.utils.parseEther(amount),
           });
           onCLick1();
