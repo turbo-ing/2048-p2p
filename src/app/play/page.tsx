@@ -129,10 +129,19 @@ export default function Play() {
       <main className="flex items-center justify-between min-h-screen gap-6 max-w-7xl mx-auto lg:flex-nowrap flex-wrap pt-20">
         {isMobile ? (
           <div className="py-5 text-center w-full">
-            <div className="text-[#FCFCFD] text-lg font-semibold">You Turn</div>
-            <div className="text-[#FCFCFD] mt-2 text-6xl font-semibold">
+            {(gameState.turn === Color.WHITE && whitePlayer == publicKey) ||
+            (blackPlayer == publicKey && gameState.turn === Color.BLACK) ? (
+              <div className="text-[#FCFCFD] text-lg font-semibold">
+                Your Turn
+              </div>
+            ) : (
+              <div className="text-[#FCFCFD] text-lg font-semibold">
+                Opponent&apos;s Turn
+              </div>
+            )}
+            {/* <div className="text-[#FCFCFD] mt-2 text-6xl font-semibold">
               0:12
-            </div>
+            </div> */}
           </div>
         ) : (
           <div className="lg:block hidden w-96">
@@ -142,12 +151,19 @@ export default function Play() {
               image="/img/avatar.png"
             />
             <div className="py-5 text-center">
-              <div className="text-[#FCFCFD] text-lg font-semibold">
-                You Turn
-              </div>
-              <div className="text-[#FCFCFD] mt-2 text-6xl font-semibold">
+              {(gameState.turn === Color.WHITE && whitePlayer == publicKey) ||
+              (blackPlayer == publicKey && gameState.turn === Color.BLACK) ? (
+                <div className="text-[#FCFCFD] text-4xl font-semibold">
+                  Your Turn
+                </div>
+              ) : (
+                <div className="text-[#FCFCFD] text-4xl font-semibold">
+                  Opponent&apos;s Turn
+                </div>
+              )}
+              {/* <div className="text-[#FCFCFD] mt-2 text-6xl font-semibold">
                 0:12
-              </div>
+              </div> */}
             </div>
             <PlayerCard
               opponent
@@ -157,16 +173,18 @@ export default function Play() {
             />
             <div className="mt-8 px-6 flex justify-between">
               <button
-                className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center"
+                className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-full"
                 onClick={onEndGameClick}
               >
-                <img alt="" src="/svg/close.svg" />
-                <div>End Game</div>
+                <div className="flex items-center justify-center">
+                  <img alt="" src="/svg/close.svg" />
+                  <div className="ml-2">End Game</div>
+                </div>
               </button>
-              <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center">
+              {/* <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center">
                 <img alt="" src="/svg/rematch.svg" />
                 <div>Rematch</div>
-              </button>
+              </button> */}
             </div>
           </div>
         )}
@@ -176,7 +194,7 @@ export default function Play() {
           onClose={() => setResultModal(false)}
         />
         <div className="flex justify-center w-full">
-          <Card className="mx-2 lg:mx-6 md:pl-2.5 md:pb-2.5 md:pt-10 md:pr-10 pt-4 pr-4 bg-[#CFD1D21A] shadow-lg rounded-lg w-full lg:w-[720px] lg:h-[720px] md:max-w-4xl lg:max-w-screen-2xl">
+          <Card className="pr-2 md:pl-2.5 md:pb-2.5 md:pt-10 md:pr-10 pt-4 bg-[#CFD1D21A] shadow-lg rounded-lg w-screen lg:w-[700px] lg:h-[700px] md:max-w-[700px] lg:max-w-[680px] max-h-screen">
             <div className="grid-container gap-0 relative w-full aspect-square">
               {/* Main Chessboard */}
               {gameState.board?.rows.map((row, rowIndex) => (
@@ -230,12 +248,21 @@ export default function Play() {
                             style={{ position: "absolute" }}
                             transition={{ duration: 0.3 }}
                           >
-                            <Image
-                              alt=""
-                              height={50}
-                              src={pieceSrc}
-                              width={50}
-                            />
+                            {isMobile ? (
+                              <Image
+                                alt=""
+                                height={30}
+                                src={pieceSrc}
+                                width={30}
+                              />
+                            ) : (
+                              <Image
+                                alt=""
+                                height={50}
+                                src={pieceSrc}
+                                width={50}
+                              />
+                            )}
                           </motion.div>
                         )}
                       </div>
@@ -277,10 +304,10 @@ export default function Play() {
               <img alt="" src="/svg/close.svg" />
               <div>End Game</div>
             </button>
-            <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center mt-4">
+            {/* <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center mt-4">
               <img alt="" src="/svg/rematch.svg" />
               <div>Rematch</div>
-            </button>
+            </button> */}
           </div>
         )}
       </main>

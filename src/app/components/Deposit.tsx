@@ -26,13 +26,16 @@ export const DepositVault = ({
   const fetchBalance = async () => {
     if (provider && wallet) {
       const balance = await provider.getBalance(wallet.address);
-      const balanceInEth = ethers.utils.formatUnits(balance, 'ether');
+      const balanceInEth = ethers.utils.formatEther(balance);
+
       setBalance(balanceInEth);
 
       const localPublicKey = await wallet?.getAddress();
+
       if (!localPublicKey) return;
       const walletBalance = await provider.getBalance(localPublicKey!);
       const walletBalanceInEth = ethers.utils.formatEther(walletBalance);
+
       setWalletBalance(walletBalanceInEth);
     }
   };
@@ -47,11 +50,13 @@ export const DepositVault = ({
 
   const getAmountInUsdt = () => {
     if (!amount) return 0;
+
     return usdtPrice ? (parseFloat(amount) * usdtPrice).toFixed(2) : 0;
   };
 
   const getWalletBalanceInUsdt = () => {
     if (!walletBalance) return 0;
+
     return usdtPrice ? (parseFloat(walletBalance) * usdtPrice).toFixed(2) : 0;
   };
 
@@ -91,7 +96,7 @@ export const DepositVault = ({
         </div>
 
         <div className="text-sm font-semibold text-right mt-3">
-          <span className="text-[#94969C]">Valt balance: </span>
+          <span className="text-[#94969C]">Vault balance: </span>
           <span className="text-[#F5F5F6]">
             {(+walletBalance).toFixed(4)} ETH{' '}
             <span className="text-yellow-500">
