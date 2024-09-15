@@ -25,11 +25,6 @@ export const DepositVault = ({
 
   const fetchBalance = async () => {
     if (provider && wallet) {
-      const balance = await provider.getBalance(wallet.address);
-      const balanceInEth = ethers.utils.formatEther(balance);
-
-      setBalance(balanceInEth);
-
       const localPublicKey = await wallet?.getAddress();
 
       if (!localPublicKey) return;
@@ -37,6 +32,15 @@ export const DepositVault = ({
       const walletBalanceInEth = ethers.utils.formatEther(walletBalance);
 
       setWalletBalance(walletBalanceInEth);
+    }
+
+    if (provider) {
+      const signer = provider.getSigner();
+      const address = await signer.getAddress();
+      const balance = await provider.getBalance(address);
+      const balanceInEth = ethers.utils.formatEther(balance);
+
+      setBalance(balanceInEth);
     }
   };
 
