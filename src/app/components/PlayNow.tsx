@@ -54,8 +54,14 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
       setWallet(wallet);
 
       setLocalPrivateKey(localPrivate);
+<<<<<<< HEAD
       sessionStorage.setItem('localPrivateKey', localPrivate);
       sessionStorage.setItem('localPublicKey', localPublic);
+=======
+      sessionStorage.setItem("localPrivateKey", localPrivate);
+      sessionStorage.setItem("localPublicKey", localPublic);
+      setSelectedMode(1);
+>>>>>>> a2ff0c4 (chore, fix, feat: many feats)
     } catch (error) {
       console.error('Error connecting to MetaMask:', error);
     }
@@ -140,7 +146,6 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
 
   const onClickConnectWallet = async () => {
     await connectWallet({ provider: provider! });
-    setSelectedMode(1);
   };
 
   return (
@@ -184,7 +189,6 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 </div>
               </button>
               <button
-                disabled
                 className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8 disabled:bg-[#b6b7b9] disabled:text-[#A3ACBB]"
                 onClick={() => {
                   setIsShowModal(true);
@@ -202,11 +206,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                   onClick={() => {
                     router.push('find-match');
                   }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      router.push('find-match');
-                    }
-                  }}
+                  onKeyDown={() => null}
                 >
                   <div className="text-2xl lg:text-5xl font-semibold">
                     Quick match
@@ -232,7 +232,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
         </div>
       </div>
       <Modal show={isShowModal} onClose={onClose}>
-        {selectedMode === 0 ? (
+        {selectedMode === 0 && !wallet ? (
           <div>
             <img alt="" src="/svg/chessboardIcon.svg" />
             <div className="mt-4">
@@ -253,7 +253,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
               </button>
             </div>
           </div>
-        ) : selectedMode === 1 ? (
+        ) : selectedMode === 1 || (selectedMode === 0 && wallet) ? (
           <DepositVault
             provider={provider}
             wallet={wallet}

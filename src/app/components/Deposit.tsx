@@ -78,7 +78,7 @@ export const DepositVault = ({
       <div className="mt-4 border border-[#1F242F] bg-[#161B26] p-4 rounded-[20px]">
         <div className="flex justify-between items-center">
           <input
-            className="bg-transparent text-2xl font-bold w-1/4 focus-visible:outline-none"
+            className="bg-transparent text-2xl font-bold w-1/4 outline-none focus-visible:outline-none"
             placeholder="0.005"
             type="text"
             onChange={(e) => {

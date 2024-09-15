@@ -33,9 +33,9 @@ export const PlayerCard = ({
         } rounded-full flex items-center gap-6 relative z-10`}
       >
         <img
-          src={opponent ? '/svg/red-icon.svg' : '/svg/black-icon.svg'}
           alt=""
           className="absolute right-0 -z-10 "
+          src={opponent ? "/svg/red-icon.svg" : "/svg/black-icon.svg"}
         />
         <div className="relative">
           <img
@@ -60,16 +60,16 @@ export const PlayerCard = ({
       </div>
       <div className="flex justify-evenly py-2 px-6 my-5">
         <div className="text-center w-1/3">
-          <div className="text-2xl text-[#FCFCFD] font-semibold">12</div>
-          <div className="text-sm font-medium text-[#F2F4F7]">WIN</div>
+          <div className="text-2xl text-[#FCFCFD] font-semibold" />
+          <div className="text-sm font-medium text-[#F2F4F7]" />
         </div>
         <div className="text-center w-1/3">
-          <div className="text-2xl text-[#FCFCFD] font-semibold">12</div>
-          <div className="text-sm font-medium text-[#F2F4F7]">DRAW</div>
+          <div className="text-2xl text-[#FCFCFD] font-semibold" />
+          <div className="text-sm font-medium text-[#F2F4F7]" />
         </div>
         <div className="text-center w-1/3">
-          <div className="text-2xl text-[#FCFCFD] font-semibold">12</div>
-          <div className="text-sm font-medium text-[#F2F4F7]">LOSE</div>
+          <div className="text-2xl text-[#FCFCFD] font-semibold" />
+          <div className="text-sm font-medium text-[#F2F4F7]" />
         </div>
       </div>
       <hr className={opponent ? 'mt-6' : 'mb-6'} />
@@ -96,9 +96,13 @@ export const PlayerMobileCard = ({
         } w-[120px] h-[120px] relative overflow-hidden z-20`}
       >
         <img
+<<<<<<< HEAD
           src={opponent ? '/svg/red-icon.svg' : '/svg/black-icon.svg'}
+=======
+>>>>>>> a2ff0c4 (chore, fix, feat: many feats)
           alt=""
           className="absolute bottom-0 left-1/2 -translate-x-1/2 -z-10"
+          src={opponent ? "/svg/red-icon.svg" : "/svg/black-icon.svg"}
         />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 translate-y-3">
           <div className="relative flex justify-center">
