@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { Dispatch, SetStateAction, useEffect } from "react";
-import { ethers } from "ethers";
+import { Dispatch, SetStateAction, useEffect } from 'react';
+import { ethers } from 'ethers';
 
-import { GameState } from "@/pb/game";
+import { GameState } from '@/pb/game';
 
 const usePeersFetcher = async (
   setPublicKey: Dispatch<SetStateAction<string>>,
@@ -18,7 +18,7 @@ const usePeersFetcher = async (
           setProvider(p);
 
           if (p) {
-            await p.send("eth_requestAccounts", []);
+            await p.send('eth_requestAccounts', []);
             const signer = p.getSigner();
             const userAccount = await signer.getAddress();
 
@@ -26,14 +26,14 @@ const usePeersFetcher = async (
           }
         } else {
           alert(
-            "MetaMask is not installed. Please install MetaMask and try again.",
+            'MetaMask is not installed. Please install MetaMask and try again.',
           );
         }
       };
 
       fetchPeers();
     } catch (error) {
-      console.error("Error connecting to MetaMask:", error);
+      console.error('Error connecting to MetaMask:', error);
     }
   }, []);
 };
@@ -72,13 +72,13 @@ const useGameStateFetcher = async ({
           setGameState(response.state);
         }
       } catch (e) {
-        console.error("Error fetching game state:", e);
+        console.error('Error fetching game state:', e);
       }
     };
 
     const interval = setInterval(() => {
       fetchGameState();
-    }, 1300);
+    }, 2000);
 
     return () => clearInterval(interval);
   });
