@@ -45,6 +45,7 @@ export default function Play() {
     useState<ethers.providers.Web3Provider | null>(null);
   const [wallet, setWallet] = useState<ethers.Wallet | null>(null);
   const [resultModal, setResultModal] = useState(false);
+  const [isWinner, setIsWinner] = useState(false);
 
   const channel = createChannel(
     (process.env.NEXT_PUBLIC_CHANNEL as string) || "http://127.0.0.1:50050",
@@ -69,7 +70,15 @@ export default function Play() {
   }
 
   usePeersFetcher(setPublicKey, setProvider);
-  useGameStateFetcher(setGameState, client, whitePlayer, blackPlayer);
+  useGameStateFetcher({
+    setGameState,
+    setResultModal,
+    setIsWinner,
+    client,
+    publicKey,
+    whitePlayer,
+    blackPlayer,
+  });
 
   useEffect(() => {
     setLocalPrivateKey(sessionStorage.getItem("localPrivateKey")!);
@@ -124,6 +133,8 @@ export default function Play() {
       });
 
       const signature = await signer?.signMessage(message);
+
+      setIsWinner(false);
 
       const _response = await client.endGame({
         whitePlayer,
@@ -206,7 +217,7 @@ export default function Play() {
           </div>
         )}
         <ResultModal
-          isWinner={false}
+          isWinner={isWinner}
           open={resultModal}
           onClose={() => setResultModal(false)}
         />

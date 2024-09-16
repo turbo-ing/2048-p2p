@@ -46,6 +46,7 @@ export interface GameState {
   turn: Color;
   whitePlayer: string;
   blackPlayer: string;
+  stopped?: string | undefined;
   history?: string | undefined;
   board: Board | undefined;
 }
@@ -73,7 +74,7 @@ export interface Cell {
 }
 
 function createBaseGameState(): GameState {
-  return { turn: 0, whitePlayer: "", blackPlayer: "", history: undefined, board: undefined };
+  return { turn: 0, whitePlayer: "", blackPlayer: "", stopped: undefined, history: undefined, board: undefined };
 }
 
 export const GameState = {
@@ -87,11 +88,14 @@ export const GameState = {
     if (message.blackPlayer !== "") {
       writer.uint32(26).string(message.blackPlayer);
     }
+    if (message.stopped !== undefined) {
+      writer.uint32(34).string(message.stopped);
+    }
     if (message.history !== undefined) {
-      writer.uint32(34).string(message.history);
+      writer.uint32(42).string(message.history);
     }
     if (message.board !== undefined) {
-      Board.encode(message.board, writer.uint32(42).fork()).ldelim();
+      Board.encode(message.board, writer.uint32(50).fork()).ldelim();
     }
     return writer;
   },
@@ -129,10 +133,17 @@ export const GameState = {
             break;
           }
 
-          message.history = reader.string();
+          message.stopped = reader.string();
           continue;
         case 5:
           if (tag !== 42) {
+            break;
+          }
+
+          message.history = reader.string();
+          continue;
+        case 6:
+          if (tag !== 50) {
             break;
           }
 
@@ -152,6 +163,7 @@ export const GameState = {
       turn: isSet(object.turn) ? colorFromJSON(object.turn) : 0,
       whitePlayer: isSet(object.whitePlayer) ? globalThis.String(object.whitePlayer) : "",
       blackPlayer: isSet(object.blackPlayer) ? globalThis.String(object.blackPlayer) : "",
+      stopped: isSet(object.stopped) ? globalThis.String(object.stopped) : undefined,
       history: isSet(object.history) ? globalThis.String(object.history) : undefined,
       board: isSet(object.board) ? Board.fromJSON(object.board) : undefined,
     };
@@ -167,6 +179,9 @@ export const GameState = {
     }
     if (message.blackPlayer !== "") {
       obj.blackPlayer = message.blackPlayer;
+    }
+    if (message.stopped !== undefined) {
+      obj.stopped = message.stopped;
     }
     if (message.history !== undefined) {
       obj.history = message.history;
@@ -185,6 +200,7 @@ export const GameState = {
     message.turn = object.turn ?? 0;
     message.whitePlayer = object.whitePlayer ?? "";
     message.blackPlayer = object.blackPlayer ?? "";
+    message.stopped = object.stopped ?? undefined;
     message.history = object.history ?? undefined;
     message.board = (object.board !== undefined && object.board !== null) ? Board.fromPartial(object.board) : undefined;
     return message;
