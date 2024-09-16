@@ -29,6 +29,15 @@ body {
   }
 }
 
+@layer base {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+
 
 .bg-gradient{
   background: linear-gradient(224deg, rgba(0, 0, 0, 0.00) 17.67%, rgba(0, 0, 0, 0.70) 77.47%);

@@ -38,12 +38,23 @@ const usePeersFetcher = async (
   }, []);
 };
 
-const useGameStateFetcher = async (
-  setGameState: Dispatch<SetStateAction<GameState>>,
-  client: any,
-  whitePlayer: String,
-  blackPlayer: String,
-) => {
+const useGameStateFetcher = async ({
+  setGameState,
+  setResultModal,
+  setIsWinner,
+  client,
+  publicKey,
+  whitePlayer,
+  blackPlayer,
+}: {
+  setGameState: Dispatch<SetStateAction<GameState>>;
+  setResultModal: Dispatch<SetStateAction<boolean>>;
+  setIsWinner: Dispatch<SetStateAction<boolean>>;
+  publicKey: String;
+  client: any;
+  whitePlayer: String;
+  blackPlayer: String;
+}) => {
   useEffect(() => {
     const fetchGameState = async () => {
       try {
@@ -53,6 +64,11 @@ const useGameStateFetcher = async (
         });
 
         if (response.state) {
+          if (response.state.stopped) {
+            setIsWinner(response.state.stopped !== publicKey);
+            setResultModal(true);
+          }
+
           setGameState(response.state);
         }
       } catch (e) {
@@ -62,7 +78,7 @@ const useGameStateFetcher = async (
 
     const interval = setInterval(() => {
       fetchGameState();
-    }, 5000);
+    }, 1300);
 
     return () => clearInterval(interval);
   });

@@ -1,66 +1,89 @@
-'use client';
+"use client";
 
-import { Card } from '@nextui-org/react';
-import cx from 'classnames';
-import { ethers } from 'ethers';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
-import { createChannel, createClient } from 'nice-grpc-web';
-import { useEffect, useState } from 'react';
+import { Card } from "@nextui-org/react";
+import cx from "classnames";
+import { ethers } from "ethers";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { createChannel, createClient } from "nice-grpc-web";
+import { useEffect, useState } from "react";
 
-import { Color, GameState } from '../../pb/game';
-import { Navbar } from '../components/Navbar';
-import { PlayerCard, PlayerMobileCard } from '../components/playerCard';
-import { onCellClick } from '../core/play';
-import { useGameStateFetcher, usePeersFetcher } from '../hooks/gameHooks';
-import useIsMobile from '../hooks/useIsMobile';
-import { ResultModal } from '../components/ResultModal';
+import { Color, GameState } from "../../pb/game";
+import { Navbar } from "../components/Navbar";
+import { PlayerCard, PlayerMobileCard } from "../components/playerCard";
+import { ResultModal } from "../components/ResultModal";
+import { onCellClick } from "../core/play";
+import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
+import useIsMobile from "../hooks/useIsMobile";
 
-import { NodeDefinition, Position } from '@/pb/query';
+import { NodeDefinition, Position } from "@/pb/query";
 
 const pieceToSvg: Record<string, string> = {
-  r: '/assets/rook-b.svg',
-  n: '/assets/knight-b.svg',
-  b: '/assets/bishop-b.svg',
-  q: '/assets/queen-b.svg',
-  k: '/assets/king-b.svg',
-  p: '/assets/pawn-b.svg',
-  R: '/assets/rook-w.svg',
-  N: '/assets/knight-w.svg',
-  B: '/assets/bishop-w.svg',
-  Q: '/assets/queen-w.svg',
-  K: '/assets/king-w.svg',
-  P: '/assets/pawn-w.svg',
+  r: "/assets/rook-b.svg",
+  n: "/assets/knight-b.svg",
+  b: "/assets/bishop-b.svg",
+  q: "/assets/queen-b.svg",
+  k: "/assets/king-b.svg",
+  p: "/assets/pawn-b.svg",
+  R: "/assets/rook-w.svg",
+  N: "/assets/knight-w.svg",
+  B: "/assets/bishop-w.svg",
+  Q: "/assets/queen-w.svg",
+  K: "/assets/king-w.svg",
+  P: "/assets/pawn-w.svg",
 };
 
 export default function Play() {
   const [gameState, setGameState] = useState<GameState>({} as GameState);
   const [selectedCell, setSelectedCell] = useState<Position | null>(null);
   const [isBoardReversed, setIsBoardReversed] = useState<Boolean>(false);
-  const [whitePlayer, setWhitePlayer] = useState<string>('');
-  const [blackPlayer, setBlackPlayer] = useState<string>('');
-  const [publicKey, setPublicKey] = useState<string>('');
-  const [localPrivateKey, setLocalPrivateKey] = useState<string>('');
+  const [whitePlayer, setWhitePlayer] = useState<string>("");
+  const [blackPlayer, setBlackPlayer] = useState<string>("");
+  const [publicKey, setPublicKey] = useState<string>("");
+  const [localPrivateKey, setLocalPrivateKey] = useState<string>("");
   const [provider, setProvider] =
     useState<ethers.providers.Web3Provider | null>(null);
   const [wallet, setWallet] = useState<ethers.Wallet | null>(null);
   const [resultModal, setResultModal] = useState(false);
+  const [isWinner, setIsWinner] = useState(false);
 
   const channel = createChannel(
-    (process.env.NEXT_PUBLIC_CHANNEL as string) || 'http://127.0.0.1:50050',
+    (process.env.NEXT_PUBLIC_CHANNEL as string) || "http://127.0.0.1:50050",
   );
   const client = createClient(NodeDefinition, channel);
   const isMobile = useIsMobile();
-  const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  const letters = ["A", "B", "C", "D", "E", "F", "G", "H"];
   const numbers = [8, 7, 6, 5, 4, 3, 2, 1];
 
+  function shortenAddress(address: string): string {
+    // Ensure that the address is long enough to be shortened
+    if (address.length <= 4 + 3) {
+      return address;
+    }
+
+    // Slice the start and end part of the string
+    const start = address.slice(0, 4);
+    const end = address.slice(-3);
+
+    // Return the shortened version with "..."
+    return `${start}...${end}`;
+  }
+
   usePeersFetcher(setPublicKey, setProvider);
-  useGameStateFetcher(setGameState, client, whitePlayer, blackPlayer);
+  useGameStateFetcher({
+    setGameState,
+    setResultModal,
+    setIsWinner,
+    client,
+    publicKey,
+    whitePlayer,
+    blackPlayer,
+  });
 
   useEffect(() => {
-    setLocalPrivateKey(sessionStorage.getItem('localPrivateKey')!);
-    setWhitePlayer(sessionStorage.getItem('whitePlayer')!);
-    setBlackPlayer(sessionStorage.getItem('blackPlayer')!);
+    setLocalPrivateKey(sessionStorage.getItem("localPrivateKey")!);
+    setWhitePlayer(sessionStorage.getItem("whitePlayer")!);
+    setBlackPlayer(sessionStorage.getItem("blackPlayer")!);
   }, []);
 
   useEffect(() => {
@@ -92,7 +115,7 @@ export default function Play() {
     const actualCol = isBoardReversed ? col : col;
     const fig = gameState.board?.rows[actualRow].cells[actualCol].piece;
 
-    if (!fig) return '';
+    if (!fig) return "";
 
     return fig.color === Color.WHITE
       ? pieceToSvg[fig.kind.toUpperCase()]
@@ -106,10 +129,12 @@ export default function Play() {
       const message = JSON.stringify({
         whitePlayer,
         blackPlayer,
-        action: 'endGame',
+        action: "endGame",
       });
 
       const signature = await signer?.signMessage(message);
+
+      setIsWinner(false);
 
       const _response = await client.endGame({
         whitePlayer,
@@ -172,7 +197,7 @@ export default function Play() {
               opponent
               address={blackPlayer}
               amount="42.069 ETH"
-              image="/img/avatar.png"
+              image="/img/avatar2.png"
             />
             <div className="mt-8 px-6 flex justify-between">
               <button
@@ -192,7 +217,7 @@ export default function Play() {
           </div>
         )}
         <ResultModal
-          isWinner={false}
+          isWinner={isWinner}
           open={resultModal}
           onClose={() => setResultModal(false)}
         />
@@ -216,14 +241,14 @@ export default function Play() {
                       <div
                         key={`${rowIndex}-${colIndex}`}
                         className={cx(
-                          'w-full h-full flex items-center justify-center',
+                          "w-full h-full flex items-center justify-center",
                           selectedCell?.x === rowIndex &&
                             selectedCell?.y === colIndex
-                            ? 'border-2 border-blue-500'
-                            : '',
+                            ? "border-2 border-blue-500"
+                            : "",
                           (rowIndex + colIndex) % 2 === 0
-                            ? 'bg-[#929292]'
-                            : 'bg-[#F0EBE3]',
+                            ? "bg-[#F24545]"
+                            : "bg-[#9B9B9B]",
                         )}
                         role="button"
                         tabIndex={0}
@@ -248,7 +273,7 @@ export default function Play() {
                             animate={{ opacity: 1 }}
                             initial={{ opacity: 0 }}
                             layoutId={pieceKey}
-                            style={{ position: 'absolute' }}
+                            style={{ position: "absolute" }}
                             transition={{ duration: 0.3 }}
                           >
                             {isMobile ? (
@@ -293,7 +318,7 @@ export default function Play() {
               <PlayerMobileCard
                 opponent
                 address={blackPlayer}
-                image="/img/avatar.png"
+                image="/img/avatar2.png"
               />
             </div>
             <hr className="border-[#D8E3DA] my-5" />

@@ -1,15 +1,15 @@
-import { ethers } from 'ethers';
-import { useRouter } from 'next/navigation';
-import { createChannel, createClient } from 'nice-grpc-web';
-import { useEffect, useState } from 'react';
+import { ethers } from "ethers";
+import { useRouter } from "next/navigation";
+import { createChannel, createClient } from "nice-grpc-web";
+import { useEffect, useState } from "react";
 
-import { depositVault, linkToWallet } from '../core/link';
-import swithChain from '../core/switchChain';
+import { depositVault, linkToWallet } from "../core/link";
+import swithChain from "../core/switchChain";
 
-import { DepositVault } from './Deposit';
-import Modal from './Modal';
+import { DepositVault } from "./Deposit";
+import Modal from "./Modal";
 
-import { NodeDefinition } from '@/pb/query';
+import { NodeDefinition } from "@/pb/query";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -19,9 +19,9 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
   const [selectedMode, setSelectedMode] = useState(0);
   const [isdepositModal, setIsdepositModal] = useState(false);
   const [isShowModal, setIsShowModal] = useState(false);
-  const [account, setAccount] = useState('');
-  const [address, setAddress] = useState('');
-  const [localPrivateKey, setLocalPrivateKey] = useState('');
+  const [account, setAccount] = useState("");
+  const [address, setAddress] = useState("");
+  const [localPrivateKey, setLocalPrivateKey] = useState("");
   const [provider, setProvider] =
     useState<ethers.providers.Web3Provider | null>(null);
   const [wallet, setWallet] = useState<ethers.Wallet | null>(null);
@@ -41,7 +41,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
       const randomWallet = await linkToWallet({ provider });
 
       if (!randomWallet) {
-        throw new Error('Error linking to wallet');
+        throw new Error("Error linking to wallet");
       }
 
       const localPrivate = randomWallet.retrievedPrivateKey;
@@ -54,24 +54,25 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
       setWallet(wallet);
 
       setLocalPrivateKey(localPrivate);
-      sessionStorage.setItem('localPrivateKey', localPrivate);
-      sessionStorage.setItem('localPublicKey', localPublic);
+      sessionStorage.setItem("localPrivateKey", localPrivate);
+      sessionStorage.setItem("localPublicKey", localPublic);
+      setSelectedMode(1);
     } catch (error) {
-      console.error('Error connecting to MetaMask:', error);
+      console.error("Error connecting to MetaMask:", error);
     }
   };
 
   const _handleDepositVault = async ({ wallet }: { wallet: ethers.Wallet }) => {
     if (wallet && provider) {
       const to = await wallet.getAddress();
-      const value = ethers.utils.parseEther('0.2');
+      const value = ethers.utils.parseEther("0.2");
 
       console.log(await depositVault({ provider, to, value }));
     }
   };
 
   const channel = createChannel(
-    (process.env.NEXT_PUBLIC_CHANNEL as string) || 'http://127.0.0.1:50050',
+    (process.env.NEXT_PUBLIC_CHANNEL as string) || "http://127.0.0.1:50050",
   );
   const client = createClient(NodeDefinition, channel);
 
@@ -83,9 +84,9 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
         });
 
         if (response.state) {
-          sessionStorage.setItem('whitePlayer', response.state.whitePlayer);
-          sessionStorage.setItem('blackPlayer', response.state.blackPlayer);
-          router.push('/play');
+          sessionStorage.setItem("whitePlayer", response.state.whitePlayer);
+          sessionStorage.setItem("blackPlayer", response.state.blackPlayer);
+          router.push("/play");
         }
       }
     };
@@ -98,7 +99,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
   }, [account]);
 
   const initChain = async () => {
-    console.log('Init chain');
+    console.log("Init chain");
     const chainInvalid = await swithChain();
 
     if (!chainInvalid) {
@@ -121,8 +122,8 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
       whitePlayer: account,
       blackPlayer: address,
     });
-    sessionStorage.setItem('whitePlayer', account);
-    sessionStorage.setItem('blackPlayer', address);
+    sessionStorage.setItem("whitePlayer", account);
+    sessionStorage.setItem("blackPlayer", address);
     router.push(`/play`);
   };
 
@@ -140,14 +141,13 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
 
   const onClickConnectWallet = async () => {
     await connectWallet({ provider: provider! });
-    setSelectedMode(1);
   };
 
   return (
     <>
       <div
         className={`absolute inset-0 w-full h-full text-black text-4xl transition-opacity duration-1000 ${
-          activeIndex === 1 ? 'opacity-100 z-20' : 'opacity-0 z-10'
+          activeIndex === 1 ? "opacity-100 z-20" : "opacity-0 z-10"
         }`}
       >
         <div className="relative flex items-center text-[#D9D9D9]">
@@ -166,7 +166,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
             </div>
             <div className="mt-12">
               <button
-                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center"
+                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center lg:w-[570px] w-[405px]"
                 onClick={playWithFriend}
               >
                 <img
@@ -174,7 +174,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                   className="w-16 h-16 lg:w-auto lg:h-auto"
                   src="/svg/Chess-Board.svg"
                 />
-                <div className="text-[#FCFCFD] text-left lg:text-center">
+                <div className="text-[#FCFCFD] text-left">
                   <div className="text-2xl lg:text-5xl font-semibold">
                     Play with friend
                   </div>
@@ -184,8 +184,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 </div>
               </button>
               <button
-                disabled
-                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8 disabled:bg-[#b6b7b9] disabled:text-[#A3ACBB]"
+                className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8 disabled:bg-[#b6b7b9] disabled:text-[#A3ACBB] lg:w-[570px] w-[405px]"
                 onClick={() => {
                   setIsShowModal(true);
                 }}
@@ -196,17 +195,13 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                   src="/svg/quickMatch.svg"
                 />
                 <div
-                  className="text-[#FCFCFD] text-left lg:text-center disabled:text-[#A3ACBB]"
+                  className="text-[#FCFCFD] text-left disabled:text-[#A3ACBB]"
                   role="button"
                   tabIndex={0}
                   onClick={() => {
-                    router.push('find-match');
+                    router.push("find-match");
                   }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      router.push('find-match');
-                    }
-                  }}
+                  onKeyDown={() => null}
                 >
                   <div className="text-2xl lg:text-5xl font-semibold">
                     Quick match
@@ -232,7 +227,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
         </div>
       </div>
       <Modal show={isShowModal} onClose={onClose}>
-        {selectedMode === 0 ? (
+        {selectedMode === 0 && !wallet ? (
           <div>
             <img alt="" src="/svg/chessboardIcon.svg" />
             <div className="mt-4">
@@ -253,7 +248,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
               </button>
             </div>
           </div>
-        ) : selectedMode === 1 ? (
+        ) : selectedMode === 1 || (selectedMode === 0 && wallet) ? (
           <DepositVault
             provider={provider}
             wallet={wallet}
