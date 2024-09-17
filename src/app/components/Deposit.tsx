@@ -1,12 +1,14 @@
 import { ethers } from "ethers";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { depositVault } from "../core/link";
-import { useUsdtPrice } from "../contexts/UsdtPriceContext";
 
 interface DepositVaultProps {
   provider: ethers.providers.Web3Provider | null;
   wallet: ethers.Wallet | null;
+  usdtPrice: number | undefined;
+  walletBalance: string;
+  balance: string;
   onDepositSubmit: () => void;
   onDepositCancel: () => void;
 }
@@ -16,41 +18,11 @@ export const DepositVault = ({
   onDepositSubmit,
   onDepositCancel,
   wallet,
+  usdtPrice,
+  walletBalance,
+  balance,
 }: DepositVaultProps) => {
   const [amount, setAmount] = useState("");
-  const [balance, setBalance] = useState("");
-  const [walletBalance, setWalletBalance] = useState("0");
-
-  const usdtPrice = useUsdtPrice("ETH");
-
-  const fetchBalance = async () => {
-    if (provider && wallet) {
-      const localPublicKey = await wallet?.getAddress();
-
-      if (!localPublicKey) return;
-      const walletBalance = await provider.getBalance(localPublicKey!);
-      const walletBalanceInEth = ethers.utils.formatEther(walletBalance);
-
-      setWalletBalance(walletBalanceInEth);
-    }
-
-    if (provider) {
-      const signer = provider.getSigner();
-      const address = await signer.getAddress();
-      const balance = await provider.getBalance(address);
-      const balanceInEth = ethers.utils.formatEther(balance);
-
-      setBalance(balanceInEth);
-    }
-  };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchBalance();
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [provider, wallet]);
 
   const getAmountInUsdt = () => {
     if (!amount) return 0;

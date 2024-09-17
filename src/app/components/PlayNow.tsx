@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import { useRouter } from "next/navigation";
 import { createChannel, createClient } from "nice-grpc-web";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { depositVault, linkToWallet } from "../core/link";
 import swithChain from "../core/switchChain";
@@ -10,26 +10,55 @@ import { DepositVault } from "./Deposit";
 import Modal from "./Modal";
 
 import { NodeDefinition } from "@/pb/query";
+import { useUsdtPrice } from "../contexts/UsdtPriceContext";
 
 interface PlayNowProps {
   activeIndex: number;
+  account: string;
+  balance: string;
+  walletBalance: string;
+  setSelectedMode: Dispatch<SetStateAction<number>>;
+  setAccount: Dispatch<SetStateAction<string>>;
+  setWallet: Dispatch<SetStateAction<ethers.Wallet | null>>;
+  setLocalPrivateKey: Dispatch<SetStateAction<string>>;
+  provider: ethers.providers.Web3Provider | null;
+  selectedMode: number;
+  wallet: ethers.Wallet | null;
   goToSlide: (index: number) => void;
 }
-export const PlayNow = ({ activeIndex }: PlayNowProps) => {
-  const [selectedMode, setSelectedMode] = useState(0);
+export const PlayNow = ({
+  activeIndex,
+  account,
+  setSelectedMode,
+  selectedMode,
+  wallet,
+  provider,
+  setAccount,
+  setLocalPrivateKey,
+  setWallet,
+  balance,
+  walletBalance,
+}: PlayNowProps) => {
   const [isdepositModal, setIsdepositModal] = useState(false);
   const [isShowModal, setIsShowModal] = useState(false);
-  const [account, setAccount] = useState("");
   const [address, setAddress] = useState("");
-  const [localPrivateKey, setLocalPrivateKey] = useState("");
-  const [provider, setProvider] =
-    useState<ethers.providers.Web3Provider | null>(null);
-  const [wallet, setWallet] = useState<ethers.Wallet | null>(null);
+
   const router = useRouter();
+
+  const usdtPrice = useUsdtPrice("ETH");
 
   const onClose = () => {
     setIsShowModal(false);
     setSelectedMode(0);
+  };
+
+  const _handleDepositVault = async ({ wallet }: { wallet: ethers.Wallet }) => {
+    if (wallet && provider) {
+      const to = await wallet.getAddress();
+      const value = ethers.utils.parseEther("0.2");
+
+      console.log(await depositVault({ provider, to, value }));
+    }
   };
 
   const connectWallet = async ({
@@ -62,13 +91,8 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
     }
   };
 
-  const _handleDepositVault = async ({ wallet }: { wallet: ethers.Wallet }) => {
-    if (wallet && provider) {
-      const to = await wallet.getAddress();
-      const value = ethers.utils.parseEther("0.2");
-
-      console.log(await depositVault({ provider, to, value }));
-    }
+  const onClickConnectWallet = async () => {
+    await connectWallet({ provider: provider! });
   };
 
   const channel = createChannel(
@@ -98,25 +122,6 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
     return () => clearInterval(interval);
   }, [account]);
 
-  const initChain = async () => {
-    console.log("Init chain");
-    const chainInvalid = await swithChain();
-
-    if (!chainInvalid) {
-      return;
-    }
-
-    const p = new ethers.providers.Web3Provider(window.ethereum);
-
-    setProvider(p);
-  };
-
-  useEffect(() => {
-    if (window.ethereum) {
-      initChain();
-    }
-  }, []);
-
   const joinGame = async () => {
     await client.start({
       whitePlayer: account,
@@ -137,10 +142,6 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
         setIsShowModal(true);
       }
     }
-  };
-
-  const onClickConnectWallet = async () => {
-    await connectWallet({ provider: provider! });
   };
 
   return (
@@ -188,6 +189,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
                 onClick={() => {
                   setIsShowModal(true);
                 }}
+                disabled
               >
                 <img
                   alt=""
@@ -220,6 +222,7 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
               autoPlay
               loop
               muted
+              playsInline
               className="w-full object-cover h-full"
               src="/video/chess.mp4"
             />
@@ -252,6 +255,9 @@ export const PlayNow = ({ activeIndex }: PlayNowProps) => {
           <DepositVault
             provider={provider}
             wallet={wallet}
+            balance={balance}
+            usdtPrice={usdtPrice}
+            walletBalance={walletBalance}
             onDepositCancel={() => {
               setSelectedMode(2);
             }}

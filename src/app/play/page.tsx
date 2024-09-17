@@ -46,7 +46,28 @@ export default function Play() {
   const [wallet, setWallet] = useState<ethers.Wallet | null>(null);
   const [resultModal, setResultModal] = useState(false);
   const [isWinner, setIsWinner] = useState(false);
+  const [walletBalance, setWalletBalance] = useState("0");
+  const [balance, setBalance] = useState("");
+  const fetchBalance = async () => {
+    if (provider && wallet) {
+      const localPublicKey = await wallet?.getAddress();
 
+      if (!localPublicKey) return;
+      const walletBalance = await provider.getBalance(localPublicKey!);
+      const walletBalanceInEth = ethers.utils.formatEther(walletBalance);
+
+      setWalletBalance(walletBalanceInEth);
+    }
+
+    if (provider) {
+      const signer = provider.getSigner();
+      const address = await signer.getAddress();
+      const balance = await provider.getBalance(address);
+      const balanceInEth = ethers.utils.formatEther(balance);
+
+      setBalance(balanceInEth);
+    }
+  };
   const channel = createChannel(
     (process.env.NEXT_PUBLIC_CHANNEL as string) || "http://127.0.0.1:50050",
   );
@@ -85,6 +106,10 @@ export default function Play() {
     setWhitePlayer(sessionStorage.getItem("whitePlayer")!);
     setBlackPlayer(sessionStorage.getItem("blackPlayer")!);
   }, []);
+
+  useEffect(() => {
+    fetchBalance();
+  }, [wallet]);
 
   useEffect(() => {
     setIsBoardReversed(publicKey === whitePlayer);
@@ -150,10 +175,18 @@ export default function Play() {
 
   const isBlackPlayer = publicKey === blackPlayer;
   const isWhitePlayer = publicKey === whitePlayer;
-
+  const isTurn =
+    (gameState.turn !== Color.WHITE && whitePlayer !== publicKey) ||
+    (blackPlayer !== publicKey && gameState.turn !== Color.BLACK);
   return (
     <div className="bg-black">
-      <Navbar isDark />
+      <Navbar
+        isDark
+        isShowButton
+        walletBalance={walletBalance}
+        address={shortenAddress(publicKey)}
+        wallet={wallet}
+      />
       <main className="flex items-center justify-between min-h-screen gap-6 max-w-7xl mx-auto lg:flex-nowrap flex-wrap pt-20">
         {isMobile ? (
           <div className="py-5 text-center w-full">
@@ -174,7 +207,11 @@ export default function Play() {
         ) : (
           <div className="lg:block hidden w-96">
             <PlayerCard
-              address={whitePlayer}
+              address={
+                [blackPlayer, whitePlayer].find((address) => {
+                  return address !== publicKey;
+                }) ?? ""
+              }
               amount="42.069 ETH"
               image="/img/avatar.png"
             />
@@ -194,8 +231,8 @@ export default function Play() {
               </div> */}
             </div>
             <PlayerCard
-              opponent
-              address={blackPlayer}
+              isPlayer
+              address={publicKey}
               amount="42.069 ETH"
               image="/img/avatar2.png"
             />
@@ -264,6 +301,7 @@ export default function Play() {
                             player: publicKey,
                             isBoardReversed,
                             pos: { x: rowIndex, y: colIndex },
+                            isTurn: isTurn,
                           })
                         }
                         onKeyDown={() => null}
@@ -316,7 +354,7 @@ export default function Play() {
               <PlayerMobileCard address={whitePlayer} image="/img/avatar.png" />
               <div className="text-[#FCFCFD] text-5xl">Vs</div>
               <PlayerMobileCard
-                opponent
+                isPlayer
                 address={blackPlayer}
                 image="/img/avatar2.png"
               />
