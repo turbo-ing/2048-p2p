@@ -1,9 +1,9 @@
-import { ethers } from 'ethers';
-import { Dispatch } from 'react';
+import { ethers } from "ethers";
+import { Dispatch } from "react";
 
-import { sequencerWallet } from './link';
+import { sequencerWallet } from "./link";
 
-import { Position } from '@/pb/query';
+import { Position } from "@/pb/query";
 
 interface onCellClickParams {
   pos: Position;
@@ -16,6 +16,7 @@ interface onCellClickParams {
   player: string;
   client: any;
   wallet: ethers.Wallet | null;
+  isTurn: boolean;
 }
 
 const onCellClick = async ({
@@ -29,8 +30,9 @@ const onCellClick = async ({
   wallet,
   player,
   pos,
+  isTurn,
 }: onCellClickParams) => {
-  if (selectedCell) {
+  if (selectedCell && isTurn) {
     const actualFromPos = isBoardReversed
       ? { x: 7 - selectedCell.x, y: selectedCell.y }
       : selectedCell;
@@ -41,7 +43,7 @@ const onCellClick = async ({
 
     const sentTx = await wallet?.sendTransaction({
       to: sequencerWallet,
-      value: ethers.utils.parseEther('0.00001'),
+      value: ethers.utils.parseEther("0.00001"),
       type: 2,
       // gasLimit: ethers.BigNumber.from(21000),
     });
@@ -50,7 +52,7 @@ const onCellClick = async ({
 
     console.log(sequencerFeeHash);
 
-    console.log('Sent transaction:', sentTx);
+    console.log("Sent transaction:", sentTx);
 
     const message = {
       whitePlayer,
@@ -70,9 +72,9 @@ const onCellClick = async ({
         publicKey,
       });
 
-      console.log('Transaction response:', response);
+      console.log("Transaction response:", response);
     } catch (e) {
-      console.error('Error making move:', e);
+      console.error("Error making move:", e);
     }
   } else {
     setSelectedCell(pos);

@@ -175,7 +175,9 @@ export default function Play() {
 
   const isBlackPlayer = publicKey === blackPlayer;
   const isWhitePlayer = publicKey === whitePlayer;
-
+  const isTurn =
+    (gameState.turn !== Color.WHITE && whitePlayer !== publicKey) ||
+    (blackPlayer !== publicKey && gameState.turn !== Color.BLACK);
   return (
     <div className="bg-black">
       <Navbar
@@ -205,7 +207,11 @@ export default function Play() {
         ) : (
           <div className="lg:block hidden w-96">
             <PlayerCard
-              address={isWhitePlayer ? whitePlayer : blackPlayer}
+              address={
+                [blackPlayer, whitePlayer].find((address) => {
+                  return address !== publicKey;
+                })!
+              }
               amount="42.069 ETH"
               image="/img/avatar.png"
             />
@@ -226,7 +232,7 @@ export default function Play() {
             </div>
             <PlayerCard
               isPlayer
-              address={isWhitePlayer ? blackPlayer : whitePlayer}
+              address={publicKey}
               amount="42.069 ETH"
               image="/img/avatar2.png"
             />
@@ -295,6 +301,7 @@ export default function Play() {
                             player: publicKey,
                             isBoardReversed,
                             pos: { x: rowIndex, y: colIndex },
+                            isTurn: isTurn,
                           })
                         }
                         onKeyDown={() => null}
