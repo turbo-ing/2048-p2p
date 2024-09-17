@@ -210,7 +210,7 @@ export default function Play() {
               address={
                 [blackPlayer, whitePlayer].find((address) => {
                   return address !== publicKey;
-                })!
+                }) ?? ""
               }
               amount="42.069 ETH"
               image="/img/avatar.png"
