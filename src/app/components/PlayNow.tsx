@@ -189,6 +189,7 @@ export const PlayNow = ({
                 onClick={() => {
                   setIsShowModal(true);
                 }}
+                disabled
               >
                 <img
                   alt=""
