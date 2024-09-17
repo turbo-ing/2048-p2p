@@ -2,7 +2,7 @@ interface PlayerCardProps {
   image: string;
   address: string;
   amount: string;
-  opponent?: boolean;
+  isPlayer?: boolean;
 }
 
 function shortenAddress(address: string): string {
@@ -23,19 +23,19 @@ export const PlayerCard = ({
   image,
   address,
   amount,
-  opponent = false,
+  isPlayer = false,
 }: PlayerCardProps) => {
   return (
-    <div className={`flex w-96 flex-col ${opponent && "flex-col-reverse"}`}>
+    <div className={`flex w-96 flex-col ${isPlayer && "flex-col-reverse"}`}>
       <div
         className={`p-6 ${
-          opponent ? "bg-[#F23939]" : "bg-[#CFD1D2]"
+          isPlayer ? "bg-[#F23939]" : "bg-[#CFD1D2]"
         } rounded-full flex items-center gap-6 relative z-10 overflow-hidden`}
       >
         <img
           alt=""
           className="absolute right-0 -z-10 "
-          src={opponent ? "/svg/red-icon.svg" : "/svg/black-icon.svg"}
+          src={isPlayer ? "/svg/red-icon.svg" : "/svg/black-icon.svg"}
         />
         <div className="relative">
           <img
@@ -48,14 +48,19 @@ export const PlayerCard = ({
               alt=""
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
               src={
-                opponent ? "/svg/red-team-icon.svg" : "/svg/black-team-icon.svg"
+                isPlayer ? "/svg/red-team-icon.svg" : "/svg/black-team-icon.svg"
               }
             />
           </div>
         </div>
         <div className="text-[#101828]">
-          <div className="text-4xl font-semibold">
-            {shortenAddress(address)}
+          <div>
+            <div className="text-4xl font-semibold">
+              {shortenAddress(address)}
+            </div>
+            <div className="text-[#101828] font-bold text-lg">
+              {isPlayer ? "Player" : "Opponent"}
+            </div>
           </div>
           {/* <div className="mt-1 font-medium">{amount} ETH</div> */}
         </div>
@@ -74,7 +79,7 @@ export const PlayerCard = ({
           <div className="text-sm font-medium text-[#F2F4F7]" />
         </div>
       </div>
-      <hr className={opponent ? "mt-6" : "mb-6"} />
+      <hr className={isPlayer ? "mt-6" : "mb-6"} />
     </div>
   );
 };
@@ -82,25 +87,25 @@ export const PlayerCard = ({
 interface PlayerMobileCardProps {
   image: string;
   address: string;
-  opponent?: boolean;
+  isPlayer?: boolean;
 }
 
 export const PlayerMobileCard = ({
   address,
   image,
-  opponent,
+  isPlayer,
 }: PlayerMobileCardProps) => {
   return (
     <div className="flex w-full justify-center">
       <div
         className={`p-3 rounded-full ${
-          opponent ? "bg-[#F23939]" : "bg-[#CFD1D2]"
+          isPlayer ? "bg-[#F23939]" : "bg-[#CFD1D2]"
         } w-[120px] h-[120px] relative overflow-hidden z-20`}
       >
         <img
           alt=""
           className="absolute bottom-0 left-1/2 -translate-x-1/2 -z-10"
-          src={opponent ? "/svg/red-icon.svg" : "/svg/black-icon.svg"}
+          src={isPlayer ? "/svg/red-icon.svg" : "/svg/black-icon.svg"}
         />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 translate-y-3">
           <div className="relative flex justify-center">
@@ -114,7 +119,7 @@ export const PlayerMobileCard = ({
                 alt=""
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                 src={
-                  opponent
+                  isPlayer
                     ? "/svg/red-team-icon.svg"
                     : "/svg/black-team-icon.svg"
                 }

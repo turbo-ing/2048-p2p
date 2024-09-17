@@ -225,7 +225,7 @@ export default function Play() {
               </div> */}
             </div>
             <PlayerCard
-              opponent
+              isPlayer
               address={isWhitePlayer ? blackPlayer : whitePlayer}
               amount="42.069 ETH"
               image="/img/avatar2.png"
@@ -347,7 +347,7 @@ export default function Play() {
               <PlayerMobileCard address={whitePlayer} image="/img/avatar.png" />
               <div className="text-[#FCFCFD] text-5xl">Vs</div>
               <PlayerMobileCard
-                opponent
+                isPlayer
                 address={blackPlayer}
                 image="/img/avatar2.png"
               />

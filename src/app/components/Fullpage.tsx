@@ -81,7 +81,6 @@ const FullPageSlides = () => {
         onClick={() => {
           goToSlide(0);
         }}
-        walletBalance={walletBalance}
       />
       <Home activeIndex={activeIndex} goToSlide={goToSlide} />
       <PlayNow

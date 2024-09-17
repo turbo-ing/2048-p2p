@@ -11,10 +11,10 @@ import Drawer from "./Drawer";
 interface NavbarProps {
   isDark: boolean;
   onClick?: () => void;
-  walletBalance?: string;
-  address: string;
   isShowButton?: boolean;
-  wallet: ethers.Wallet | null;
+  walletBalance?: string;
+  wallet?: ethers.Wallet | null;
+  address?: string;
 }
 export const Navbar = ({
   isDark,
