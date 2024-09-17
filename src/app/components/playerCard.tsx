@@ -30,7 +30,7 @@ export const PlayerCard = ({
       <div
         className={`p-6 ${
           opponent ? "bg-[#F23939]" : "bg-[#CFD1D2]"
-        } rounded-full flex items-center gap-6 relative z-10`}
+        } rounded-full flex items-center gap-6 relative z-10 overflow-hidden`}
       >
         <img
           alt=""

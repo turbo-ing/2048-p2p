@@ -5,15 +5,27 @@ import { useState } from "react";
 
 import useIsMobile from "../hooks/useIsMobile";
 
+import { ethers } from "ethers";
 import Drawer from "./Drawer";
 
 interface NavbarProps {
   isDark: boolean;
   onClick?: () => void;
+  walletBalance?: string;
+  address: string;
+  isShowButton?: boolean;
+  wallet: ethers.Wallet | null;
 }
-export const Navbar = ({ isDark, onClick }: NavbarProps) => {
+export const Navbar = ({
+  isDark,
+  onClick,
+  isShowButton = false,
+  address,
+  wallet,
+  walletBalance,
+}: NavbarProps) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
+  // console.log(wallet?.provider._network.chainId);
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen);
   };
@@ -60,9 +72,32 @@ export const Navbar = ({ isDark, onClick }: NavbarProps) => {
           </div>
         ) : (
           <div>
-            <button className="py-2.5 px-4 shadow bg-[#F23939] rounded-full font-semibold text-base">
-              Connect Wallet
-            </button>
+            {isShowButton && (
+              <div className="flex gap-2">
+                {/* {wallet &&
+                  wallet?.provider._network.chainId ===
+                    process.env.NEXT_PUBLIC_CHAIN_ID && (
+                    <div className="bg-white rounded-full p-2 flex gap-2">
+                      <img src="/svg/chain/turbo.svg" alt="" />
+                      <div>Turbo</div>
+                    </div>
+                  )} */}
+                <div className="bg-white rounded-full p-2 flex gap-2 items-center">
+                  <img src="/svg/chain/turbo.svg" alt="" />
+                  <div className="text-lg font-bold text-[#25292E]">Turbo</div>
+                </div>
+                <div className="bg-white rounded-full py-2 px-3 flex gap-2 items-center">
+                  <div className="text-lg font-bold text-[#25292E]">
+                    Vault: {walletBalance} ETH
+                  </div>
+                </div>
+                <div className="bg-white rounded-full py-2 px-3 flex gap-2 items-center">
+                  <div className="text-lg font-bold text-[#25292E]">
+                    {address}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
