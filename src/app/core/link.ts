@@ -1,27 +1,27 @@
-import { ethers } from "ethers";
+import { ethers } from 'ethers';
 
-import { abi } from "./abi/Chess.json";
+import { abi } from './abi/Chess.json';
 
 const contractAddress =
   (process.env.NEXT_PUBLIC_CHESS_CONTRACT as string) ||
-  "0x032f5B3A053d21Fa6F6f7242F6B3670f981d156f";
+  '0x032f5B3A053d21Fa6F6f7242F6B3670f981d156f';
 const sequencerWallet =
   (process.env.NEXT_PUBLIC_SEQUENCER_WALLET as string) ||
-  "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+  '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 
 async function linkToWallet({
   provider,
 }: {
   provider: ethers.providers.Web3Provider;
 }): Promise<{ retrievedPrivateKey: string; publicKey: string } | undefined> {
-  if (typeof window.ethereum === "undefined") {
-    alert("MetaMask is not installed. Please install MetaMask and try again.");
+  if (typeof window.ethereum === 'undefined') {
+    alert('MetaMask is not installed. Please install MetaMask and try again.');
 
     return undefined;
   }
 
   try {
-    await window.ethereum.request({ method: "eth_requestAccounts" });
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
     const signer = provider.getSigner();
 
     console.log(signer.getAddress());
@@ -37,17 +37,17 @@ async function linkToWallet({
 
       await tx.wait();
     } catch (e) {
-      console.error("Error while waiting for transaction confirmation:", e);
+      console.error('Error while waiting for transaction confirmation:', e);
     }
 
     const value = await contract.getValue();
 
     const retrievedPrivateKey =
-      "0x" + value.toHexString().slice(2).padStart(64, "0");
+      '0x' + value.toHexString().slice(2).padStart(64, '0');
 
     return { retrievedPrivateKey, publicKey: wallet.address };
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
 
     return undefined;
   }
@@ -64,18 +64,18 @@ async function depositVault({
   to,
   value,
 }: DepositVaultParams): Promise<string> {
-  if (typeof window.ethereum === "undefined") {
-    alert("MetaMask is not installed. Please install MetaMask and try again.");
+  if (typeof window.ethereum === 'undefined') {
+    alert('MetaMask is not installed. Please install MetaMask and try again.');
 
-    return "";
+    return '';
   }
 
   try {
     const txn = await provider.getSigner().sendTransaction({
       to,
       value,
-      maxPriorityFeePerGas: ethers.utils.parseUnits("1", "gwei"),
-      gasLimit: ethers.BigNumber.from(21000),
+      // maxPriorityFeePerGas: ethers.utils.parseUnits("1", "gwei"),
+      // gasLimit: ethers.BigNumber.from(21000),
       type: 2,
     });
 
@@ -83,9 +83,9 @@ async function depositVault({
 
     return txn.hash;
   } catch (e) {
-    console.error("Error while waiting for transaction confirmation:", e);
+    console.error('Error while waiting for transaction confirmation:', e);
 
-    return "";
+    return '';
   }
 }
 
