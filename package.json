@@ -29,7 +29,7 @@
     "nice-grpc": "^2.1.9",
     "nice-grpc-web": "^3.3.4",
     "noble-hashes": "^0.3.1",
-    "protobufjs": "^7.3.2",
+    "protobufjs": "^7.4.0",
     "react": "^18",
     "react-dom": "^18"
   },
@@ -52,7 +52,7 @@
     "protoc-gen-grpc-web": "^1.5.0",
     "protoc-gen-ts": "^0.8.7",
     "tailwindcss": "^3.4.1",
-    "ts-proto": "^1.181.0",
+    "ts-proto": "^2.2.0",
     "typescript": "^5"
   }
 }

@@ -22,8 +22,8 @@ const Drawer: React.FC<DrawerProps> = ({
         isOpen
           ? "translate-x-0"
           : position === "left"
-            ? "-translate-x-full"
-            : "translate-x-full"
+          ? "-translate-x-full"
+          : "translate-x-full"
       } bg-black shadow-lg`}
     >
       <div className="p-4 flex justify-between items-center text-[#344054]">

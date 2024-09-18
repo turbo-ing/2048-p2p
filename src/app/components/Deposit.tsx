@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { useState } from "react";
-
+import React from "react";
 import { depositVault } from "../core/link";
 
 interface DepositVaultProps {
@@ -21,7 +21,7 @@ export const DepositVault = ({
   usdtPrice,
   walletBalance,
   balance,
-}: DepositVaultProps) => {
+}: DepositVaultProps): React.ReactNode => {
   const [amount, setAmount] = useState("");
 
   const getAmountInUsdt = () => {

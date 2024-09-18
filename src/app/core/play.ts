@@ -17,7 +17,23 @@ interface onCellClickParams {
   client: any;
   wallet: ethers.Wallet | null;
   isTurn: boolean;
+  txSent: string | null;
+  setTxSent: Dispatch<React.SetStateAction<string | null>>;
 }
+
+const sendSequencerFee = async ({
+  wallet
+}: { wallet: ethers.Wallet | null }): Promise<string | null> => {
+   const sentTx = await wallet?.sendTransaction({
+     to: sequencerWallet,
+     value: ethers.utils.parseEther("0.00001"),
+     type: 2,
+   });
+
+   await sentTx?.wait();
+
+  return sentTx?.hash || null;
+};
 
 const onCellClick = async ({
   selectedCell,
@@ -31,6 +47,8 @@ const onCellClick = async ({
   player,
   pos,
   isTurn,
+  txSent,
+  setTxSent,
 }: onCellClickParams) => {
   if (selectedCell && isTurn) {
     const actualFromPos = isBoardReversed
@@ -41,27 +59,14 @@ const onCellClick = async ({
     await makeMove(actualFromPos, actualToPos);
     setSelectedCell(null);
 
-    const sentTx = await wallet?.sendTransaction({
-      to: sequencerWallet,
-      value: ethers.utils.parseEther("0.00001"),
-      type: 2,
-      // gasLimit: ethers.BigNumber.from(21000),
-    });
-
-    const sequencerFeeHash = sentTx!.hash;
-
-    console.log(sequencerFeeHash);
-
-    console.log("Sent transaction:", sentTx);
-
     const message = {
       whitePlayer,
       blackPlayer,
       player,
       action: [actualFromPos, actualToPos],
-      sequencerFeeHash,
+      sequencerFeeHash: txSent,
     };
-
+    
     const signature = await wallet?.signMessage(JSON.stringify(message))!;
     const publicKey = await wallet?.getAddress()!;
 
@@ -72,7 +77,7 @@ const onCellClick = async ({
         publicKey,
       });
 
-      console.log("Transaction response:", response);
+      setTxSent(null);
     } catch (e) {
       console.error("Error making move:", e);
     }
@@ -81,4 +86,4 @@ const onCellClick = async ({
   }
 };
 
-export { onCellClick };
+export { onCellClick, sendSequencerFee };

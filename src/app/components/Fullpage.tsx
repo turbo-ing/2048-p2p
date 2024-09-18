@@ -19,7 +19,6 @@ const FullPageSlides = () => {
   const [account, setAccount] = useState("");
   const [selectedMode, setSelectedMode] = useState(0);
 
-  console.log(account);
   const usdtPrice = useUsdtPrice("ETH");
 
   useEffect(() => {

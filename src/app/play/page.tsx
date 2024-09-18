@@ -12,7 +12,7 @@ import { Color, GameState } from "../../pb/game";
 import { Navbar } from "../components/Navbar";
 import { PlayerCard, PlayerMobileCard } from "../components/playerCard";
 import { ResultModal } from "../components/ResultModal";
-import { onCellClick } from "../core/play";
+import { onCellClick, sendSequencerFee } from "../core/play";
 import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
 import useIsMobile from "../hooks/useIsMobile";
 
@@ -47,7 +47,8 @@ export default function Play() {
   const [resultModal, setResultModal] = useState(false);
   const [isWinner, setIsWinner] = useState(false);
   const [walletBalance, setWalletBalance] = useState("0");
-  const [balance, setBalance] = useState("");
+  const [txSent, setTxSent] = useState<string | null>(null);
+
   const fetchBalance = async () => {
     if (provider && wallet) {
       const localPublicKey = await wallet?.getAddress();
@@ -57,15 +58,6 @@ export default function Play() {
       const walletBalanceInEth = ethers.utils.formatEther(walletBalance);
 
       setWalletBalance(walletBalanceInEth);
-    }
-
-    if (provider) {
-      const signer = provider.getSigner();
-      const address = await signer.getAddress();
-      const balance = await provider.getBalance(address);
-      const balanceInEth = ethers.utils.formatEther(balance);
-
-      setBalance(balanceInEth);
     }
   };
   const channel = createChannel(
@@ -175,9 +167,26 @@ export default function Play() {
 
   const isBlackPlayer = publicKey === blackPlayer;
   const isWhitePlayer = publicKey === whitePlayer;
-  const isTurn =
-    (gameState.turn !== Color.WHITE && whitePlayer !== publicKey) ||
-    (blackPlayer !== publicKey && gameState.turn !== Color.BLACK);
+  const [isTurn, setIsTurn] = useState(true);
+
+  useEffect(() => {
+    setIsTurn(
+      (gameState.turn === Color.WHITE && whitePlayer === publicKey) ||
+        (blackPlayer === publicKey && gameState.turn === Color.BLACK),
+    );
+
+    const executeSendSequencerFee = async () => {
+      if (txSent) {
+        return;
+      }
+      const txHash = await sendSequencerFee({ wallet });
+      setTxSent(txHash);
+      console.log(txHash);
+    };
+
+    executeSendSequencerFee();
+  }, [gameState]);
+
   return (
     <div className="bg-black">
       <Navbar
@@ -302,6 +311,8 @@ export default function Play() {
                             isBoardReversed,
                             pos: { x: rowIndex, y: colIndex },
                             isTurn: isTurn,
+                            txSent,
+                            setTxSent,
                           })
                         }
                         onKeyDown={() => null}
