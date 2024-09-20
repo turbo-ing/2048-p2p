@@ -15,6 +15,16 @@ export enum Color {
   UNRECOGNIZED = -1,
 }
 
+export enum PieceKind {
+  NULL = "",
+  PAWN = "p",
+  ROOK = "r",
+  KNIGHT = "n",
+  BISHOP = "b",
+  QUEEN = "q",
+  KING = "k",
+}
+
 export function colorFromJSON(object: any): Color {
   switch (object) {
     case 0:
@@ -53,7 +63,7 @@ export interface GameState {
 
 export interface Piece {
   color: Color;
-  kind: string;
+  kind: PieceKind;
 }
 
 export interface Location {
@@ -74,11 +84,21 @@ export interface Cell {
 }
 
 function createBaseGameState(): GameState {
-  return { turn: 0, whitePlayer: "", blackPlayer: "", stopped: undefined, history: undefined, board: undefined };
+  return {
+    turn: 0,
+    whitePlayer: "",
+    blackPlayer: "",
+    stopped: undefined,
+    history: undefined,
+    board: undefined,
+  };
 }
 
 export const GameState: MessageFns<GameState> = {
-  encode(message: GameState, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: GameState,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.turn !== 0) {
       writer.uint32(8).int32(message.turn);
     }
@@ -101,7 +121,8 @@ export const GameState: MessageFns<GameState> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): GameState {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseGameState();
     while (reader.pos < end) {
@@ -161,10 +182,18 @@ export const GameState: MessageFns<GameState> = {
   fromJSON(object: any): GameState {
     return {
       turn: isSet(object.turn) ? colorFromJSON(object.turn) : 0,
-      whitePlayer: isSet(object.whitePlayer) ? globalThis.String(object.whitePlayer) : "",
-      blackPlayer: isSet(object.blackPlayer) ? globalThis.String(object.blackPlayer) : "",
-      stopped: isSet(object.stopped) ? globalThis.String(object.stopped) : undefined,
-      history: isSet(object.history) ? globalThis.String(object.history) : undefined,
+      whitePlayer: isSet(object.whitePlayer)
+        ? globalThis.String(object.whitePlayer)
+        : "",
+      blackPlayer: isSet(object.blackPlayer)
+        ? globalThis.String(object.blackPlayer)
+        : "",
+      stopped: isSet(object.stopped)
+        ? globalThis.String(object.stopped)
+        : undefined,
+      history: isSet(object.history)
+        ? globalThis.String(object.history)
+        : undefined,
       board: isSet(object.board) ? Board.fromJSON(object.board) : undefined,
     };
   },
@@ -202,17 +231,23 @@ export const GameState: MessageFns<GameState> = {
     message.blackPlayer = object.blackPlayer ?? "";
     message.stopped = object.stopped ?? undefined;
     message.history = object.history ?? undefined;
-    message.board = (object.board !== undefined && object.board !== null) ? Board.fromPartial(object.board) : undefined;
+    message.board =
+      object.board !== undefined && object.board !== null
+        ? Board.fromPartial(object.board)
+        : undefined;
     return message;
   },
 };
 
 function createBasePiece(): Piece {
-  return { color: 0, kind: "" };
+  return { color: 0, kind: PieceKind.NULL };
 }
 
 export const Piece: MessageFns<Piece> = {
-  encode(message: Piece, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Piece,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.color !== 0) {
       writer.uint32(8).int32(message.color);
     }
@@ -223,7 +258,8 @@ export const Piece: MessageFns<Piece> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Piece {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePiece();
     while (reader.pos < end) {
@@ -241,7 +277,7 @@ export const Piece: MessageFns<Piece> = {
             break;
           }
 
-          message.kind = reader.string();
+          message.kind = reader.string() as PieceKind;
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -255,7 +291,9 @@ export const Piece: MessageFns<Piece> = {
   fromJSON(object: any): Piece {
     return {
       color: isSet(object.color) ? colorFromJSON(object.color) : 0,
-      kind: isSet(object.kind) ? globalThis.String(object.kind) : "",
+      kind: isSet(object.kind)
+        ? (globalThis.String(object.kind) as PieceKind)
+        : PieceKind.NULL,
     };
   },
 
@@ -276,7 +314,7 @@ export const Piece: MessageFns<Piece> = {
   fromPartial(object: DeepPartial<Piece>): Piece {
     const message = createBasePiece();
     message.color = object.color ?? 0;
-    message.kind = object.kind ?? "";
+    message.kind = object.kind ?? PieceKind.NULL;
     return message;
   },
 };
@@ -286,7 +324,10 @@ function createBaseLocation(): Location {
 }
 
 export const Location: MessageFns<Location> = {
-  encode(message: Location, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Location,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     writer.uint32(10).fork();
     for (const v of message.coords) {
       writer.uint32(v);
@@ -299,7 +340,8 @@ export const Location: MessageFns<Location> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Location {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseLocation();
     while (reader.pos < end) {
@@ -340,7 +382,9 @@ export const Location: MessageFns<Location> = {
 
   fromJSON(object: any): Location {
     return {
-      coords: globalThis.Array.isArray(object?.coords) ? object.coords.map((e: any) => globalThis.Number(e)) : [],
+      coords: globalThis.Array.isArray(object?.coords)
+        ? object.coords.map((e: any) => globalThis.Number(e))
+        : [],
       piece: isSet(object.piece) ? Piece.fromJSON(object.piece) : undefined,
     };
   },
@@ -362,7 +406,10 @@ export const Location: MessageFns<Location> = {
   fromPartial(object: DeepPartial<Location>): Location {
     const message = createBaseLocation();
     message.coords = object.coords?.map((e) => e) || [];
-    message.piece = (object.piece !== undefined && object.piece !== null) ? Piece.fromPartial(object.piece) : undefined;
+    message.piece =
+      object.piece !== undefined && object.piece !== null
+        ? Piece.fromPartial(object.piece)
+        : undefined;
     return message;
   },
 };
@@ -372,7 +419,10 @@ function createBaseBoard(): Board {
 }
 
 export const Board: MessageFns<Board> = {
-  encode(message: Board, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Board,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     for (const v of message.rows) {
       Row.encode(v!, writer.uint32(10).fork()).join();
     }
@@ -380,7 +430,8 @@ export const Board: MessageFns<Board> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Board {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseBoard();
     while (reader.pos < end) {
@@ -403,7 +454,11 @@ export const Board: MessageFns<Board> = {
   },
 
   fromJSON(object: any): Board {
-    return { rows: globalThis.Array.isArray(object?.rows) ? object.rows.map((e: any) => Row.fromJSON(e)) : [] };
+    return {
+      rows: globalThis.Array.isArray(object?.rows)
+        ? object.rows.map((e: any) => Row.fromJSON(e))
+        : [],
+    };
   },
 
   toJSON(message: Board): unknown {
@@ -429,7 +484,10 @@ function createBaseRow(): Row {
 }
 
 export const Row: MessageFns<Row> = {
-  encode(message: Row, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Row,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     for (const v of message.cells) {
       Cell.encode(v!, writer.uint32(10).fork()).join();
     }
@@ -437,7 +495,8 @@ export const Row: MessageFns<Row> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Row {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRow();
     while (reader.pos < end) {
@@ -460,7 +519,11 @@ export const Row: MessageFns<Row> = {
   },
 
   fromJSON(object: any): Row {
-    return { cells: globalThis.Array.isArray(object?.cells) ? object.cells.map((e: any) => Cell.fromJSON(e)) : [] };
+    return {
+      cells: globalThis.Array.isArray(object?.cells)
+        ? object.cells.map((e: any) => Cell.fromJSON(e))
+        : [],
+    };
   },
 
   toJSON(message: Row): unknown {
@@ -486,7 +549,10 @@ function createBaseCell(): Cell {
 }
 
 export const Cell: MessageFns<Cell> = {
-  encode(message: Cell, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Cell,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.piece !== undefined) {
       Piece.encode(message.piece, writer.uint32(10).fork()).join();
     }
@@ -494,7 +560,8 @@ export const Cell: MessageFns<Cell> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Cell {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseCell();
     while (reader.pos < end) {
@@ -517,7 +584,9 @@ export const Cell: MessageFns<Cell> = {
   },
 
   fromJSON(object: any): Cell {
-    return { piece: isSet(object.piece) ? Piece.fromJSON(object.piece) : undefined };
+    return {
+      piece: isSet(object.piece) ? Piece.fromJSON(object.piece) : undefined,
+    };
   },
 
   toJSON(message: Cell): unknown {
@@ -533,17 +602,31 @@ export const Cell: MessageFns<Cell> = {
   },
   fromPartial(object: DeepPartial<Cell>): Cell {
     const message = createBaseCell();
-    message.piece = (object.piece !== undefined && object.piece !== null) ? Piece.fromPartial(object.piece) : undefined;
+    message.piece =
+      object.piece !== undefined && object.piece !== null
+        ? Piece.fromPartial(object.piece)
+        : undefined;
     return message;
   },
 };
 
-type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+type Builtin =
+  | Date
+  | Function
+  | Uint8Array
+  | string
+  | number
+  | boolean
+  | undefined;
 
-export type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
+export type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+  ? globalThis.Array<DeepPartial<U>>
+  : T extends ReadonlyArray<infer U>
+  ? ReadonlyArray<DeepPartial<U>>
+  : T extends {}
+  ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
 function isSet(value: any): boolean {

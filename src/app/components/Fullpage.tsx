@@ -17,15 +17,15 @@ const FullPageSlides = () => {
   const [walletBalance, setWalletBalance] = useState("0");
   const [localPrivateKey, setLocalPrivateKey] = useState("");
   const [account, setAccount] = useState("");
-  const [selectedMode, setSelectedMode] = useState(0);
+  const [selectedMode, setSelectedMode] = useState(3);
 
   const usdtPrice = useUsdtPrice("ETH");
 
-  useEffect(() => {
-    if (window.ethereum) {
-      initChain();
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (window.ethereum) {
+  //     initChain();
+  //   }
+  // }, []);
 
   const initChain = async () => {
     console.log("Init chain");

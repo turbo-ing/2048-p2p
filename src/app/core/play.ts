@@ -22,15 +22,17 @@ interface onCellClickParams {
 }
 
 const sendSequencerFee = async ({
-  wallet
-}: { wallet: ethers.Wallet | null }): Promise<string | null> => {
-   const sentTx = await wallet?.sendTransaction({
-     to: sequencerWallet,
-     value: ethers.utils.parseEther("0.00001"),
-     type: 2,
-   });
+  wallet,
+}: {
+  wallet: ethers.Wallet | null;
+}): Promise<string | null> => {
+  const sentTx = await wallet?.sendTransaction({
+    to: sequencerWallet,
+    value: ethers.utils.parseEther("0.00001"),
+    type: 2,
+  });
 
-   await sentTx?.wait();
+  await sentTx?.wait();
 
   return sentTx?.hash || null;
 };
@@ -59,28 +61,28 @@ const onCellClick = async ({
     await makeMove(actualFromPos, actualToPos);
     setSelectedCell(null);
 
-    const message = {
-      whitePlayer,
-      blackPlayer,
-      player,
-      action: [actualFromPos, actualToPos],
-      sequencerFeeHash: txSent,
-    };
-    
-    const signature = await wallet?.signMessage(JSON.stringify(message))!;
-    const publicKey = await wallet?.getAddress()!;
+    // const message = {
+    //   whitePlayer,
+    //   blackPlayer,
+    //   player,
+    //   action: [actualFromPos, actualToPos],
+    //   sequencerFeeHash: txSent,
+    // };
 
-    try {
-      const response = await client.transact({
-        ...message,
-        signature,
-        publicKey,
-      });
+    // const signature = await wallet?.signMessage(JSON.stringify(message))!;
+    // const publicKey = await wallet?.getAddress()!;
 
-      setTxSent(null);
-    } catch (e) {
-      console.error("Error making move:", e);
-    }
+    // try {
+    //   const response = await client.transact({
+    //     ...message,
+    //     signature,
+    //     publicKey,
+    //   });
+
+    //   setTxSent(null);
+    // } catch (e) {
+    //   console.error("Error making move:", e);
+    // }
   } else {
     setSelectedCell(pos);
   }

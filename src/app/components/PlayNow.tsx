@@ -11,6 +11,7 @@ import Modal from "./Modal";
 
 import { NodeDefinition } from "@/pb/query";
 import { useUsdtPrice } from "../contexts/UsdtPriceContext";
+import { useChess } from "@/reducer/chess";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -39,6 +40,10 @@ export const PlayNow = ({
   balance,
   walletBalance,
 }: PlayNowProps) => {
+  const [state, dispatch, connected, setRoom] = useChess();
+
+  console.log(state);
+
   const [isdepositModal, setIsdepositModal] = useState(false);
   const [isShowModal, setIsShowModal] = useState(false);
   const [address, setAddress] = useState("");
@@ -123,10 +128,10 @@ export const PlayNow = ({
   }, [account]);
 
   const joinGame = async () => {
-    await client.start({
-      whitePlayer: account,
-      blackPlayer: address,
-    });
+    // await client.start({
+    //   whitePlayer: account,
+    //   blackPlayer: address,
+    // });
     sessionStorage.setItem("whitePlayer", account);
     sessionStorage.setItem("blackPlayer", address);
     router.push(`/play`);
@@ -177,7 +182,7 @@ export const PlayNow = ({
                 />
                 <div className="text-[#FCFCFD] text-left">
                   <div className="text-2xl lg:text-5xl font-semibold">
-                    Play with friend
+                    Create Room
                   </div>
                   <div className="text-[#E4E7EC] text-base lg:text-xl font-medium mt-1">
                     Invite a friend for a private match!
@@ -189,7 +194,6 @@ export const PlayNow = ({
                 onClick={() => {
                   setIsShowModal(true);
                 }}
-                disabled
               >
                 <img
                   alt=""
@@ -200,16 +204,13 @@ export const PlayNow = ({
                   className="text-[#FCFCFD] text-left disabled:text-[#A3ACBB]"
                   role="button"
                   tabIndex={0}
-                  onClick={() => {
-                    router.push("find-match");
-                  }}
                   onKeyDown={() => null}
                 >
                   <div className="text-2xl lg:text-5xl font-semibold">
-                    Quick match
+                    Join Room
                   </div>
                   <div className="text-[#E4E7EC] text-base lg:text-xl font-medium mt-1 disabled:text-[#A3ACBB]">
-                    Find an opponent and start instantly!
+                    Enter your friend's room!
                   </div>
                 </div>
               </button>
@@ -314,7 +315,7 @@ export const PlayNow = ({
                 Create a Room
               </div>
               <div className="mt-1 text-sm text-[#94969C]">
-                Set up your own chess room
+                Set up your own chess room and invite your friend
               </div>
             </div>
             <div className="mt-5">
@@ -333,7 +334,7 @@ export const PlayNow = ({
                   />
                 </div>
               </div>
-              <div className="mt-5">
+              {/* <div className="mt-5">
                 <label
                   className="text-[#CECFD2] text-sm font-medium"
                   htmlFor="gameMode"
@@ -345,14 +346,14 @@ export const PlayNow = ({
                     <option value="classic">Classic Chess</option>
                   </select>
                 </div>
-              </div>
-              <div className="mt-1.5 text-[#94969C] text-sm">
+              </div> */}
+              {/* <div className="mt-1.5 text-[#94969C] text-sm">
                 Paste the game room code here to join your friend&apos;s match.
-              </div>
+              </div> */}
             </div>
             <div className="mt-8">
               <button className="hover:bg-red-600 py-2.5 px-4 bg-[#F23939] rounded-full w-full justify-center">
-                <div className="font-semibold text-base">Join Game</div>
+                <div className="font-semibold text-base">Create Room</div>
               </button>
             </div>
           </div>
