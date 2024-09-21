@@ -35,6 +35,10 @@ interface JoinAction extends EdgeAction<GameState> {
 // Action Types
 type Action = MoveAction | JoinAction;
 
+function error(message: string) {
+  console.error(message);
+}
+
 // Reducer Function
 const chessReducer = (state: GameState, action: Action): GameState => {
   switch (action.type) {
@@ -43,34 +47,41 @@ const chessReducer = (state: GameState, action: Action): GameState => {
       const board = state.board;
 
       if (!board) {
-        throw new Error("Board not initialized");
+        error("Board not initialized");
+        return state;
       }
 
       if (!state.whitePlayer || !state.blackPlayer) {
-        throw new Error("Opponent hasn't joined yet");
+        error("Opponent hasn't joined yet");
+        return state;
       }
 
       if (state.turn == Color.WHITE && action.peerId != state.whitePlayer) {
-        throw new Error("Not your turn");
+        error("Not your turn");
+        return state;
       }
 
       if (state.turn == Color.BLACK && action.peerId != state.blackPlayer) {
-        throw new Error("Not your turn");
+        error("Not your turn");
+        return state;
       }
 
       const movingPiece = board.rows[from.row]?.cells[from.col]?.piece;
 
       if (!movingPiece) {
-        throw new Error("No piece at source position");
+        error("No piece at source position");
+        return state;
       }
 
       if (movingPiece.color !== state.turn) {
-        throw new Error("Not your turn");
+        error("Not your turn");
+        return state;
       }
 
       // Validate move
       if (!validateMove(movingPiece, from, to, board)) {
-        throw new Error("Invalid move");
+        error("Invalid move");
+        return state;
       }
 
       // Deep copy of the board to maintain immutability
@@ -91,18 +102,27 @@ const chessReducer = (state: GameState, action: Action): GameState => {
     }
 
     case "JOIN": {
+      if (
+        state.whitePlayer == action.peerId ||
+        state.blackPlayer == action.peerId
+      )
+        return state;
+
       if (!state.whitePlayer) {
         return {
           ...state,
           whitePlayer: action.peerId!,
+          whitePlayerName: action.payload.name,
         };
       } else if (!state.blackPlayer) {
         return {
           ...state,
-          whitePlayer: action.peerId!,
+          blackPlayer: action.peerId!,
+          blackPlayerName: action.payload.name,
         };
       } else {
-        throw new Error("Room is full");
+        error("Room is full");
+        return state;
       }
     }
 

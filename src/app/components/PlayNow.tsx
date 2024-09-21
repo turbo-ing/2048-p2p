@@ -12,6 +12,7 @@ import Modal from "./Modal";
 import { NodeDefinition } from "@/pb/query";
 import { useUsdtPrice } from "../contexts/UsdtPriceContext";
 import { generateRoomCode, useChess } from "@/reducer/chess";
+import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -41,6 +42,8 @@ export const PlayNow = ({
   walletBalance,
 }: PlayNowProps) => {
   const [state, dispatch, connected, room, setRoom] = useChess();
+  const turboEdge = useTurboEdgeV0();
+  const peerId = turboEdge?.node.peerId.toString();
 
   console.log(state);
 
@@ -57,6 +60,7 @@ export const PlayNow = ({
 
   const onClose = () => {
     setIsShowModal(false);
+    setRoom("");
   };
 
   const _handleDepositVault = async ({ wallet }: { wallet: ethers.Wallet }) => {
@@ -68,38 +72,38 @@ export const PlayNow = ({
     }
   };
 
-  const connectWallet = async ({
-    provider,
-  }: {
-    provider: ethers.providers.Web3Provider;
-  }) => {
-    try {
-      const randomWallet = await linkToWallet({ provider });
+  // const connectWallet = async ({
+  //   provider,
+  // }: {
+  //   provider: ethers.providers.Web3Provider;
+  // }) => {
+  //   try {
+  //     const randomWallet = await linkToWallet({ provider });
 
-      if (!randomWallet) {
-        throw new Error("Error linking to wallet");
-      }
+  //     if (!randomWallet) {
+  //       throw new Error("Error linking to wallet");
+  //     }
 
-      const localPrivate = randomWallet.retrievedPrivateKey;
-      const localPublic = randomWallet.publicKey;
+  //     const localPrivate = randomWallet.retrievedPrivateKey;
+  //     const localPublic = randomWallet.publicKey;
 
-      setAccount(await provider.getSigner().getAddress());
+  //     setAccount(await provider.getSigner().getAddress());
 
-      const wallet = new ethers.Wallet(localPrivate);
+  //     const wallet = new ethers.Wallet(localPrivate);
 
-      setWallet(wallet);
+  //     setWallet(wallet);
 
-      setLocalPrivateKey(localPrivate);
-      sessionStorage.setItem("localPrivateKey", localPrivate);
-      sessionStorage.setItem("localPublicKey", localPublic);
-    } catch (error) {
-      console.error("Error connecting to MetaMask:", error);
-    }
-  };
+  //     setLocalPrivateKey(localPrivate);
+  //     sessionStorage.setItem("localPrivateKey", localPrivate);
+  //     sessionStorage.setItem("localPublicKey", localPublic);
+  //   } catch (error) {
+  //     console.error("Error connecting to MetaMask:", error);
+  //   }
+  // };
 
-  const onClickConnectWallet = async () => {
-    await connectWallet({ provider: provider! });
-  };
+  // const onClickConnectWallet = async () => {
+  //   await connectWallet({ provider: provider! });
+  // };
 
   const channel = createChannel(
     (process.env.NEXT_PUBLIC_CHANNEL as string) || "http://127.0.0.1:50050",
@@ -128,15 +132,6 @@ export const PlayNow = ({
   //   return () => clearInterval(interval);
   // }, [account]);
 
-  // Check if both player has joined the room to start the game
-  useEffect(() => {
-    if (connected) {
-      if (state.whitePlayer && state.blackPlayer) {
-        router.push("/play");
-      }
-    }
-  }, [state, connected]);
-
   const joinGameDeprecated = async () => {
     // await client.start({
     //   whitePlayer: account,
@@ -147,12 +142,41 @@ export const PlayNow = ({
     // router.push(`/play`);
   };
 
+  // Check if both player has joined the room to start the game
+  useEffect(() => {
+    if (connected) {
+      // If both player connected then start the game
+      if (state.whitePlayer && state.blackPlayer) {
+        router.push("/play");
+      }
+
+      // If the player is not joined yet then join the game
+      if (!state.whitePlayer || !state.blackPlayer) {
+        if (state.whitePlayer != peerId && state.blackPlayer != peerId) {
+          dispatch({
+            type: "JOIN",
+            payload: {
+              name: nameInput,
+            },
+          });
+        }
+      } else {
+        if (state.whitePlayer != peerId && state.blackPlayer != peerId) {
+          window.alert(
+            "Another player has already joined the goom. Please create a new room.",
+          );
+          window.location.reload();
+        }
+      }
+    }
+  }, [state, connected, peerId, nameInput]);
+
   const joinGame = async (roomId: string) => {
     setRoom(roomId);
+    setSelectedMode(5);
   };
 
   const newGame = async () => {
-    setSelectedMode(5);
     joinGame(generateRoomCode());
   };
 
@@ -257,7 +281,7 @@ export const PlayNow = ({
                 Connect your MetaMask wallet and start playing with friends!
               </div>
             </div>
-            <div className="mt-5">
+            {/* <div className="mt-5">
               <button
                 className="hover:bg-red-600 flex py-2.5 px-4 bg-[#F23939] rounded-full items-center gap-1.5 w-full justify-center"
                 onClick={onClickConnectWallet}
@@ -265,7 +289,7 @@ export const PlayNow = ({
                 <img alt="" src="/svg/magnifier.svg" />
                 <div className="font-semibold text-base">Connect wallet</div>
               </button>
-            </div>
+            </div> */}
           </div>
         ) : selectedMode === 1 || (selectedMode === 0 && wallet) ? (
           <DepositVault
@@ -411,39 +435,26 @@ export const PlayNow = ({
             <img alt="" src="/svg/find-friend.svg" />
             <div className="mt-4">
               <div className="text-[#F5F5F6] font-semibold text-lg">
-                Create a Room
+                Waiting for opponent...
               </div>
               <div className="mt-1 text-sm text-[#94969C]">
-                Share room code below with your friend
+                Share the room code below with your friend
               </div>
             </div>
-            <div className="mt-5">
-              <div>
-                <label
-                  className="text-[#CECFD2] text-sm font-medium"
-                  htmlFor="wallet"
-                >
-                  Invite your friend below or wait for an invitation here.
-                  <br />
-                  Your address: {account}
-                </label>
-                <div>
-                  <input
-                    className="bg-[#0C111D] border border-[#333741] rounded-full shadow text-md text-[#85888E] py-2.5 px-3.5 w-full mt-1.5"
-                    placeholder="Enter your friend's address"
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                  />
-                </div>
+            <div className="my-8 flex flex-col items-center">
+              <div className="text-4xl text-center">{room}</div>
+
+              <div className="mt-2 text-sm text-[#94969C]">
+                Waiting for opponent...
               </div>
             </div>
-            <div className="mt-8">
+
+            <div>
               <button
                 className="hover:bg-red-600 py-2.5 px-4 bg-[#F23939] rounded-full w-full justify-center"
-                onClick={joinGameDeprecated}
+                onClick={onClose}
               >
-                <div className="font-semibold text-base">Join Game</div>
+                <div className="font-semibold text-base">Leave Room</div>
               </button>
             </div>
           </div>

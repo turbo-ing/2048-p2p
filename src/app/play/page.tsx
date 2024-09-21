@@ -17,6 +17,9 @@ import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
 import useIsMobile from "../hooks/useIsMobile";
 
 import { NodeDefinition, Position } from "@/pb/query";
+import { useChess } from "@/reducer/chess";
+import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
+import { useRouter } from "next/navigation";
 
 const pieceToSvg: Record<string, string> = {
   r: "/assets/rook-b.svg",
@@ -34,12 +37,19 @@ const pieceToSvg: Record<string, string> = {
 };
 
 export default function Play() {
-  const [gameState, setGameState] = useState<GameState>({} as GameState);
+  const [gameState, dispatch, connected, room, setRoom] = useChess();
+  const turboEdge = useTurboEdgeV0();
+  const peerId = turboEdge?.node.peerId.toString();
+  const publicKey = peerId || "";
+
+  const whitePlayer = gameState.whitePlayer;
+  const blackPlayer = gameState.blackPlayer;
+
+  console.log(gameState);
+
+  // const [gameState, setGameState] = useState<GameState>({} as GameState);
   const [selectedCell, setSelectedCell] = useState<Position | null>(null);
   const [isBoardReversed, setIsBoardReversed] = useState<Boolean>(false);
-  const [whitePlayer, setWhitePlayer] = useState<string>("");
-  const [blackPlayer, setBlackPlayer] = useState<string>("");
-  const [publicKey, setPublicKey] = useState<string>("");
   const [localPrivateKey, setLocalPrivateKey] = useState<string>("");
   const [provider, setProvider] =
     useState<ethers.providers.Web3Provider | null>(null);
@@ -48,6 +58,7 @@ export default function Play() {
   const [isWinner, setIsWinner] = useState(false);
   const [walletBalance, setWalletBalance] = useState("0");
   const [txSent, setTxSent] = useState<string | null>(null);
+  const router = useRouter();
 
   const fetchBalance = async () => {
     if (provider && wallet) {
@@ -69,35 +80,42 @@ export default function Play() {
   const numbers = [8, 7, 6, 5, 4, 3, 2, 1];
 
   function shortenAddress(address: string): string {
-    // Ensure that the address is long enough to be shortened
-    if (address.length <= 4 + 3) {
-      return address;
-    }
+    return address;
+    // // Ensure that the address is long enough to be shortened
+    // if (address.length <= 4 + 3) {
+    //   return address;
+    // }
 
-    // Slice the start and end part of the string
-    const start = address.slice(0, 4);
-    const end = address.slice(-3);
+    // // Slice the start and end part of the string
+    // const start = address.slice(0, 4);
+    // const end = address.slice(-3);
 
-    // Return the shortened version with "..."
-    return `${start}...${end}`;
+    // // Return the shortened version with "..."
+    // return `${start}...${end}`;
   }
 
-  usePeersFetcher(setPublicKey, setProvider);
-  useGameStateFetcher({
-    setGameState,
-    setResultModal,
-    setIsWinner,
-    client,
-    publicKey,
-    whitePlayer,
-    blackPlayer,
-  });
+  // usePeersFetcher(setPublicKey, setProvider);
+  // useGameStateFetcher({
+  //   setGameState,
+  //   setResultModal,
+  //   setIsWinner,
+  //   client,
+  //   publicKey,
+  //   whitePlayer,
+  //   blackPlayer,
+  // });
+
+  // useEffect(() => {
+  //   setLocalPrivateKey(sessionStorage.getItem("localPrivateKey")!);
+  //   setWhitePlayer(sessionStorage.getItem("whitePlayer")!);
+  //   setBlackPlayer(sessionStorage.getItem("blackPlayer")!);
+  // }, []);
 
   useEffect(() => {
-    setLocalPrivateKey(sessionStorage.getItem("localPrivateKey")!);
-    setWhitePlayer(sessionStorage.getItem("whitePlayer")!);
-    setBlackPlayer(sessionStorage.getItem("blackPlayer")!);
-  }, []);
+    if (!room) {
+      router.push("/");
+    }
+  }, [room]);
 
   useEffect(() => {
     fetchBalance();
@@ -123,7 +141,21 @@ export default function Play() {
       newBoard.rows[to.x].cells[to.y].piece = piece;
       newBoard.rows[from.x].cells[from.y].piece = null;
 
-      setGameState({ ...gameState, board: newBoard });
+      dispatch({
+        type: "MOVE",
+        payload: {
+          from: {
+            row: from.x,
+            col: from.y,
+          },
+          to: {
+            row: to.x,
+            col: to.y,
+          },
+        },
+      });
+
+      // setGameState({ ...gameState, board: newBoard });
     }
   };
 
@@ -195,6 +227,7 @@ export default function Play() {
         walletBalance={walletBalance}
         address={shortenAddress(publicKey)}
         wallet={wallet}
+        onClick={() => window.location.reload()}
       />
       <main className="flex items-center justify-between min-h-screen gap-6 max-w-7xl mx-auto lg:flex-nowrap flex-wrap pt-20">
         {isMobile ? (
@@ -217,9 +250,9 @@ export default function Play() {
           <div className="lg:block hidden w-96">
             <PlayerCard
               address={
-                [blackPlayer, whitePlayer].find((address) => {
-                  return address !== publicKey;
-                }) ?? ""
+                (gameState.whitePlayer == peerId
+                  ? gameState.blackPlayerName
+                  : gameState.whitePlayerName) || ""
               }
               amount="42.069 ETH"
               image="/img/avatar.png"
@@ -241,7 +274,11 @@ export default function Play() {
             </div>
             <PlayerCard
               isPlayer
-              address={publicKey}
+              address={
+                (gameState.whitePlayer == peerId
+                  ? gameState.whitePlayerName
+                  : gameState.blackPlayerName) || ""
+              }
               amount="42.069 ETH"
               image="/img/avatar2.png"
             />

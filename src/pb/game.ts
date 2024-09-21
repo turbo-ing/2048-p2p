@@ -56,6 +56,8 @@ export interface GameState {
   turn: Color;
   whitePlayer: string;
   blackPlayer: string;
+  whitePlayerName?: string;
+  blackPlayerName?: string;
   stopped?: string | undefined;
   history?: string | undefined;
   board: Board | undefined;

@@ -6,17 +6,18 @@ interface PlayerCardProps {
 }
 
 function shortenAddress(address: string): string {
-  // Ensure that the address is long enough to be shortened
-  if (address.length <= 4 + 3) {
-    return address;
-  }
+  return address;
+  // // Ensure that the address is long enough to be shortened
+  // if (address.length <= 4 + 3) {
+  //   return address;
+  // }
 
-  // Slice the start and end part of the string
-  const start = address.slice(0, 4);
-  const end = address.slice(-3);
+  // // Slice the start and end part of the string
+  // const start = address.slice(0, 4);
+  // const end = address.slice(-3);
 
-  // Return the shortened version with "..."
-  return `${start}...${end}`;
+  // // Return the shortened version with "..."
+  // return `${start}...${end}`;
 }
 
 export const PlayerCard = ({
@@ -55,7 +56,7 @@ export const PlayerCard = ({
         </div>
         <div className="text-[#101828]">
           <div>
-            <div className="text-4xl font-semibold">
+            <div className="text-4xl font-semibold truncate">
               {shortenAddress(address)}
             </div>
             <div className="text-[#101828] font-bold text-lg">

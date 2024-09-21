@@ -35,11 +35,13 @@ export const Navbar = ({
     <div className="absolute z-50 w-full">
       <div className="flex justify-between h-20 max-w-7xl mx-auto items-center lg:px-8 px-4">
         <div className="flex gap-10 items-center">
-          <img
-            alt=""
-            className="w-52"
-            src={isDark ? "/img/chessLogoDark.svg " : "/img/chessLogo.svg"}
-          />
+          <Link href="/" onClick={onClick}>
+            <img
+              alt=""
+              className="w-52"
+              src={isDark ? "/img/chessLogoDark.svg " : "/img/chessLogo.svg"}
+            />
+          </Link>
           {!isMobile && (
             <Link
               className={`${
@@ -71,7 +73,7 @@ export const Navbar = ({
             </svg>
           </div>
         ) : (
-          <div>
+          <div className="hidden">
             {isShowButton && (
               <div className="flex gap-2">
                 {/* {wallet &&
