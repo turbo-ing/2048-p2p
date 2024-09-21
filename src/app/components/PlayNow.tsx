@@ -11,7 +11,7 @@ import Modal from "./Modal";
 
 import { NodeDefinition } from "@/pb/query";
 import { useUsdtPrice } from "../contexts/UsdtPriceContext";
-import { useChess } from "@/reducer/chess";
+import { generateRoomCode, useChess } from "@/reducer/chess";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -40,7 +40,7 @@ export const PlayNow = ({
   balance,
   walletBalance,
 }: PlayNowProps) => {
-  const [state, dispatch, connected, setRoom] = useChess();
+  const [state, dispatch, connected, room, setRoom] = useChess();
 
   console.log(state);
 
@@ -48,13 +48,15 @@ export const PlayNow = ({
   const [isShowModal, setIsShowModal] = useState(false);
   const [address, setAddress] = useState("");
 
+  const [nameInput, setNameInput] = useState("");
+  const [roomIdInput, setRoomIdInput] = useState("");
+
   const router = useRouter();
 
   const usdtPrice = useUsdtPrice("ETH");
 
   const onClose = () => {
     setIsShowModal(false);
-    setSelectedMode(0);
   };
 
   const _handleDepositVault = async ({ wallet }: { wallet: ethers.Wallet }) => {
@@ -90,7 +92,6 @@ export const PlayNow = ({
       setLocalPrivateKey(localPrivate);
       sessionStorage.setItem("localPrivateKey", localPrivate);
       sessionStorage.setItem("localPublicKey", localPublic);
-      setSelectedMode(1);
     } catch (error) {
       console.error("Error connecting to MetaMask:", error);
     }
@@ -105,48 +106,64 @@ export const PlayNow = ({
   );
   const client = createClient(NodeDefinition, channel);
 
+  // useEffect(() => {
+  //   const f = async () => {
+  //     if (account) {
+  //       const response = await client.isInGame({
+  //         player: account,
+  //       });
+
+  //       if (response.state) {
+  //         sessionStorage.setItem("whitePlayer", response.state.whitePlayer);
+  //         sessionStorage.setItem("blackPlayer", response.state.blackPlayer);
+  //         router.push("/play");
+  //       }
+  //     }
+  //   };
+
+  //   const interval = setInterval(() => {
+  //     f();
+  //   }, 5000);
+
+  //   return () => clearInterval(interval);
+  // }, [account]);
+
+  // Check if both player has joined the room to start the game
   useEffect(() => {
-    const f = async () => {
-      if (account) {
-        const response = await client.isInGame({
-          player: account,
-        });
-
-        if (response.state) {
-          sessionStorage.setItem("whitePlayer", response.state.whitePlayer);
-          sessionStorage.setItem("blackPlayer", response.state.blackPlayer);
-          router.push("/play");
-        }
+    if (connected) {
+      if (state.whitePlayer && state.blackPlayer) {
+        router.push("/play");
       }
-    };
+    }
+  }, [state, connected]);
 
-    const interval = setInterval(() => {
-      f();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [account]);
-
-  const joinGame = async () => {
+  const joinGameDeprecated = async () => {
     // await client.start({
     //   whitePlayer: account,
     //   blackPlayer: address,
     // });
-    sessionStorage.setItem("whitePlayer", account);
-    sessionStorage.setItem("blackPlayer", address);
-    router.push(`/play`);
+    // sessionStorage.setItem("whitePlayer", account);
+    // sessionStorage.setItem("blackPlayer", address);
+    // router.push(`/play`);
+  };
+
+  const joinGame = async (roomId: string) => {
+    setRoom(roomId);
+  };
+
+  const newGame = async () => {
+    setSelectedMode(5);
+    joinGame(generateRoomCode());
   };
 
   const playWithFriend = async () => {
-    if (window.ethereum) {
-      const chainInvalid = await swithChain();
+    setSelectedMode(3);
+    setIsShowModal(true);
+  };
 
-      if (!chainInvalid) {
-        return;
-      } else {
-        setIsShowModal(true);
-      }
-    }
+  const joinRoom = async () => {
+    setSelectedMode(4);
+    setIsShowModal(true);
   };
 
   return (
@@ -191,9 +208,7 @@ export const PlayNow = ({
               </button>
               <button
                 className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8 disabled:bg-[#b6b7b9] disabled:text-[#A3ACBB] lg:w-[570px] w-[405px]"
-                onClick={() => {
-                  setIsShowModal(true);
-                }}
+                onClick={joinRoom}
               >
                 <img
                   alt=""
@@ -301,21 +316,23 @@ export const PlayNow = ({
             <div className="mt-8">
               <button
                 className="hover:bg-red-600 py-2.5 px-4 bg-[#F23939] rounded-full w-full justify-center"
-                onClick={joinGame}
+                onClick={joinGameDeprecated}
               >
                 <div className="font-semibold text-base">Join Game</div>
               </button>
             </div>
           </div>
-        ) : (
+        ) : selectedMode === 3 || selectedMode == 4 ? (
           <div>
             <img alt="" src="/svg/create-room.svg" />
             <div className="mt-4">
               <div className="text-[#F5F5F6] font-semibold text-lg">
-                Create a Room
+                {selectedMode == 3 ? "Create a Room" : "Join a Room"}
               </div>
               <div className="mt-1 text-sm text-[#94969C]">
-                Set up your own chess room and invite your friend
+                {selectedMode == 3
+                  ? "Set up your own chess room and invite your friend"
+                  : "Enter your friend's room code to start playing together"}
               </div>
             </div>
             <div className="mt-5">
@@ -331,9 +348,32 @@ export const PlayNow = ({
                     className="bg-[#0C111D] border border-[#333741] rounded-full shadow text-md text-[#85888E] py-2.5 px-3.5 w-full mt-1.5"
                     placeholder="Enter your name"
                     type="text"
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
                   />
                 </div>
               </div>
+
+              {selectedMode == 4 && (
+                <div className="mt-5">
+                  <label
+                    className="text-[#CECFD2] text-sm font-medium"
+                    htmlFor="username"
+                  >
+                    Room Code
+                  </label>
+                  <div>
+                    <input
+                      className="bg-[#0C111D] border border-[#333741] rounded-full shadow text-md text-[#85888E] py-2.5 px-3.5 w-full mt-1.5"
+                      placeholder="Enter room code"
+                      type="text"
+                      value={roomIdInput}
+                      onChange={(e) => setRoomIdInput(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* <div className="mt-5">
                 <label
                   className="text-[#CECFD2] text-sm font-medium"
@@ -352,8 +392,58 @@ export const PlayNow = ({
               </div> */}
             </div>
             <div className="mt-8">
-              <button className="hover:bg-red-600 py-2.5 px-4 bg-[#F23939] rounded-full w-full justify-center">
-                <div className="font-semibold text-base">Create Room</div>
+              <button
+                className="hover:bg-red-600 py-2.5 px-4 bg-[#F23939] rounded-full w-full justify-center"
+                onClick={
+                  selectedMode == 3
+                    ? () => newGame()
+                    : () => joinGame(roomIdInput)
+                }
+              >
+                <div className="font-semibold text-base">
+                  {selectedMode == 3 ? "Create Room" : "Join Room"}
+                </div>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <img alt="" src="/svg/find-friend.svg" />
+            <div className="mt-4">
+              <div className="text-[#F5F5F6] font-semibold text-lg">
+                Create a Room
+              </div>
+              <div className="mt-1 text-sm text-[#94969C]">
+                Share room code below with your friend
+              </div>
+            </div>
+            <div className="mt-5">
+              <div>
+                <label
+                  className="text-[#CECFD2] text-sm font-medium"
+                  htmlFor="wallet"
+                >
+                  Invite your friend below or wait for an invitation here.
+                  <br />
+                  Your address: {account}
+                </label>
+                <div>
+                  <input
+                    className="bg-[#0C111D] border border-[#333741] rounded-full shadow text-md text-[#85888E] py-2.5 px-3.5 w-full mt-1.5"
+                    placeholder="Enter your friend's address"
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="mt-8">
+              <button
+                className="hover:bg-red-600 py-2.5 px-4 bg-[#F23939] rounded-full w-full justify-center"
+                onClick={joinGameDeprecated}
+              >
+                <div className="font-semibold text-base">Join Game</div>
               </button>
             </div>
           </div>

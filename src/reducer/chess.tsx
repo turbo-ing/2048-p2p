@@ -46,6 +46,10 @@ const chessReducer = (state: GameState, action: Action): GameState => {
         throw new Error("Board not initialized");
       }
 
+      if (!state.whitePlayer || !state.blackPlayer) {
+        throw new Error("Opponent hasn't joined yet");
+      }
+
       if (state.turn == Color.WHITE && action.peerId != state.whitePlayer) {
         throw new Error("Not your turn");
       }
@@ -277,7 +281,13 @@ function initializeBoard(): Board {
 
 // Create Context
 const ChessContext = createContext<
-  | [GameState, Dispatch<Action>, boolean, Dispatch<SetStateAction<string>>]
+  | [
+      GameState,
+      Dispatch<Action>,
+      boolean,
+      string,
+      Dispatch<SetStateAction<string>>,
+    ]
   | null
 >(null);
 
@@ -303,7 +313,7 @@ export const ChessProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   return (
-    <ChessContext.Provider value={[state, dispatch, connected, setRoom]}>
+    <ChessContext.Provider value={[state, dispatch, connected, room, setRoom]}>
       {children}
     </ChessContext.Provider>
   );
@@ -317,3 +327,12 @@ export const useChess = () => {
   }
   return context;
 };
+
+export function generateRoomCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
