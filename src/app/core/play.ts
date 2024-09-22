@@ -4,6 +4,7 @@ import { Dispatch } from "react";
 import { sequencerWallet } from "./link";
 
 import { Position } from "@/pb/query";
+import { Board, Color } from "@/pb/game";
 
 interface onCellClickParams {
   pos: Position;
@@ -19,6 +20,7 @@ interface onCellClickParams {
   isTurn: boolean;
   txSent: string | null;
   setTxSent: Dispatch<React.SetStateAction<string | null>>;
+  board: Board;
 }
 
 const sendSequencerFee = async ({
@@ -51,14 +53,26 @@ const onCellClick = async ({
   isTurn,
   txSent,
   setTxSent,
+  board,
 }: onCellClickParams) => {
+  const actualRow = isBoardReversed ? 7 - pos.x : pos.x;
+  const actualCol = isBoardReversed ? pos.y : pos.y;
+
+  if (
+    board.rows[actualRow].cells[actualCol].piece?.color ===
+    (whitePlayer == player ? Color.WHITE : Color.BLACK)
+  ) {
+    setSelectedCell(pos);
+    return;
+  }
+
   if (selectedCell && isTurn) {
     const actualFromPos = isBoardReversed
       ? { x: 7 - selectedCell.x, y: selectedCell.y }
       : selectedCell;
     const actualToPos = isBoardReversed ? { x: 7 - pos.x, y: pos.y } : pos;
 
-    await makeMove(actualFromPos, actualToPos);
+    makeMove(actualFromPos, actualToPos).catch(console.error);
     setSelectedCell(null);
 
     // const message = {

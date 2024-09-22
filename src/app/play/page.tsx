@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { createChannel, createClient } from "nice-grpc-web";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { Color, GameState } from "../../pb/game";
 import { Navbar } from "../components/Navbar";
@@ -17,7 +17,7 @@ import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
 import useIsMobile from "../hooks/useIsMobile";
 
 import { NodeDefinition, Position } from "@/pb/query";
-import { useChess } from "@/reducer/chess";
+import { getPossibleMoves, useChess } from "@/reducer/chess";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { useRouter } from "next/navigation";
 
@@ -45,10 +45,13 @@ export default function Play() {
   const whitePlayer = gameState.whitePlayer;
   const blackPlayer = gameState.blackPlayer;
 
+  // const isBlackPlayer = publicKey === blackPlayer;
+  const isWhitePlayer = publicKey === whitePlayer;
+
   console.log(gameState);
 
   // const [gameState, setGameState] = useState<GameState>({} as GameState);
-  const [selectedCell, setSelectedCell] = useState<Position | null>(null);
+  const [selectedCell, _setSelectedCell] = useState<Position | null>(null);
   const [nextMoves, setNextMoves] = useState<{ [pos: string]: Boolean }>({});
   const [isBoardReversed, setIsBoardReversed] = useState<Boolean>(false);
   const [localPrivateKey, setLocalPrivateKey] = useState<string>("");
@@ -133,6 +136,41 @@ export default function Play() {
     }
   }, [provider, localPrivateKey]);
 
+  const setSelectedCell: Dispatch<SetStateAction<Position | null>> = (
+    position: SetStateAction<Position | null>,
+  ) => {
+    if (typeof position !== "function" && position && gameState.board) {
+      const actualRow = isBoardReversed ? 7 - position.x : position.x;
+      const actualCol = isBoardReversed ? position.y : position.y;
+      const piece = gameState.board.rows[actualRow].cells[actualCol].piece;
+
+      if (piece?.color !== (isWhitePlayer ? Color.WHITE : Color.BLACK)) {
+        return;
+      }
+
+      const nextMoves = getPossibleMoves(
+        piece,
+        { row: actualRow, col: actualCol },
+        gameState.board,
+      );
+
+      const moveMap: { [pos: string]: boolean } = {};
+
+      for (const move of nextMoves) {
+        moveMap[`${isBoardReversed ? 7 - move.row : move.row},${move.col}`] =
+          true;
+      }
+
+      setNextMoves(moveMap);
+    }
+
+    if (!position) {
+      setNextMoves({});
+    }
+
+    _setSelectedCell(position);
+  };
+
   const makeMove = async (from: Position, to: Position) => {
     const newBoard = JSON.parse(JSON.stringify(gameState.board));
     const piece = newBoard.rows[from.x].cells[from.y].piece;
@@ -177,8 +215,6 @@ export default function Play() {
     });
   };
 
-  // const isBlackPlayer = publicKey === blackPlayer;
-  const isWhitePlayer = publicKey === whitePlayer;
   const [isTurn, setIsTurn] = useState(true);
 
   useEffect(() => {
@@ -229,13 +265,14 @@ export default function Play() {
         ) : (
           <div className="lg:block hidden w-96">
             <PlayerCard
+              isTop={true}
+              isWhite={gameState.whitePlayer != peerId}
               address={
                 (gameState.whitePlayer == peerId
                   ? gameState.blackPlayerName
                   : gameState.whitePlayerName) || ""
               }
               amount="42.069 ETH"
-              image="/img/avatar.png"
             />
             <div className="py-5 text-center">
               {(gameState.turn === Color.WHITE && whitePlayer == publicKey) ||
@@ -253,14 +290,14 @@ export default function Play() {
               </div> */}
             </div>
             <PlayerCard
-              isPlayer
+              isTop={false}
+              isWhite={gameState.whitePlayer == peerId}
               address={
                 (gameState.whitePlayer == peerId
                   ? gameState.whitePlayerName
                   : gameState.blackPlayerName) || ""
               }
               amount="42.069 ETH"
-              image="/img/avatar2.png"
             />
             <div className="mt-8 px-6 flex justify-between">
               <button
@@ -307,13 +344,17 @@ export default function Play() {
                       <div
                         key={`${rowIndex}-${colIndex}`}
                         className={cx(
-                          "w-full h-full flex items-center justify-center",
+                          "w-full h-full flex items-center justify-center transition",
                           selectedCell?.x === rowIndex &&
                             selectedCell?.y === colIndex
                             ? "border-2 border-blue-500"
                             : "",
                           (rowIndex + colIndex) % 2 === 0
-                            ? "bg-[#F24545]"
+                            ? nextMoves[`${rowIndex},${colIndex}`]
+                              ? "bg-[#e91010]"
+                              : "bg-[#F24545]"
+                            : nextMoves[`${rowIndex},${colIndex}`]
+                            ? "bg-[#7c7c7c]"
                             : "bg-[#9B9B9B]",
                         )}
                         role="button"
@@ -333,6 +374,7 @@ export default function Play() {
                             isTurn: isTurn,
                             txSent,
                             setTxSent,
+                            board: gameState.board!,
                           })
                         }
                         onKeyDown={() => null}
@@ -382,12 +424,22 @@ export default function Play() {
         {isMobile && (
           <div className="flex w-full flex-col px-4">
             <div className="flex justify-between items-center font-semibold w-full">
-              <PlayerMobileCard address={whitePlayer} image="/img/avatar.png" />
+              <PlayerMobileCard
+                isWhite={gameState.whitePlayer != peerId}
+                address={
+                  (gameState.whitePlayer == peerId
+                    ? gameState.blackPlayerName
+                    : gameState.whitePlayerName) || ""
+                }
+              />
               <div className="text-[#FCFCFD] text-5xl">Vs</div>
               <PlayerMobileCard
-                isPlayer
-                address={blackPlayer}
-                image="/img/avatar2.png"
+                isWhite={gameState.whitePlayer == peerId}
+                address={
+                  (gameState.whitePlayer == peerId
+                    ? gameState.whitePlayerName
+                    : gameState.blackPlayerName) || ""
+                }
               />
             </div>
             <hr className="border-[#D8E3DA] my-5" />
