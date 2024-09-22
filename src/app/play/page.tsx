@@ -55,7 +55,6 @@ export default function Play() {
     useState<ethers.providers.Web3Provider | null>(null);
   const [wallet, setWallet] = useState<ethers.Wallet | null>(null);
   const [resultModal, setResultModal] = useState(false);
-  const [isWinner, setIsWinner] = useState(false);
   const [walletBalance, setWalletBalance] = useState("0");
   const [txSent, setTxSent] = useState<string | null>(null);
   const router = useRouter();
@@ -172,29 +171,9 @@ export default function Play() {
   };
 
   const onEndGameClick = async () => {
-    try {
-      const signer = provider?.getSigner();
-
-      const message = JSON.stringify({
-        whitePlayer,
-        blackPlayer,
-        action: "endGame",
-      });
-
-      const signature = await signer?.signMessage(message);
-
-      setIsWinner(false);
-
-      const _response = await client.endGame({
-        whitePlayer,
-        blackPlayer,
-        signature,
-      });
-    } catch (err) {
-      console.log(err);
-    }
-
-    setResultModal(true);
+    dispatch({
+      type: "LEAVE",
+    });
   };
 
   const isBlackPlayer = publicKey === blackPlayer;
@@ -300,8 +279,11 @@ export default function Play() {
           </div>
         )}
         <ResultModal
-          isWinner={isWinner}
-          open={resultModal}
+          isWinner={
+            gameState.winner === (isWhitePlayer ? Color.WHITE : Color.BLACK)
+          }
+          isDraw={gameState.winner === null}
+          open={gameState.winner !== undefined}
           onClose={() => setResultModal(false)}
         />
         <div className="flex justify-center w-full">

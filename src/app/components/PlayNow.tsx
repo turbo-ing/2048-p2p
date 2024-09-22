@@ -208,8 +208,7 @@ export const PlayNow = ({
               <div className="lg:text-6xl text-4xl font-semibold">Play Now</div>
             </div>
             <div className="mt-4 text-2xl font-semibold max-w-[598px]">
-              Start a quick match against a random opponent or play with
-              friends.
+              Create a room to play with friends.
             </div>
             <div className="mt-12">
               <button

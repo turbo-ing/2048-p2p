@@ -61,6 +61,10 @@ export interface GameState {
   stopped?: string | undefined;
   history?: string | undefined;
   board: Board | undefined;
+  winner?: Color | null;
+
+  whiteHalfMove: number;
+  blackHalfMove: number;
 }
 
 export interface Piece {
@@ -93,6 +97,9 @@ function createBaseGameState(): GameState {
     stopped: undefined,
     history: undefined,
     board: undefined,
+
+    whiteHalfMove: 0,
+    blackHalfMove: 0,
   };
 }
 
@@ -197,6 +204,8 @@ export const GameState: MessageFns<GameState> = {
         ? globalThis.String(object.history)
         : undefined,
       board: isSet(object.board) ? Board.fromJSON(object.board) : undefined,
+      whiteHalfMove: 0,
+      blackHalfMove: 0,
     };
   },
 

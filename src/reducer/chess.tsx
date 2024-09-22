@@ -32,8 +32,12 @@ interface JoinAction extends EdgeAction<GameState> {
   };
 }
 
+interface LeaveAction extends EdgeAction<GameState> {
+  type: "LEAVE";
+}
+
 // Action Types
-type Action = MoveAction | JoinAction;
+type Action = MoveAction | JoinAction | LeaveAction;
 
 function error(message: string) {
   console.error(message);
@@ -53,6 +57,11 @@ const chessReducer = (state: GameState, action: Action): GameState => {
 
       if (!state.whitePlayer || !state.blackPlayer) {
         error("Opponent hasn't joined yet");
+        return state;
+      }
+
+      if (typeof state.winner !== "undefined") {
+        error("Game has ended");
         return state;
       }
 
@@ -94,10 +103,39 @@ const chessReducer = (state: GameState, action: Action): GameState => {
       // Switch turn
       const nextTurn = state.turn === Color.WHITE ? Color.BLACK : Color.WHITE;
 
+      // Handle 50 moves rule
+      let newHalfMove =
+        (state.turn === Color.WHITE
+          ? state.whiteHalfMove
+          : state.blackHalfMove) + 1;
+      const targetPiece = board.rows[to.row]?.cells[to.col]?.piece;
+
+      // Reset half-move clock if a pawn moved or a capture was made
+      if (
+        movingPiece.kind === PieceKind.PAWN ||
+        (targetPiece && targetPiece.color !== movingPiece.color)
+      ) {
+        newHalfMove = 0;
+      }
+
+      // Check if the opponent is in checkmate
+      let winner;
+      if (isCheckmate(newBoard, nextTurn)) {
+        // Set winner to current player (since opponent is in checkmate)
+        winner = state.turn; // The player who made the move
+      } else if (newHalfMove >= 50) {
+        winner = null;
+      }
+
       return {
         ...state,
         turn: nextTurn,
         board: newBoard,
+        winner,
+        whiteHalfMove:
+          state.turn === Color.WHITE ? newHalfMove : state.whiteHalfMove,
+        blackHalfMove:
+          state.turn === Color.BLACK ? newHalfMove : state.blackHalfMove,
       };
     }
 
@@ -126,6 +164,24 @@ const chessReducer = (state: GameState, action: Action): GameState => {
       }
     }
 
+    case "LEAVE": {
+      if (state.whitePlayer == action.peerId) {
+        return {
+          ...state,
+          winner: Color.BLACK,
+        };
+      }
+
+      if (state.blackPlayer == action.peerId) {
+        return {
+          ...state,
+          winner: Color.WHITE,
+        };
+      }
+
+      return state;
+    }
+
     default:
       return state;
   }
@@ -137,6 +193,7 @@ function validateMove(
   from: { row: number; col: number },
   to: { row: number; col: number },
   board: Board,
+  checkOwnKingSafety: boolean = true,
 ): boolean {
   const deltaRow = to.row - from.row;
   const deltaCol = to.col - from.col;
@@ -154,13 +211,15 @@ function validateMove(
 
   const direction = piece.color === Color.WHITE ? -1 : 1;
 
+  let isValidMove = false;
+
   switch (piece.kind) {
     case PieceKind.PAWN: {
       // Move forward
       if (deltaCol === 0) {
         // One square forward
         if (deltaRow === direction && !targetCell.piece) {
-          return true;
+          isValidMove = true;
         }
         // Two squares forward from starting position
         const startRow = piece.color === Color.WHITE ? 6 : 1;
@@ -172,7 +231,7 @@ function validateMove(
           const intermediateRow = from.row + direction;
           const intermediateCell = board.rows[intermediateRow]?.cells[from.col];
           if (!intermediateCell.piece) {
-            return true;
+            isValidMove = true;
           }
         }
       }
@@ -183,25 +242,25 @@ function validateMove(
         targetCell.piece &&
         targetCell.piece.color !== piece.color
       ) {
-        return true;
+        isValidMove = true;
       }
-      return false;
+      break;
     }
     case PieceKind.ROOK: {
       if (deltaRow === 0 || deltaCol === 0) {
         if (isPathClear(board, from, to)) {
-          return true;
+          isValidMove = true;
         }
       }
-      return false;
+      break;
     }
     case PieceKind.BISHOP: {
       if (Math.abs(deltaRow) === Math.abs(deltaCol)) {
         if (isPathClear(board, from, to)) {
-          return true;
+          isValidMove = true;
         }
       }
-      return false;
+      break;
     }
     case PieceKind.QUEEN: {
       if (
@@ -210,29 +269,48 @@ function validateMove(
         Math.abs(deltaRow) === Math.abs(deltaCol)
       ) {
         if (isPathClear(board, from, to)) {
-          return true;
+          isValidMove = true;
         }
       }
-      return false;
+      break;
     }
     case PieceKind.KNIGHT: {
       if (
         (Math.abs(deltaRow) === 2 && Math.abs(deltaCol) === 1) ||
         (Math.abs(deltaRow) === 1 && Math.abs(deltaCol) === 2)
       ) {
-        return true;
+        isValidMove = true;
       }
-      return false;
+      break;
     }
     case PieceKind.KING: {
       if (Math.abs(deltaRow) <= 1 && Math.abs(deltaCol) <= 1) {
-        return true;
+        isValidMove = true;
       }
-      return false;
+      break;
     }
     default:
       return false;
   }
+
+  if (!isValidMove) {
+    return false;
+  }
+
+  if (checkOwnKingSafety) {
+    // Simulate the move and check if own king is in check
+    const newBoard = JSON.parse(JSON.stringify(board)) as Board;
+
+    // Perform the move on the new board
+    newBoard.rows[to.row].cells[to.col].piece = piece;
+    newBoard.rows[from.row].cells[from.col].piece = undefined;
+
+    if (isInCheck(newBoard, piece.color)) {
+      return false; // Move would leave own king in check
+    }
+  }
+
+  return true;
 }
 
 // Helper Function to Check if Path is Clear
@@ -259,6 +337,117 @@ function isPathClear(
     currentCol += stepCol;
   }
   return true; // Path is clear
+}
+
+// Function to Find the King's Position
+function findKingPosition(
+  board: Board,
+  color: Color,
+): { row: number; col: number } | null {
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const cell = board.rows[row].cells[col];
+      if (
+        cell.piece &&
+        cell.piece.color === color &&
+        cell.piece.kind === PieceKind.KING
+      ) {
+        return { row, col };
+      }
+    }
+  }
+  return null;
+}
+
+// Function to Check if Square is Under Attack
+function isSquareUnderAttack(
+  board: Board,
+  position: { row: number; col: number },
+  byColor: Color,
+): boolean {
+  const opponentColor = byColor;
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const cell = board.rows[row].cells[col];
+      if (cell.piece && cell.piece.color === opponentColor) {
+        const from = { row, col };
+        const to = position;
+        if (validateMove(cell.piece, from, to, board, false)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+// Function to Check if King is in Check
+function isInCheck(board: Board, color: Color): boolean {
+  const kingPosition = findKingPosition(board, color);
+  if (!kingPosition) {
+    // King not found, game over
+    return true;
+  }
+  const opponentColor = color === Color.WHITE ? Color.BLACK : Color.WHITE;
+  return isSquareUnderAttack(board, kingPosition, opponentColor);
+}
+
+// Function to Check if Player is in Checkmate
+function isCheckmate(board: Board, color: Color): boolean {
+  if (!isInCheck(board, color)) {
+    return false; // Not in check, so cannot be in checkmate
+  }
+
+  // For each piece of the player
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const cell = board.rows[row].cells[col];
+      if (cell.piece && cell.piece.color === color) {
+        const from = { row, col };
+
+        // Get possible moves for this piece
+        const possibleMoves = getPossibleMoves(cell.piece, from, board);
+
+        for (const to of possibleMoves) {
+          // Simulate the move
+          const newBoard = JSON.parse(JSON.stringify(board)) as Board;
+
+          // Perform the move
+          newBoard.rows[to.row].cells[to.col].piece = cell.piece;
+          newBoard.rows[from.row].cells[from.col].piece = undefined;
+
+          // Check if the king is still in check
+          if (!isInCheck(newBoard, color)) {
+            return false; // Found a legal move that gets out of check
+          }
+        }
+      }
+    }
+  }
+
+  // No legal moves found to get out of check
+  return true;
+}
+
+// Suggest Next Possible Moves for a Selected Piece
+export function getPossibleMoves(
+  piece: Piece,
+  from: { row: number; col: number },
+  board: Board,
+): { row: number; col: number }[] {
+  const possibleMoves: { row: number; col: number }[] = [];
+
+  // Loop over all squares on the board
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const to = { row, col };
+      if (validateMove(piece, from, to, board)) {
+        possibleMoves.push(to);
+      }
+    }
+  }
+
+  return possibleMoves;
 }
 
 // Initialize the board with starting positions
@@ -322,6 +511,8 @@ export const ChessProvider: React.FC<{ children: React.ReactNode }> = ({
     whitePlayer: "",
     blackPlayer: "",
     board: initializeBoard(),
+    whiteHalfMove: 0,
+    blackHalfMove: 0,
   };
 
   const [state, dispatch, connected] = useEdgeReducerV0(

@@ -39,14 +39,14 @@ export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
 
       <div className="z-50 max-w-5xl mx-auto">
         <div className=" text-[#101828] text-5xl lg:text-7xl text-center font-semibold">
-          Experience Chess in the
+          <span className="text-[#DC3434]">Serverless P2P</span> Chess in
           <span className="text-[#DC3434]"> Decentralized</span> Web3 Era!
         </div>
         <div className="mt-6 max-w-2xl mx-auto mb-12">
           <p className="text-[#475467] text-xl font-medium text-center">
-            Ditch the servers and embrace the future. BlockKnight’s peer-to-peer
-            technology offers a decentralized, secure, and thrilling chess
-            experience—right in your browser!
+            BlockKnight is powered by Turbo Edge’s peer-to-peer technology
+            offers a decentralized, secure, and thrilling chess experience—right
+            in your browser with zero servers!
           </p>
         </div>
         <div className="flex gap-3 justify-center">
