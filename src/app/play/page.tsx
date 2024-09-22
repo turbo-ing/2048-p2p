@@ -122,8 +122,8 @@ export default function Play() {
   }, [wallet]);
 
   useEffect(() => {
-    setIsBoardReversed(publicKey === whitePlayer);
-  }, [whitePlayer, publicKey]);
+    setIsBoardReversed(publicKey === blackPlayer);
+  }, [blackPlayer, publicKey]);
 
   useEffect(() => {
     if (provider) {
