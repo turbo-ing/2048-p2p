@@ -49,6 +49,7 @@ export default function Play() {
 
   // const [gameState, setGameState] = useState<GameState>({} as GameState);
   const [selectedCell, setSelectedCell] = useState<Position | null>(null);
+  const [nextMoves, setNextMoves] = useState<{ [pos: string]: Boolean }>({});
   const [isBoardReversed, setIsBoardReversed] = useState<Boolean>(false);
   const [localPrivateKey, setLocalPrivateKey] = useState<string>("");
   const [provider, setProvider] =
@@ -176,7 +177,7 @@ export default function Play() {
     });
   };
 
-  const isBlackPlayer = publicKey === blackPlayer;
+  // const isBlackPlayer = publicKey === blackPlayer;
   const isWhitePlayer = publicKey === whitePlayer;
   const [isTurn, setIsTurn] = useState(true);
 
