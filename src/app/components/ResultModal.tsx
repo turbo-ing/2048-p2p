@@ -19,7 +19,7 @@ export const ResultModal = ({
   const router = useRouter();
 
   return (
-    <Modal show={open} onClose={onClose}>
+    <Modal show={open}>
       <div>
         <div className="relative">
           <img
