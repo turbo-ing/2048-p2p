@@ -125,6 +125,8 @@ const chessReducer = (state: GameState, action: Action): GameState => {
         winner = state.turn; // The player who made the move
       } else if (newHalfMove >= 50) {
         winner = null;
+      } else if (isStalemate(newBoard, nextTurn)) {
+        winner = null;
       }
 
       return {
@@ -426,6 +428,33 @@ function isCheckmate(board: Board, color: Color): boolean {
   }
 
   // No legal moves found to get out of check
+  return true;
+}
+
+// Check if Player is in Stalemate
+function isStalemate(board: Board, color: Color): boolean {
+  if (isInCheck(board, color)) {
+    return false; // In check, so cannot be in stalemate
+  }
+
+  // For each piece of the player
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const cell = board.rows[row].cells[col];
+      if (cell.piece && cell.piece.color === color) {
+        const from = { row, col };
+
+        // Get possible moves for this piece
+        const possibleMoves = getPossibleMoves(cell.piece, from, board);
+
+        if (possibleMoves.length > 0) {
+          return false; // Found a legal move
+        }
+      }
+    }
+  }
+
+  // No legal moves found
   return true;
 }
 
