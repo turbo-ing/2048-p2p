@@ -898,7 +898,7 @@
   resolved "https://registry.npmjs.org/@leichtgewicht/ip-codec/-/ip-codec-2.0.5.tgz"
   integrity sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==
 
-"@libp2p/circuit-relay-v2@^2.0.1":
+"@libp2p/circuit-relay-v2@2.0.1":
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@libp2p/circuit-relay-v2/-/circuit-relay-v2-2.0.1.tgz#32df8ec7d0c2d089ed68497f6b0162dbe9aae909"
   integrity sha512-NyrxFG+xMexkP65FewQUgeqtAv1S/fvBBYpdltmaFs3gq2HC//5CEAHssFiwNvxlhxhPs39AHfi5yGB7GbCvPA==
@@ -3782,15 +3782,15 @@
   dependencies:
     tslib "^2.4.0"
 
-"@turbo-ing/edge-v0@^0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@turbo-ing/edge-v0/-/edge-v0-0.1.2.tgz#0e2a8a725e48fd141eb842e67abb4d5696a78e9b"
-  integrity sha512-k2KQctyv57F7q3Uu3f++S0F4vkj/uytbHN4uDXke50T1jGLeaZ+RDV+nRE420FjK+bcUo810pL4yp1eSD+/NIg==
+"@turbo-ing/edge-v0@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@turbo-ing/edge-v0/-/edge-v0-0.2.0.tgz#00107fbd0e574e762f254a058ef5d386718fd23e"
+  integrity sha512-uaQyaTbC8LPAUxhzcrlkMtEfcqFMR0D4JojBk1gU8Acdj3Q/0R43Y9wtpxGvpZVRVXi4IbNT0WcSySvgFMby/A==
   dependencies:
     "@chainsafe/libp2p-gossipsub" "^14.1.0"
     "@chainsafe/libp2p-noise" "^16.0.0"
     "@chainsafe/libp2p-yamux" "^7.0.0"
-    "@libp2p/circuit-relay-v2" "^2.0.1"
+    "@libp2p/circuit-relay-v2" "2.0.1"
     "@libp2p/crypto" "^5.0.1"
     "@libp2p/dcutr" "^2.0.1"
     "@libp2p/floodsub" "^10.0.1"
