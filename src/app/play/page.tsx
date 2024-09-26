@@ -20,6 +20,7 @@ import { NodeDefinition, Position } from "@/pb/query";
 import { getPossibleMoves, useChess } from "@/reducer/chess";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { useRouter } from "next/navigation";
+import { ConnectingModal } from "../components/ConnectingModal";
 
 const pieceToSvg: Record<string, string> = {
   r: "/assets/rook-b.svg",
@@ -324,6 +325,7 @@ export default function Play() {
           open={gameState.winner !== undefined}
           onClose={() => setResultModal(false)}
         />
+        <ConnectingModal open={!connected}></ConnectingModal>
         <div className="flex justify-center w-full">
           <Card className="pr-2 md:pl-2.5 md:pb-2.5 md:pt-10 md:pr-10 pt-4 bg-[#CFD1D21A] shadow-lg rounded-lg w-screen lg:w-[700px] lg:h-[700px] md:max-w-[700px] lg:max-w-[680px] max-h-screen">
             <div className="grid-container gap-0 relative w-full aspect-square">
