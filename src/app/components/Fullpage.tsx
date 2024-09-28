@@ -76,7 +76,7 @@ const FullPageSlides = () => {
   return (
     <div className="relative w-screen h-screen">
       <Navbar
-        isDark={activeIndex === 0 ? false : true}
+        isDark={true}
         onClick={() => {
           goToSlide(0);
         }}

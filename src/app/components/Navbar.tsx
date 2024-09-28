@@ -32,14 +32,14 @@ export const Navbar = ({
   const isMobile = useIsMobile();
 
   return (
-    <div className="absolute z-50 w-full">
+    <div className="absolute z-50 w-full bg-black">
       <div className="flex justify-between h-20 max-w-7xl mx-auto items-center lg:px-8 px-4">
         <div className="flex gap-10 items-center">
           <Link href="/" onClick={onClick}>
             <img
               alt=""
-              className="w-52"
-              src={isDark ? "/img/chessLogoDark.svg " : "/img/chessLogo.svg"}
+              className="max-h-8"
+              src={isDark ? "/svg/2048-logo.svg" : "/svg/2048-logo.svg"}
             />
           </Link>
           {!isMobile && (
@@ -85,7 +85,7 @@ export const Navbar = ({
                     </div>
                   )} */}
                 <div className="bg-white rounded-full p-2 flex gap-2 items-center">
-                  <img src="/svg/chain/turbo.svg" alt="" />
+                  <img alt="" src="/svg/chain/turbo.svg" />
                   <div className="text-lg font-bold text-[#25292E]">Turbo</div>
                 </div>
                 <div className="bg-white rounded-full py-2 px-3 flex gap-2 items-center">

@@ -39,4 +39,5 @@ next-env.d.ts
 
 old
 
-.env
+pnpm-lock.yaml
+.idea
