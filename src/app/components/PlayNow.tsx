@@ -185,7 +185,7 @@ export const PlayNow = ({
   };
 
   const playSoloMode = async () => {
-    router.push("/play");
+    router.push("/gameplay");
   };
 
   return (

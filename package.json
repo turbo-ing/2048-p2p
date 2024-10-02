@@ -19,6 +19,7 @@
     "@noble/secp256k1": "^2.1.0",
     "@reduxjs/toolkit": "^2.2.7",
     "@turbo-ing/edge-v0": "^0.2.1",
+    "@types/styled-components": "^5.1.26",
     "@typescript-eslint/eslint-plugin": "^5.6.0",
     "@typescript-eslint/parser": "^5.6.0",
     "classnames": "^2.5.1",
@@ -33,7 +34,8 @@
     "noble-hashes": "^0.3.1",
     "protobufjs": "^7.4.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "styled-components": "^5.3.6"
   },
   "devDependencies": {
     "@types/node": "^20",
