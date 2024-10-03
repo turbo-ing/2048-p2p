@@ -10,7 +10,7 @@ import { useUsdtPrice } from "../contexts/UsdtPriceContext";
 import Modal from "./Modal";
 
 import { NodeDefinition } from "@/pb/query";
-import { generateRoomCode, useChess } from "@/reducer/chess";
+import { generateRoomCode } from "@/reducer/chess";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -39,11 +39,12 @@ export const PlayNow = ({
   balance,
   walletBalance,
 }: PlayNowProps) => {
-  const [state, dispatch, connected, room, setRoom] = useChess();
+  const [room, setRoom] = useState("");
+  // const [state, dispatch, connected, room, setRoom] = useChess();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
 
-  console.log(state);
+  // console.log(state);
 
   const [isdepositModal, setIsdepositModal] = useState(false);
   const [isShowModal, setIsShowModal] = useState(false);
@@ -55,21 +56,21 @@ export const PlayNow = ({
 
   const router = useRouter();
 
-  const usdtPrice = useUsdtPrice("ETH");
+  // const usdtPrice = useUsdtPrice("ETH");
 
   const onClose = () => {
     setIsShowModal(false);
     setRoom("");
   };
 
-  const _handleDepositVault = async ({ wallet }: { wallet: ethers.Wallet }) => {
-    if (wallet && provider) {
-      const to = await wallet.getAddress();
-      const value = ethers.utils.parseEther("0.2");
-
-      console.log(await depositVault({ provider, to, value }));
-    }
-  };
+  // const _handleDepositVault = async ({ wallet }: { wallet: ethers.Wallet }) => {
+  //   if (wallet && provider) {
+  //     const to = await wallet.getAddress();
+  //     const value = ethers.utils.parseEther("0.2");
+  //
+  //     console.log(await depositVault({ provider, to, value }));
+  //   }
+  // };
 
   // const connectWallet = async ({
   //   provider,
@@ -104,10 +105,10 @@ export const PlayNow = ({
   //   await connectWallet({ provider: provider! });
   // };
 
-  const channel = createChannel(
-    (process.env.NEXT_PUBLIC_CHANNEL as string) || "http://127.0.0.1:50050",
-  );
-  const client = createClient(NodeDefinition, channel);
+  // const channel = createChannel(
+  //   (process.env.NEXT_PUBLIC_CHANNEL as string) || "http://127.0.0.1:50050",
+  // );
+  // const client = createClient(NodeDefinition, channel);
 
   // useEffect(() => {
   //   const f = async () => {
@@ -132,33 +133,33 @@ export const PlayNow = ({
   // }, [account]);
 
   // Check if both player has joined the room to start the game
-  useEffect(() => {
-    if (connected) {
-      // If both player connected then start the game
-      if (state.whitePlayer && state.blackPlayer) {
-        router.push("/play");
-      }
-
-      // If the player is not joined yet then join the game
-      if (!state.whitePlayer || !state.blackPlayer) {
-        if (state.whitePlayer != peerId && state.blackPlayer != peerId) {
-          dispatch({
-            type: "JOIN",
-            payload: {
-              name: nameInput,
-            },
-          });
-        }
-      } else {
-        if (state.whitePlayer != peerId && state.blackPlayer != peerId) {
-          window.alert(
-            "Another player has already joined the goom. Please create a new room.",
-          );
-          window.location.reload();
-        }
-      }
-    }
-  }, [state, connected, peerId, nameInput]);
+  // useEffect(() => {
+  //   if (connected) {
+  //     // If both player connected then start the game
+  //     if (state.whitePlayer && state.blackPlayer) {
+  //       router.push("/play");
+  //     }
+  //
+  //     // If the player is not joined yet then join the game
+  //     if (!state.whitePlayer || !state.blackPlayer) {
+  //       if (state.whitePlayer != peerId && state.blackPlayer != peerId) {
+  //         dispatch({
+  //           type: "JOIN",
+  //           payload: {
+  //             name: nameInput,
+  //           },
+  //         });
+  //       }
+  //     } else {
+  //       if (state.whitePlayer != peerId && state.blackPlayer != peerId) {
+  //         window.alert(
+  //           "Another player has already joined the goom. Please create a new room.",
+  //         );
+  //         window.location.reload();
+  //       }
+  //     }
+  //   }
+  // }, [state, connected, peerId, nameInput]);
 
   const joinGame = async (roomId: string) => {
     setSelectedMode(4);
@@ -185,7 +186,8 @@ export const PlayNow = ({
   };
 
   const playSoloMode = async () => {
-    router.push("/gameplay");
+    // router.push("/gameplay");
+    router.push("/game2048");
   };
 
   return (
