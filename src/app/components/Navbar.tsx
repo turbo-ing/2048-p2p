@@ -32,21 +32,16 @@ export const Navbar = ({
   const isMobile = useIsMobile();
 
   return (
-    <div className="absolute z-50 w-full">
-      <div className="flex justify-between h-20 max-w-7xl mx-auto items-center lg:px-8 px-4">
+    <div className="absolute z-50 w-full bg-black">
+      <div className="flex justify-between h-20 max-w-7xl mx-auto items-center lg:px-8 px-4 ">
         <div className="flex gap-10 items-center">
           <Link href="/" onClick={onClick}>
-            <img
-              alt=""
-              className="w-52"
-              src={isDark ? "/img/chessLogoDark.svg " : "/img/chessLogo.svg"}
-            />
+            <img alt="" className="w-36" src={"/svg/logo.svg"} />
           </Link>
           {!isMobile && (
             <Link
-              className={`${
-                isDark ? "text-white" : "text-[#475467]"
-              } text-base font-semibold`}
+              className={`text-white
+               text-base font-semibold`}
               href="/"
               onClick={onClick}
             >

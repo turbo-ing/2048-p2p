@@ -9,7 +9,7 @@ export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
 
   return (
     <div
-      className={`absolute inset-0 w-full h-full flex items-center justify-center text-white text-4xl transition-opacity duration-1000 ${
+      className={`absolute inset-0 w-full h-full flex  justify-center text-white text-4xl transition-opacity duration-1000 ${
         activeIndex === 0 ? "opacity-100 z-20" : "opacity-0 z-10"
       }`}
     >
@@ -18,35 +18,16 @@ export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
         className="w-full h-full absolute left-0"
         src="/img/backgroundPattern.png"
       />
-      {!isMobile && (
-        <>
-          <div className="absolute left-0 top-1/2 -translate-y-[45%]">
-            <img
-              alt=""
-              className="w-[160px] h-[580px] xl:w-[206px] xl:h-full"
-              src="/img/chess.png"
-            />
-          </div>
-          <div className="absolute right-0 top-1/2 -translate-y-[45%]">
-            <img
-              alt=""
-              className="w-[160px] h-[580px] xl:w-[206px] xl:h-full"
-              src="/img/chess-horse.png"
-            />
-          </div>
-        </>
-      )}
 
-      <div className="z-50 max-w-5xl mx-auto">
-        <div className=" text-[#101828] text-5xl lg:text-7xl text-center font-semibold">
-          <span className="text-[#DC3434]">Serverless P2P</span> Chess in
-          <span className="text-[#DC3434]"> Decentralized</span> Web3 Era!
+      <div className="z-50 max-w-5xl mx-auto pt-40 lg:pt-44">
+        <div className=" text-white text-5xl lg:text-6xl text-center font-semibold">
+          <div>The Ultimate Decentralized,</div>
+          <div>Serverless 2048 Experience.</div>
         </div>
         <div className="mt-6 max-w-2xl mx-auto mb-12">
-          <p className="text-[#475467] text-xl font-medium text-center">
-            BlockKnight is powered by Turbo Edge’s peer-to-peer technology
-            offers a decentralized, secure, and thrilling chess experience—right
-            in your browser with zero servers!
+          <p className="text-white text-xl lg:text-2xl text-center">
+            Play solo or challenge a friend in real-time, peer-to-peer gameplay,
+            powered by blockchain technology!
           </p>
         </div>
         <div className="flex gap-3 justify-center">
@@ -63,6 +44,11 @@ export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
             <div className="text-lg">Play now</div>
           </button>
         </div>
+        {activeIndex === 0 && (
+          <div className="pt-16 flex justify-center w-full">
+            <img src="/svg/poweredBy.svg" alt="" />
+          </div>
+        )}
       </div>
     </div>
   );

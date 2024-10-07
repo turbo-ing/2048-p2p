@@ -8,12 +8,10 @@ import Image from "next/image";
 import { createChannel, createClient } from "nice-grpc-web";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
-import { Color, GameState } from "../../pb/game";
+import { Color } from "../../pb/game";
 import { Navbar } from "../components/Navbar";
-import { PlayerCard, PlayerMobileCard } from "../components/playerCard";
 import { ResultModal } from "../components/ResultModal";
 import { onCellClick, sendSequencerFee } from "../core/play";
-import { useGameStateFetcher, usePeersFetcher } from "../hooks/gameHooks";
 import useIsMobile from "../hooks/useIsMobile";
 
 import { NodeDefinition, Position } from "@/pb/query";
@@ -265,16 +263,6 @@ export default function Play() {
           </div>
         ) : (
           <div className="lg:block hidden w-96">
-            <PlayerCard
-              isTop={true}
-              isWhite={gameState.whitePlayer != peerId}
-              address={
-                (gameState.whitePlayer == peerId
-                  ? gameState.blackPlayerName
-                  : gameState.whitePlayerName) || ""
-              }
-              amount="42.069 ETH"
-            />
             <div className="py-5 text-center">
               {(gameState.turn === Color.WHITE && whitePlayer == publicKey) ||
               (blackPlayer == publicKey && gameState.turn === Color.BLACK) ? (
@@ -290,16 +278,7 @@ export default function Play() {
                 0:12
               </div> */}
             </div>
-            <PlayerCard
-              isTop={false}
-              isWhite={gameState.whitePlayer == peerId}
-              address={
-                (gameState.whitePlayer == peerId
-                  ? gameState.whitePlayerName
-                  : gameState.blackPlayerName) || ""
-              }
-              amount="42.069 ETH"
-            />
+
             <div className="mt-8 px-6 flex justify-between">
               <button
                 className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-full"
@@ -423,41 +402,6 @@ export default function Play() {
             </div>
           </Card>
         </div>
-        {isMobile && (
-          <div className="flex w-full flex-col px-4">
-            <div className="flex justify-between items-center font-semibold w-full">
-              <PlayerMobileCard
-                isWhite={gameState.whitePlayer != peerId}
-                address={
-                  (gameState.whitePlayer == peerId
-                    ? gameState.blackPlayerName
-                    : gameState.whitePlayerName) || ""
-                }
-              />
-              <div className="text-[#FCFCFD] text-5xl">Vs</div>
-              <PlayerMobileCard
-                isWhite={gameState.whitePlayer == peerId}
-                address={
-                  (gameState.whitePlayer == peerId
-                    ? gameState.whitePlayerName
-                    : gameState.blackPlayerName) || ""
-                }
-              />
-            </div>
-            <hr className="border-[#D8E3DA] my-5" />
-            <button
-              className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center"
-              onClick={onEndGameClick}
-            >
-              <img alt="" src="/svg/close.svg" />
-              <div>End Game</div>
-            </button>
-            {/* <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center mt-4">
-              <img alt="" src="/svg/rematch.svg" />
-              <div>Rematch</div>
-            </button> */}
-          </div>
-        )}
       </main>
     </div>
   );

@@ -3,16 +3,15 @@ import { useRouter } from "next/navigation";
 import { createChannel, createClient } from "nice-grpc-web";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
-import { depositVault, linkToWallet } from "../core/link";
-import swithChain from "../core/switchChain";
+import { depositVault } from "../core/link";
 
 import { DepositVault } from "./Deposit";
 import Modal from "./Modal";
 
 import { NodeDefinition } from "@/pb/query";
-import { useUsdtPrice } from "../contexts/UsdtPriceContext";
 import { generateRoomCode, useChess } from "@/reducer/chess";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
+import { useUsdtPrice } from "../contexts/UsdtPriceContext";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -193,22 +192,93 @@ export const PlayNow = ({
   return (
     <>
       <div
-        className={`absolute inset-0 w-full h-full text-black text-4xl transition-opacity duration-1000 ${
+        className={`relative inset-0 w-full h-full text-black text-4xl transition-opacity duration-1000 ${
           activeIndex === 1 ? "opacity-100 z-20" : "opacity-0 z-10"
         }`}
       >
-        <div className="relative flex items-center text-[#D9D9D9]">
-          <div className="absolute max-w-7xl mx-auto w-full left-1/2 -translate-x-1/2 md:px-16 px-2 z-40">
-            <div className="flex items-center gap-4">
+        <img
+          alt=""
+          className="w-full h-full left-0 z-20 object-cover"
+          src="/img/playnowbg.png"
+        />
+        <div className="absolute top-1/2 -translate-y-1/2 z-30 text-[#D9D9D9] w-full max-w-7xl left-1/2 -translate-x-1/2 px-4">
+          <div className="flex justify-center">
+            <img
+              src="/svg/2048.svg"
+              alt=""
+              className="py-8 max-w-[286px] w-auto lg:hidden block"
+            />
+          </div>
+          <div>
+            <div className="w-full">
+              <div className="flex items-center gap-4">
+                <div className="lg:text-6xl text-4xl font-semibold">
+                  Play Now
+                </div>
+              </div>
+              <div className="mt-4 text-2xl font-semibold max-w-[598px]">
+                Dive into the Decentralized 2048 Experience!
+              </div>
+            </div>
+            <div className="mt-12 flex justify-between">
+              <div className="md:w-1/2 w-full">
+                <button
+                  className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center w-full"
+                  onClick={playWithFriend}
+                >
+                  <img
+                    alt=""
+                    className="w-16 h-16 lg:w-24 lg:h-24"
+                    src="/svg/play-white.svg"
+                  />
+                  <div className="text-[#FCFCFD] text-left">
+                    <div className="text-2xl lg:text-5xl font-semibold">
+                      Classic 2048
+                    </div>
+                    <div className="text-[#E4E7EC] text-base lg:text-xl font-medium mt-1">
+                      Challenge Yourself!
+                    </div>
+                  </div>
+                </button>
+                <button
+                  className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center mt-8 disabled:bg-[#b6b7b9] disabled:text-[#A3ACBB] w-full"
+                  onClick={joinRoom}
+                >
+                  <img
+                    alt=""
+                    className="w-16 h-16 lg:w-24 lg:h-24"
+                    src="/svg/users.svg"
+                  />
+                  <div
+                    className="text-[#FCFCFD] text-left disabled:text-[#A3ACBB]"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={() => null}
+                  >
+                    <div className="text-2xl lg:text-5xl font-semibold">
+                      Invite a Friend
+                    </div>
+                    <div className="text-[#E4E7EC] text-base lg:text-xl font-medium mt-1 disabled:text-[#A3ACBB]">
+                      Invite a friend for a private match!
+                    </div>
+                  </div>
+                </button>
+              </div>
               <img
+                src="/svg/2048.svg"
                 alt=""
-                className="lg:w-[72px] lg:h-[72px] w-16 h-16"
-                src="/svg/playnow.svg"
+                className="lg:block hidden max-w-[474px] w-auto"
               />
+            </div>
+          </div>
+        </div>
+        {/* <div className="flex items-center text-[#D9D9D9] max-w-7xl mx-auto h-screen">
+          <div className="w-full md:px-16 px-2 z-40">
+            <div className="flex items-center gap-4">
               <div className="lg:text-6xl text-4xl font-semibold">Play Now</div>
             </div>
             <div className="mt-4 text-2xl font-semibold max-w-[598px]">
-              Create a room to play with friends.
+              Dive into the Decentralized 2048 Experience!
             </div>
             <div className="mt-12">
               <button
@@ -217,15 +287,15 @@ export const PlayNow = ({
               >
                 <img
                   alt=""
-                  className="w-16 h-16 lg:w-auto lg:h-auto"
-                  src="/svg/Chess-Board.svg"
+                  className="w-16 h-16 lg:w-24 lg:h-24"
+                  src="/svg/play-white.svg"
                 />
                 <div className="text-[#FCFCFD] text-left">
                   <div className="text-2xl lg:text-5xl font-semibold">
-                    Create Room
+                    Classic 2048
                   </div>
                   <div className="text-[#E4E7EC] text-base lg:text-xl font-medium mt-1">
-                    Invite a friend for a private match!
+                    Challenge Yourself!
                   </div>
                 </div>
               </button>
@@ -235,8 +305,8 @@ export const PlayNow = ({
               >
                 <img
                   alt=""
-                  className="w-16 h-16 lg:w-auto lg:h-auto"
-                  src="/svg/quickMatch.svg"
+                  className="w-16 h-16 lg:w-24 lg:h-24"
+                  src="/svg/users.svg"
                 />
                 <div
                   className="text-[#FCFCFD] text-left disabled:text-[#A3ACBB]"
@@ -245,28 +315,19 @@ export const PlayNow = ({
                   onKeyDown={() => null}
                 >
                   <div className="text-2xl lg:text-5xl font-semibold">
-                    Join Room
+                    Invite a Friend
                   </div>
                   <div className="text-[#E4E7EC] text-base lg:text-xl font-medium mt-1 disabled:text-[#A3ACBB]">
-                    Enter your friend's room!
+                    Invite a friend for a private match!
                   </div>
                 </div>
               </button>
             </div>
           </div>
-          <div className="md:w-2/5 bg-black h-screen flex" />
-          <div className="w-full md:w-3/5 h-screen relative">
-            <div className="absolute w-full h-full bg-gradient" />
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full object-cover h-full"
-              src="/video/chess.mp4"
-            />
+          <div className="md:w-3/5 flex justify-end items-center pr-16">
+            <img src="/svg/2048.svg" alt="" className="" />
           </div>
-        </div>
+        </div> */}
       </div>
       <Modal show={isShowModal} onClose={onClose}>
         {selectedMode === 0 && !wallet ? (
