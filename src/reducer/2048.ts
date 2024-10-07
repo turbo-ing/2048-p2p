@@ -167,7 +167,7 @@ const game2048Reducer = (state: G2048State, action: Action): G2048State => {
 
       return {
         ...state,
-        board: { ...state.board, ["local_player"]: newGrid },
+        board: { ...state.board, ["local_player"]: spawnNewTile(newGrid) },
       };
     case "JOIN":
       error("Not implemented yet");
