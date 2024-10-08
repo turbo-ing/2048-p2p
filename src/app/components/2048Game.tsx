@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 
 import { Grid, GRID_SIZE } from "@/reducer/2048";
+import ScoreBoard from "@/app/components/ScoreBoard";
 
 // Helper function to get background and text color based on tile value
 const getTileStyle = (value: number | null) => {
@@ -77,9 +78,10 @@ const hasValidMoves = (grid: Grid): boolean => {
 // Refactored Game2048 component
 interface Game2048Props {
   grid: Grid; // Initial state passed as a prop
+  score: number; // Score passed as a prop
 }
 
-const Game2048: React.FC<Game2048Props> = ({ grid }) => {
+const Game2048: React.FC<Game2048Props> = ({ grid, score }) => {
   const [gameOver, setGameOver] = useState<boolean>(false); // Track if the game is over
   const [gameWon, setGameWon] = useState<boolean>(false); // Track if the player won
 
@@ -95,26 +97,31 @@ const Game2048: React.FC<Game2048Props> = ({ grid }) => {
   }, [grid]);
 
   return (
-    <div className="game-container">
+    <div className="flex flex-col justify-center items-center h-full">
       {gameOver && <div className="game-over">Game Over! No more moves.</div>}
       {gameWon && <div className="game-won">Congratulations! You've won!</div>}
-      {grid.map((row, rowIndex) => (
-        <div key={rowIndex} className="row">
-          {row.map((tile, colIndex) => {
-            const { backgroundColor, color } = getTileStyle(tile);
+      <div className="mb-6">
+        <ScoreBoard title="Score" total={score} />
+      </div>
+      <div className="game-container">
+        {grid.map((row, rowIndex) => (
+          <div key={rowIndex} className="row">
+            {row.map((tile, colIndex) => {
+              const { backgroundColor, color } = getTileStyle(tile);
 
-            return (
-              <div
-                key={colIndex}
-                className="tile"
-                style={{ backgroundColor, color }}
-              >
-                {tile ? tile : ""}
-              </div>
-            );
-          })}
-        </div>
-      ))}
+              return (
+                <div
+                  key={colIndex}
+                  className="tile"
+                  style={{ backgroundColor, color }}
+                >
+                  {tile ? tile : ""}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
       {/* eslint-disable-next-line react/no-unknown-property */}
       <style jsx>{`
         .game-container {
@@ -140,6 +147,7 @@ const Game2048: React.FC<Game2048Props> = ({ grid }) => {
             background-color 0.3s,
             color 0.3s;
         }
+
         .game-over,
         .game-won {
           position: absolute;
