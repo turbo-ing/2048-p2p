@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 
 import { Grid, GRID_SIZE } from "@/reducer/2048";
@@ -98,21 +99,30 @@ const Game2048: React.FC<Game2048Props> = ({ grid, score }) => {
 
   return (
     <div className="flex flex-col justify-center items-center h-full">
-      {gameOver && <div className="game-over">Game Over! No more moves.</div>}
-      {gameWon && <div className="game-won">Congratulations! You've won!</div>}
+      {gameOver && (
+        <div className="absolute flex justify-center items-center text-4xl text-white font-bold m-0 w-full h-full z-10 bg-red-700">
+          Game Over! No more moves.
+        </div>
+      )}
+      {gameWon && (
+        <div className="absolute flex justify-center items-center text-4xl text-white font-bold m-0 w-full h-full z-10 bg-green-700">
+          {/* eslint-disable-next-line react/no-unescaped-entities */}
+          Congratulations! You've won!
+        </div>
+      )}
       <div className="mb-6">
         <ScoreBoard title="Score" total={score} />
       </div>
-      <div className="game-container">
+      <div className="grid grid-cols-4 gap-2.5">
         {grid.map((row, rowIndex) => (
-          <div key={rowIndex} className="row">
+          <div key={rowIndex} className="contents">
             {row.map((tile, colIndex) => {
               const { backgroundColor, color } = getTileStyle(tile);
 
               return (
                 <div
                   key={colIndex}
-                  className="tile"
+                  className="w-[100px] h-[100px] bg-[#cdc1b4] flex items-center justify-center text-3xl rounded-md transition-all duration-300"
                   style={{ backgroundColor, color }}
                 >
                   {tile ? tile : ""}
@@ -122,58 +132,6 @@ const Game2048: React.FC<Game2048Props> = ({ grid, score }) => {
           </div>
         ))}
       </div>
-      {/* eslint-disable-next-line react/no-unknown-property */}
-      <style jsx>{`
-        .game-container {
-          display: grid;
-          grid-template-columns: repeat(${GRID_SIZE}, 100px);
-          gap: 10px;
-        }
-
-        .row {
-          display: contents;
-        }
-
-        .tile {
-          width: 100px;
-          height: 100px;
-          background-color: #cdc1b4;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 24px;
-          border-radius: 5px;
-          transition:
-            background-color 0.3s,
-            color 0.3s;
-        }
-
-        .game-over,
-        .game-won {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-color: rgba(0, 0, 0, 0.7);
-          color: #fff;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          font-size: 36px;
-          font-weight: bold;
-          z-index: 10; /* Overlay this over the grid */
-          border-radius: 10px;
-        }
-
-        .game-over {
-          background-color: rgba(255, 0, 0, 0.7);
-        }
-
-        .game-won {
-          background-color: rgba(0, 255, 0, 0.7);
-        }
-      `}</style>
     </div>
   );
 };

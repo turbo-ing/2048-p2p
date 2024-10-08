@@ -1,4 +1,3 @@
-// Types
 import { EdgeAction, useEdgeReducerV0 } from "@turbo-ing/edge-v0";
 
 export type Direction = "up" | "down" | "left" | "right";
@@ -35,6 +34,19 @@ type Action = MoveAction | JoinAction | LeaveAction;
 
 const error = (message: string) => {
   console.error(message);
+};
+
+// Helper function to check if two grids are the same
+const gridsAreEqual = (grid1: Grid, grid2: Grid): boolean => {
+  for (let i = 0; i < GRID_SIZE; i++) {
+    for (let j = 0; j < GRID_SIZE; j++) {
+      if (grid1[i][j] !== grid2[i][j]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 };
 
 // Helper functions
@@ -127,7 +139,7 @@ const moveGrid = (
   grid: Grid,
   direction: Direction,
 ): { newGrid: Grid; score: number } => {
-  let newGrid: Grid = [];
+  let newGrid: Grid;
   let totalScore = 0;
 
   switch (direction) {
@@ -198,11 +210,13 @@ const initializeGame = () => {
   return newGrid;
 };
 
-const initialState: G2048State = {
-  board: { ["local_player"]: initializeGame() },
-  score: { ["local_player"]: 0 },
-  players: ["local_player"],
-  playersCount: 1,
+const initialState = (peerId: string): G2048State => {
+  return {
+    board: { [peerId]: initializeGame() },
+    score: { [peerId]: 0 },
+    players: [peerId],
+    playersCount: 1,
+  };
 };
 
 const game2048Reducer = (state: G2048State, action: Action): G2048State => {
@@ -210,16 +224,28 @@ const game2048Reducer = (state: G2048State, action: Action): G2048State => {
     case "MOVE":
       console.log("Payload on MOVE", action.payload);
       console.log("State on MOVE", state);
-      const { newGrid, score } = moveGrid(
-        state.board["local_player"],
-        action.payload,
-      );
-      const newScore = state.score["local_player"] + score;
+      const newBoards = { ...state.board };
+      const newScores = { ...state.score };
+
+      for (let boardKey in state.board) {
+        const { newGrid, score } = moveGrid(
+          state.board[boardKey],
+          action.payload,
+        );
+        const newScore = state.score[boardKey] + score;
+        let updateGrid = newGrid;
+
+        if (!gridsAreEqual(state.board[boardKey], newGrid)) {
+          updateGrid = spawnNewTile(newGrid);
+        }
+        newBoards[boardKey] = updateGrid;
+        newScores[boardKey] = newScore;
+      }
 
       return {
         ...state,
-        board: { ...state.board, ["local_player"]: spawnNewTile(newGrid) },
-        score: { ...state.score, ["local_player"]: newScore },
+        board: { ...newBoards },
+        score: { ...newScores },
       };
     case "JOIN":
       error("Not implemented yet");
@@ -234,10 +260,10 @@ const game2048Reducer = (state: G2048State, action: Action): G2048State => {
   }
 };
 
-export const use2048 = (roomId: string) => {
+export const use2048 = (roomId: string, peerId: string) => {
   const [state, dispatch, connected] = useEdgeReducerV0(
     game2048Reducer,
-    initialState,
+    initialState(peerId),
     {
       topic: roomId ? `turbo-game2048-${roomId}` : "game2048",
     },
