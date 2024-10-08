@@ -76,7 +76,7 @@ export default function Game2048Page() {
           >
             <div className="flex flex-col justify-center items-center h-full">
               <div className="mb-6">
-                <ScoreBoard title="Score" total={total} />
+                <ScoreBoard title="Score" total={state.score["local_player"]} />
               </div>
               {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
               <div onKeyDown={handleKeyDown}>

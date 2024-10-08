@@ -5,6 +5,7 @@ export type Direction = "up" | "down" | "left" | "right";
 export type Grid = (number | null)[][];
 export type G2048State = {
   board: { [playerId: string]: Grid };
+  score: { [playerId: string]: number };
   players: string[];
   playersCount: number;
 };
@@ -87,25 +88,33 @@ const slide = (row: (number | null)[]): (number | null)[] => {
 };
 
 // Helper to merge tiles in a row (combine adjacent tiles with the same value)
-const merge = (row: (number | null)[]): (number | null)[] => {
+const merge = (
+  row: (number | null)[],
+): { newRow: (number | null)[]; score: number } => {
+  let score = 0;
   const newRow = [...row]; // Copy the row
 
   for (let i = 0; i < GRID_SIZE - 1; i++) {
     if (newRow[i] !== null && newRow[i] === newRow[i + 1]) {
-      newRow[i] = newRow[i]! * 2; // Merge tiles
+      const newValue = newRow[i]! * 2;
+
+      score += newValue; // Add merged value to the score
+      newRow[i] = newValue; // Merge tiles
       newRow[i + 1] = null; // Set the next tile to null after merge
     }
   }
 
-  return newRow;
+  return { newRow, score };
 };
 
 // Function to move and merge a single row or column
-const moveAndMergeRow = (row: (number | null)[]): (number | null)[] => {
+const moveAndMergeRow = (
+  row: (number | null)[],
+): { row: (number | null)[]; score: number } => {
   const slidRow = slide(row); // First slide to remove empty spaces
-  const mergedRow = merge(slidRow); // Then merge adjacent tiles
+  const { newRow: mergedRow, score } = merge(slidRow); // Then merge adjacent tiles
 
-  return slide(mergedRow); // Slide again to remove any new empty spaces
+  return { row: slide(mergedRow), score }; // Slide again to remove any new empty spaces
 };
 
 // Transpose the grid (convert columns to rows and vice versa) for vertical movement
@@ -114,32 +123,69 @@ const transposeGrid = (grid: Grid): Grid => {
 };
 
 // Function to move the grid based on direction
-const moveGrid = (grid: Grid, direction: Direction): Grid => {
+const moveGrid = (
+  grid: Grid,
+  direction: Direction,
+): { newGrid: Grid; score: number } => {
   let newGrid: Grid = [];
+  let totalScore = 0;
 
-  if (direction === "left") {
-    // Move left: process each row
-    newGrid = grid.map((row) => moveAndMergeRow(row));
-  } else if (direction === "right") {
-    // Move right: reverse each row, process, then reverse again
-    newGrid = grid.map((row) => moveAndMergeRow(row.reverse()).reverse());
-  } else if (direction === "up") {
-    // Move up: transpose, process rows as columns, then transpose back
-    const transposed = transposeGrid(grid);
-    const movedGrid = transposed.map((row) => moveAndMergeRow(row));
+  switch (direction) {
+    case "left":
+      // Move left: process each row normally
+      newGrid = grid.map((row) => {
+        const { row: newRow, score } = moveAndMergeRow(row);
 
-    newGrid = transposeGrid(movedGrid);
-  } else if (direction === "down") {
-    // Move down: transpose, reverse rows (as columns), process, reverse, then transpose back
-    const transposed = transposeGrid(grid);
-    const movedGrid = transposed.map((row) =>
-      moveAndMergeRow(row.reverse()).reverse(),
-    );
+        totalScore += score;
 
-    newGrid = transposeGrid(movedGrid);
+        return newRow;
+      });
+      break;
+
+    case "right":
+      // Move right: reverse each row, process, then reverse again
+      newGrid = grid.map((row) => {
+        const reversedRow = [...row].reverse();
+        const { row: newRow, score } = moveAndMergeRow(reversedRow);
+
+        totalScore += score;
+
+        return newRow.reverse(); // Reverse back to get the correct order
+      });
+      break;
+
+    case "up":
+      // Move up: transpose, process rows as columns, then transpose back
+      newGrid = transposeGrid(
+        transposeGrid(grid).map((row) => {
+          const { row: newRow, score } = moveAndMergeRow(row);
+
+          totalScore += score;
+
+          return newRow;
+        }),
+      );
+      break;
+
+    case "down":
+      // Move down: transpose, reverse rows (as columns), process, reverse, then transpose back
+      newGrid = transposeGrid(
+        transposeGrid(grid).map((row) => {
+          const reversedRow = [...row].reverse();
+          const { row: newRow, score } = moveAndMergeRow(reversedRow);
+
+          totalScore += score;
+
+          return newRow.reverse(); // Reverse back after processing
+        }),
+      );
+      break;
+
+    default:
+      newGrid = grid; // Return the grid unchanged if no valid direction is provided
   }
 
-  return newGrid;
+  return { newGrid, score: totalScore };
 };
 
 const initializeGame = () => {
@@ -154,6 +200,7 @@ const initializeGame = () => {
 
 const initialState: G2048State = {
   board: { ["local_player"]: initializeGame() },
+  score: { ["local_player"]: 0 },
   players: ["local_player"],
   playersCount: 1,
 };
@@ -163,11 +210,16 @@ const game2048Reducer = (state: G2048State, action: Action): G2048State => {
     case "MOVE":
       console.log("Payload on MOVE", action.payload);
       console.log("State on MOVE", state);
-      const newGrid = moveGrid(state.board["local_player"], action.payload);
+      const { newGrid, score } = moveGrid(
+        state.board["local_player"],
+        action.payload,
+      );
+      const newScore = state.score["local_player"] + score;
 
       return {
         ...state,
         board: { ...state.board, ["local_player"]: spawnNewTile(newGrid) },
+        score: { ...state.score, ["local_player"]: newScore },
       };
     case "JOIN":
       error("Not implemented yet");
