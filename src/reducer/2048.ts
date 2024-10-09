@@ -15,7 +15,7 @@ export const INITIAL_TILES = 2;
 
 interface MoveAction extends EdgeAction<G2048State> {
   type: "MOVE";
-  payload: Direction;
+  payload: { direction: Direction; peerId: string };
 }
 
 interface JoinAction extends EdgeAction<G2048State> {
@@ -212,10 +212,15 @@ const initializeGame = () => {
 
 const initialState = (peerId: string): G2048State => {
   return {
-    board: { [peerId]: initializeGame() },
-    score: { [peerId]: 0 },
-    players: [peerId],
-    playersCount: 1,
+    board: {
+      ["test1"]: initializeGame(),
+      [peerId]: initializeGame(),
+      ["test2"]: initializeGame(),
+      ["test3"]: initializeGame(),
+    },
+    score: { ["test1"]: 0, [peerId]: 0, ["test2"]: 0, ["test3"]: 0 },
+    players: ["test1", peerId, "test2", "test3"],
+    playersCount: 4,
   };
 };
 
@@ -228,9 +233,12 @@ const game2048Reducer = (state: G2048State, action: Action): G2048State => {
       const newScores = { ...state.score };
 
       for (let boardKey in state.board) {
+        if (boardKey !== action.payload.peerId) {
+          continue;
+        }
         const { newGrid, score } = moveGrid(
           state.board[boardKey],
-          action.payload,
+          action.payload.direction,
         );
         const newScore = state.score[boardKey] + score;
         let updateGrid = newGrid;

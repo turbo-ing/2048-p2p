@@ -332,7 +332,7 @@ export const PlayNow = ({
             <div className="mt-5">
               <label
                 className="text-[#CECFD2] text-sm font-medium"
-                htmlFor="username"
+                htmlFor="gametimes"
               >
                 Game times
               </label>

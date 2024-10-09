@@ -21,16 +21,28 @@ export default function Game2048Page() {
   const handleKeyDown = async (e: KeyboardEvent) => {
     switch (e.key) {
       case "ArrowUp":
-        await dispatch({ type: "MOVE", payload: "up" });
+        await dispatch({
+          type: "MOVE",
+          payload: { direction: "up", peerId: peerId ?? "" },
+        });
         break;
       case "ArrowDown":
-        await dispatch({ type: "MOVE", payload: "down" });
+        await dispatch({
+          type: "MOVE",
+          payload: { direction: "down", peerId: peerId ?? "" },
+        });
         break;
       case "ArrowLeft":
-        await dispatch({ type: "MOVE", payload: "left" });
+        await dispatch({
+          type: "MOVE",
+          payload: { direction: "left", peerId: peerId ?? "" },
+        });
         break;
       case "ArrowRight":
-        await dispatch({ type: "MOVE", payload: "right" });
+        await dispatch({
+          type: "MOVE",
+          payload: { direction: "right", peerId: peerId ?? "" },
+        });
         break;
       default:
         return;
@@ -58,22 +70,40 @@ export default function Game2048Page() {
               backgroundRepeat: "no-repeat",
             }}
           >
-            <div className="flex flex-col justify-center items-center h-full">
-              {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
-              <div onKeyDown={handleKeyDown}>
-                {state ? (
-                  state.players.map((player) => (
-                    <div key={player}>
-                      <Game2048
-                        grid={state.board[player]}
-                        score={state.score[player]}
-                      />
-                    </div>
-                  ))
-                ) : (
-                  <div> Loading...</div>
-                )}
-              </div>
+            <div className="flex flex-row justify-center items-center">
+              {!state ? (
+                <div>Loading...</div>
+              ) : state.playersCount === 1 ? (
+                <div>
+                  <Game2048
+                    key={peerId}
+                    grid={state.board[peerId ?? ""]}
+                    score={state.score[peerId ?? ""]}
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-row justify-center items-center">
+                  <div className="w-1/2 mr-6">
+                    <Game2048
+                      key={peerId}
+                      grid={state.board[peerId ?? ""]}
+                      score={state.score[peerId ?? ""]}
+                    />
+                  </div>
+                  <div className="w-1/2 grid grid-cols-2 gap-4">
+                    {state.players.map(
+                      (player) =>
+                        player !== peerId && (
+                          <Game2048
+                            key={player}
+                            grid={state.board[player]}
+                            score={state.score[player]}
+                          />
+                        ),
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </main>

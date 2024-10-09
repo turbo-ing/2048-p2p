@@ -122,7 +122,7 @@ const Game2048: React.FC<Game2048Props> = ({ grid, score }) => {
               return (
                 <div
                   key={colIndex}
-                  className="w-[100px] h-[100px] bg-[#cdc1b4] flex items-center justify-center text-3xl rounded-md transition-all duration-300"
+                  className="w-20 h-20 bg-[#cdc1b4] flex items-center justify-center text-3xl rounded-md transition-all duration-300"
                   style={{ backgroundColor, color }}
                 >
                   {tile ? tile : ""}
