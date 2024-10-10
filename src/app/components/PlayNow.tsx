@@ -73,7 +73,7 @@ export const PlayNow = ({
   };
 
   useEffect(() => {
-    if (connected && peerId) {
+    if (connected && peerId && room) {
       // check condition to dispatch JOIN event
       dispatch({
         type: "JOIN",
@@ -84,7 +84,7 @@ export const PlayNow = ({
         },
       });
     }
-  }, [connected, peerId, nameInput, numOfPlayers]);
+  }, [connected, peerId, room, nameInput, numOfPlayers]);
 
   return (
     <>
