@@ -1,11 +1,19 @@
 import { EdgeAction, useEdgeReducerV0 } from "@turbo-ing/edge-v0";
+import {
+  createContext,
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useState,
+} from "react";
 
 export type Direction = "up" | "down" | "left" | "right";
 export type Grid = (number | null)[][];
-export type G2048State = {
+export type Game2048State = {
   board: { [playerId: string]: Grid };
   score: { [playerId: string]: number };
-  players: string[];
+  playerId: string[];
+  players: { [playerId: string]: string };
   playersCount: number;
 };
 
@@ -13,19 +21,20 @@ export type G2048State = {
 export const GRID_SIZE = 4;
 export const INITIAL_TILES = 2;
 
-interface MoveAction extends EdgeAction<G2048State> {
+interface MoveAction extends EdgeAction<Game2048State> {
   type: "MOVE";
-  payload: { direction: Direction; peerId: string };
+  payload: Direction;
 }
 
-interface JoinAction extends EdgeAction<G2048State> {
+interface JoinAction extends EdgeAction<Game2048State> {
   type: "JOIN";
   payload: {
     name: string;
+    grid: Grid;
   };
 }
 
-interface LeaveAction extends EdgeAction<G2048State> {
+interface LeaveAction extends EdgeAction<Game2048State> {
   type: "LEAVE";
 }
 
@@ -200,7 +209,7 @@ const moveGrid = (
   return { newGrid, score: totalScore };
 };
 
-const initializeGame = () => {
+export const initializeBoard = () => {
   let newGrid = getEmptyGrid();
 
   for (let i = 0; i < INITIAL_TILES; i++) {
@@ -210,21 +219,10 @@ const initializeGame = () => {
   return newGrid;
 };
 
-const initialState = (peerId: string): G2048State => {
-  return {
-    board: {
-      ["test1"]: initializeGame(),
-      [peerId]: initializeGame(),
-      ["test2"]: initializeGame(),
-      ["test3"]: initializeGame(),
-    },
-    score: { ["test1"]: 0, [peerId]: 0, ["test2"]: 0, ["test3"]: 0 },
-    players: ["test1", peerId, "test2", "test3"],
-    playersCount: 4,
-  };
-};
-
-const game2048Reducer = (state: G2048State, action: Action): G2048State => {
+const game2048Reducer = (
+  state: Game2048State,
+  action: Action,
+): Game2048State => {
   switch (action.type) {
     case "MOVE":
       console.log("Payload on MOVE", action.payload);
@@ -233,12 +231,12 @@ const game2048Reducer = (state: G2048State, action: Action): G2048State => {
       const newScores = { ...state.score };
 
       for (let boardKey in state.board) {
-        if (boardKey !== action.payload.peerId) {
+        if (boardKey !== action.peerId) {
           continue;
         }
         const { newGrid, score } = moveGrid(
           state.board[boardKey],
-          action.payload.direction,
+          action.payload,
         );
         const newScore = state.score[boardKey] + score;
         let updateGrid = newGrid;
@@ -256,9 +254,18 @@ const game2048Reducer = (state: G2048State, action: Action): G2048State => {
         score: { ...newScores },
       };
     case "JOIN":
-      error("Not implemented yet");
+      console.log("Payload on JOIN", action.payload);
+      if (state.playerId.includes(action.peerId!)) return state;
 
-      return state;
+      return {
+        ...state,
+        players: { ...state.players, [action.peerId!]: action.payload.name },
+        score: { ...state.score, [action.peerId!]: 0 },
+        playerId: [...state.playerId, action.peerId!],
+        board: { ...state.board, [action.peerId!]: action.payload.grid },
+        playersCount: state.playersCount + 1,
+      };
+
     case "LEAVE":
       error("Not implemented yet");
 
@@ -268,14 +275,64 @@ const game2048Reducer = (state: G2048State, action: Action): G2048State => {
   }
 };
 
-export const use2048 = (roomId: string, peerId: string) => {
+export const use2048 = () => {
+  const context = useContext(Game2048Context);
+
+  if (!context) {
+    throw new Error("use2048 must be used within a Game2048Provider");
+  }
+
+  return context;
+};
+
+// Create Context
+const Game2048Context = createContext<
+  | [
+      Game2048State,
+      Dispatch<Action>,
+      boolean,
+      string,
+      Dispatch<SetStateAction<string>>,
+    ]
+  | null
+>(null);
+
+export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [room, setRoom] = useState("");
+  const initialState: Game2048State = {
+    board: {},
+    score: {},
+    players: {},
+    playerId: [],
+    playersCount: 0,
+  };
+
   const [state, dispatch, connected] = useEdgeReducerV0(
     game2048Reducer,
-    initialState(peerId),
+    initialState,
     {
-      topic: roomId ? `turbo-game2048-${roomId}` : "game2048",
+      topic: room ? `turbo-game2048-${room}` : "game2048",
     },
   );
 
-  return { state, dispatch, connected };
+  return (
+    <Game2048Context.Provider
+      value={[state, dispatch, connected, room, setRoom]}
+    >
+      {children}
+    </Game2048Context.Provider>
+  );
 };
+
+export function generateRoomCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return result;
+}

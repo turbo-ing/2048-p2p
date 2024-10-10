@@ -80,9 +80,16 @@ const hasValidMoves = (grid: Grid): boolean => {
 interface Game2048Props {
   grid: Grid; // Initial state passed as a prop
   score: number; // Score passed as a prop
+  className?: string; // Optional className prop
+  player: string;
 }
 
-const Game2048: React.FC<Game2048Props> = ({ grid, score }) => {
+const Game2048: React.FC<Game2048Props> = ({
+  grid,
+  score,
+  player,
+  className,
+}) => {
   const [gameOver, setGameOver] = useState<boolean>(false); // Track if the game is over
   const [gameWon, setGameWon] = useState<boolean>(false); // Track if the player won
 
@@ -97,8 +104,10 @@ const Game2048: React.FC<Game2048Props> = ({ grid, score }) => {
     }
   }, [grid]);
 
+  const baseStyles = "text-center mt-6 text-white";
+
   return (
-    <div className="flex flex-col justify-center items-center h-full">
+    <div>
       {gameOver && (
         <div className="absolute flex justify-center items-center text-4xl text-white font-bold m-0 w-full h-full z-10 bg-red-700">
           Game Over! No more moves.
@@ -110,27 +119,32 @@ const Game2048: React.FC<Game2048Props> = ({ grid, score }) => {
           Congratulations! You've won!
         </div>
       )}
-      <div className="mb-6">
+      <div className="flex justify-center mb-6">
         <ScoreBoard title="Score" total={score} />
       </div>
       <div className="grid grid-cols-4 gap-2.5">
         {grid.map((row, rowIndex) => (
-          <div key={rowIndex} className="contents">
+          <>
             {row.map((tile, colIndex) => {
               const { backgroundColor, color } = getTileStyle(tile);
 
               return (
                 <div
                   key={colIndex}
-                  className="w-20 h-20 bg-[#cdc1b4] flex items-center justify-center text-3xl rounded-md transition-all duration-300"
+                  className="pt-[100%] relative bg-[#cdc1b4] flex items-center justify-center rounded-md transition-all duration-300"
                   style={{ backgroundColor, color }}
                 >
-                  {tile ? tile : ""}
+                  <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    {tile ? tile : ""}
+                  </span>
                 </div>
               );
             })}
-          </div>
+          </>
         ))}
+      </div>
+      <div className="border-b-1 border-white pb-3">
+        <p className={`${baseStyles} ${className}`}>Player: {player}</p>
       </div>
     </div>
   );
