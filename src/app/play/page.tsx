@@ -10,14 +10,11 @@ import Game2048 from "@/app/components/2048Game";
 import { use2048 } from "@/reducer/2048";
 
 export default function Game2048Page() {
-  const [state, dispatch, connected] = use2048();
+  const [state, dispatch] = use2048();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
 
-  console.log("connected", connected);
-  console.log("peerId", peerId);
-  console.log("state", state);
-
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -83,9 +80,9 @@ export default function Game2048Page() {
                         <Game2048
                           key={peerId}
                           className="text-base"
-                          grid={state.board[peerId ?? ""]}
-                          player={state.players[peerId ?? ""]}
-                          score={state.score[peerId ?? ""]}
+                          grid={state.board[peerId!]}
+                          player={state.players[peerId!]}
+                          score={state.score[peerId!]}
                         />
                       </div>
                     </div>

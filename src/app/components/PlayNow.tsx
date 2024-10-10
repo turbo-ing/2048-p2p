@@ -36,6 +36,7 @@ export const PlayNow = ({
   };
 
   const joinGame = async (roomId: string) => {
+    setRoom(roomId);
     setSelectedMode(4);
   };
 
@@ -51,16 +52,7 @@ export const PlayNow = ({
 
   const newGame = async () => {
     setRoom(generateRoomCode());
-    console.log("room", room);
-    console.log("numOfPlayers", numOfPlayers);
-    console.log("gameTimesInput", gameTimesInput);
-    console.log("state", state);
-    if (state.numPlayers > 0 && state.numPlayers === numOfPlayers) {
-      setIsShowModal(false);
-      router.push("/play");
-    } else {
-      setSelectedMode(3);
-    }
+    setSelectedMode(3);
   };
 
   const playWithFriend = async () => {
@@ -69,7 +61,8 @@ export const PlayNow = ({
   };
 
   const playSoloMode = async () => {
-    router.push("/play");
+    setRoom("solomode");
+    setNumOfPlayers(1);
   };
 
   useEffect(() => {
@@ -84,7 +77,17 @@ export const PlayNow = ({
         },
       });
     }
-  }, [connected, peerId, room, nameInput, numOfPlayers]);
+  }, [connected, peerId, room, nameInput]);
+
+  useEffect(() => {
+    console.log("state", state);
+    if (state.totalPlayers > 0) {
+      if (state.totalPlayers === state.playersCount) {
+        setIsShowModal(false);
+        router.push("/play");
+      }
+    }
+  }, [state]);
 
   return (
     <>
@@ -121,6 +124,7 @@ export const PlayNow = ({
               <div className="mt-12 space-y-8">
                 <button
                   className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center w-full"
+                  disabled={!turboEdge}
                   onClick={playSoloMode}
                 >
                   <img
@@ -139,6 +143,7 @@ export const PlayNow = ({
                 </button>
                 <button
                   className="p-5 lg:py-6 lg:px-[42px] bg-[#F23939] shadow-lg rounded-full flex gap-5 items-center w-full"
+                  disabled={!turboEdge}
                   onClick={playWithFriend}
                 >
                   <img
@@ -350,7 +355,7 @@ export const PlayNow = ({
             <div className="space-y-4">
               <button
                 className="hover:bg-red-600 py-2.5 px-4 bg-white rounded-full w-full justify-center"
-                onClick={onClose}
+                onClick={() => navigator.clipboard.writeText(room)}
               >
                 <div className="font-semibold text-base text-[#344054]">
                   Copy code
@@ -368,14 +373,16 @@ export const PlayNow = ({
           // waiting for opponent
           <div className="flex flex-col items-center mt-20">
             <div className="border-[6px] border-[#DC3434] rounded-full w-[182px] h-[182px] justify-center flex items-center">
-              <p className="text-4xl">2/4</p>
+              <p className="text-4xl">
+                {state.playersCount}/{state.totalPlayers}
+              </p>
             </div>
             <div className="my-8 mt-8 text-center">
               <p className="text-[#F5F5F6] font-semibold text-lg">
                 Connecting...
               </p>
               <p className="mt-1.5 text-lg text-white">
-                Game start in 10 seconds
+                The game will begin when all players are present
               </p>
             </div>
             <button

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 
 import { Grid, GRID_SIZE } from "@/reducer/2048";
-import ScoreBoard from "@/app/components/ScoreBoard";
+import ScoreBoard from "@/app/components/2048ScoreBoard";
 
 // Helper function to get background and text color based on tile value
 const getTileStyle = (value: number | null) => {
@@ -123,25 +123,26 @@ const Game2048: React.FC<Game2048Props> = ({
         <ScoreBoard title="Score" total={score} />
       </div>
       <div className="grid grid-cols-4 gap-2.5">
-        {grid.map((row, rowIndex) => (
-          <>
-            {row.map((tile, colIndex) => {
-              const { backgroundColor, color } = getTileStyle(tile);
+        {grid &&
+          grid.map((row, rowIndex) => (
+            <>
+              {row.map((tile, colIndex) => {
+                const { backgroundColor, color } = getTileStyle(tile);
 
-              return (
-                <div
-                  key={`${rowIndex}-${colIndex}`}
-                  className="pt-[100%] relative bg-[#cdc1b4] flex items-center justify-center rounded-md transition-all duration-300"
-                  style={{ backgroundColor, color }}
-                >
-                  <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    {tile ? tile : ""}
-                  </span>
-                </div>
-              );
-            })}
-          </>
-        ))}
+                return (
+                  <div
+                    key={`${rowIndex}-${colIndex}`}
+                    className="pt-[100%] relative bg-[#cdc1b4] flex items-center justify-center rounded-md transition-all duration-300"
+                    style={{ backgroundColor, color }}
+                  >
+                    <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                      {tile ? tile : ""}
+                    </span>
+                  </div>
+                );
+              })}
+            </>
+          ))}
       </div>
       <div className="border-b-1 border-white pb-3">
         <p className={`${baseStyles} ${className}`}>Player: {player}</p>

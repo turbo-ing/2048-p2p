@@ -15,7 +15,7 @@ export type Game2048State = {
   playerId: string[];
   players: { [playerId: string]: string };
   playersCount: number;
-  numPlayers: number;
+  totalPlayers: number;
 };
 
 // Constants for grid size and initial tiles
@@ -227,7 +227,7 @@ const game2048Reducer = (
 ): Game2048State => {
   switch (action.type) {
     case "MOVE":
-      console.log("Payload on MOVE", action.payload);
+      console.log("Payload on MOVE", action);
       console.log("State on MOVE", state);
       const newBoards = { ...state.board };
       const newScores = { ...state.score };
@@ -257,21 +257,25 @@ const game2048Reducer = (
       };
     case "JOIN":
       console.log("Payload on JOIN", action.payload);
+      const newState = state;
       let newNumPlayers = action.payload.numPlayers;
 
       newNumPlayers =
-        state.numPlayers > newNumPlayers ? state.numPlayers : newNumPlayers;
-      console.log("New Num Players", newNumPlayers);
+        state.totalPlayers > newNumPlayers ? state.totalPlayers : newNumPlayers;
+      const playerCount = state.playerId.includes(action.peerId!)
+        ? state.playersCount
+        : state.playersCount + 1;
 
-      return {
-        ...state,
-        players: { ...state.players, [action.peerId!]: action.payload.name },
-        score: { ...state.score, [action.peerId!]: 0 },
-        playerId: [...state.playerId, action.peerId!],
-        board: { ...state.board, [action.peerId!]: action.payload.grid },
-        playersCount: state.playersCount + 1,
-        numPlayers: newNumPlayers,
-      };
+      newState.playersCount = playerCount;
+      newState.totalPlayers = newNumPlayers;
+      if (!state.playerId.includes(action.peerId!)) {
+        newState.players[action.peerId!] = action.payload.name;
+        newState.playerId.push(action.peerId!);
+      }
+      newState.board[action.peerId!] = action.payload.grid;
+      newState.score[action.peerId!] = 0;
+
+      return { ...newState };
 
     case "LEAVE":
       error("Not implemented yet");
@@ -303,7 +307,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     players: {},
     playerId: [],
     playersCount: 0,
-    numPlayers: 0,
+    totalPlayers: 0,
   };
   const [room, setRoom] = useState("");
 
@@ -311,7 +315,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     game2048Reducer,
     initialState,
     {
-      topic: room ? `turbo-game2048-${room}` : "game2048",
+      topic: room ? `turbo-game2048-${room}` : "",
     },
   );
 

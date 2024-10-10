@@ -55,6 +55,7 @@ export const Navbar = ({
           )}
         </div>
         {isMobile ? (
+          // eslint-disable-next-line jsx-a11y/no-static-element-interactions,jsx-a11y/click-events-have-key-events
           <div onClick={toggleDrawer}>
             <svg
               fill="none"

@@ -21,6 +21,7 @@ export const UsdtPriceProvider: React.FC<{ children: React.ReactNode }> = ({
         `https://api.binance.com/api/v3/ticker/price?symbol=${tokenName.toUpperCase()}USDT`,
       );
       const data = await response.json();
+
       setPrices((prevPrices) => ({
         ...prevPrices,
         [tokenName.toUpperCase()]: parseFloat(data.price),
@@ -55,9 +56,9 @@ export const UsdtPriceProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useUsdtPrice = (tokenName: string): number | undefined => {
   const context = useContext(UsdtPriceContext);
+
   if (!context) {
     throw new Error("useUsdtPrice must be used within a UsdtPriceProvider");
   }
