@@ -25,6 +25,7 @@ export const PlayNow = ({
 
   const [nameInput, setNameInput] = useState("");
   const [gameTimesInput, setGameTimesInput] = useState(0);
+  const [numOfPlayers, setNumOfPlayers] = useState(0);
   const [roomIdInput, setRoomIdInput] = useState("");
 
   const router = useRouter();
@@ -50,7 +51,16 @@ export const PlayNow = ({
 
   const newGame = async () => {
     setRoom(generateRoomCode());
-    setSelectedMode(3);
+    console.log("room", room);
+    console.log("numOfPlayers", numOfPlayers);
+    console.log("gameTimesInput", gameTimesInput);
+    console.log("state", state);
+    if (state.numPlayers > 0 && state.numPlayers === numOfPlayers) {
+      setIsShowModal(false);
+      router.push("/play");
+    } else {
+      setSelectedMode(3);
+    }
   };
 
   const playWithFriend = async () => {
@@ -65,17 +75,16 @@ export const PlayNow = ({
   useEffect(() => {
     if (connected && peerId) {
       // check condition to dispatch JOIN event
-      if (!state.playerId.includes(peerId)) {
-        dispatch({
-          type: "JOIN",
-          payload: {
-            name: nameInput === "" ? "No Name" : nameInput,
-            grid: initializeBoard(),
-          },
-        });
-      }
+      dispatch({
+        type: "JOIN",
+        payload: {
+          name: nameInput === "" ? "No Name" : nameInput,
+          grid: initializeBoard(),
+          numPlayers: numOfPlayers,
+        },
+      });
     }
-  }, [connected, peerId, nameInput]);
+  }, [connected, peerId, nameInput, numOfPlayers]);
 
   return (
     <>
@@ -213,6 +222,23 @@ export const PlayNow = ({
                   type="text"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="mt-5">
+              <label
+                className="text-[#CECFD2] text-sm font-medium"
+                htmlFor="number-of-players"
+              >
+                Number of players
+              </label>
+              <div>
+                <input
+                  className="bg-[#0C111D] border border-[#333741] rounded-full shadow text-md text-[#85888E] py-2.5 px-3.5 w-full mt-1.5"
+                  placeholder="Enter number of players"
+                  type="text"
+                  value={numOfPlayers}
+                  onChange={(e) => setNumOfPlayers(Number(e.target.value))}
                 />
               </div>
             </div>

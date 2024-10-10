@@ -15,6 +15,7 @@ export type Game2048State = {
   playerId: string[];
   players: { [playerId: string]: string };
   playersCount: number;
+  numPlayers: number;
 };
 
 // Constants for grid size and initial tiles
@@ -31,6 +32,7 @@ interface JoinAction extends EdgeAction<Game2048State> {
   payload: {
     name: string;
     grid: Grid;
+    numPlayers: number;
   };
 }
 
@@ -255,7 +257,11 @@ const game2048Reducer = (
       };
     case "JOIN":
       console.log("Payload on JOIN", action.payload);
-      if (state.playerId.includes(action.peerId!)) return state;
+      let newNumPlayers = action.payload.numPlayers;
+
+      newNumPlayers =
+        state.numPlayers > newNumPlayers ? state.numPlayers : newNumPlayers;
+      console.log("New Num Players", newNumPlayers);
 
       return {
         ...state,
@@ -264,6 +270,7 @@ const game2048Reducer = (
         playerId: [...state.playerId, action.peerId!],
         board: { ...state.board, [action.peerId!]: action.payload.grid },
         playersCount: state.playersCount + 1,
+        numPlayers: newNumPlayers,
       };
 
     case "LEAVE":
@@ -273,16 +280,6 @@ const game2048Reducer = (
     default:
       return state;
   }
-};
-
-export const use2048 = () => {
-  const context = useContext(Game2048Context);
-
-  if (!context) {
-    throw new Error("use2048 must be used within a Game2048Provider");
-  }
-
-  return context;
 };
 
 // Create Context
@@ -300,14 +297,15 @@ const Game2048Context = createContext<
 export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [room, setRoom] = useState("");
   const initialState: Game2048State = {
     board: {},
     score: {},
     players: {},
     playerId: [],
     playersCount: 0,
+    numPlayers: 0,
   };
+  const [room, setRoom] = useState("");
 
   const [state, dispatch, connected] = useEdgeReducerV0(
     game2048Reducer,
@@ -324,6 +322,16 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
       {children}
     </Game2048Context.Provider>
   );
+};
+
+export const use2048 = () => {
+  const context = useContext(Game2048Context);
+
+  if (!context) {
+    throw new Error("use2048 must be used within a Game2048Provider");
+  }
+
+  return context;
 };
 
 export function generateRoomCode() {

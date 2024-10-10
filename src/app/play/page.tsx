@@ -3,7 +3,6 @@
 import { ThemeProvider } from "styled-components";
 import { useEffect } from "react";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
-import { useRouter } from "next/navigation";
 
 import { Navbar } from "@/app/components/Navbar";
 import useTheme from "@/app/hooks/useTheme";
@@ -11,14 +10,13 @@ import Game2048 from "@/app/components/2048Game";
 import { use2048 } from "@/reducer/2048";
 
 export default function Game2048Page() {
-  const router = useRouter();
   const [state, dispatch, connected] = use2048();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
 
-  useEffect(() => {
-    if (!connected || !peerId) router.push("/");
-  }, [connected, peerId]);
+  console.log("connected", connected);
+  console.log("peerId", peerId);
+  console.log("state", state);
 
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
 
@@ -97,7 +95,7 @@ export default function Game2048Page() {
                           (player) =>
                             player !== peerId && (
                               <div
-                                key={player}
+                                key={`${player}-id`}
                                 className="w-1/2 px-2.5 text-xl"
                               >
                                 <Game2048

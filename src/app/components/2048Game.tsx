@@ -130,7 +130,7 @@ const Game2048: React.FC<Game2048Props> = ({
 
               return (
                 <div
-                  key={colIndex}
+                  key={`${rowIndex}-${colIndex}`}
                   className="pt-[100%] relative bg-[#cdc1b4] flex items-center justify-center rounded-md transition-all duration-300"
                   style={{ backgroundColor, color }}
                 >
