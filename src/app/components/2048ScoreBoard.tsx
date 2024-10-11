@@ -15,7 +15,7 @@ const ScoreBoard: FC<ScoreBoardProps> = ({ total, title }) => {
   }, [total]);
 
   return (
-    <div className="relative flex flex-col items-center rounded-full border-[#DC3434] px-16 py-1 bg-[#DC3434] gap-1">
+    <div className="relative flex flex-col items-center rounded-full border-[#DC3434] px-2 py-1 bg-[#DC3434] gap-1 min-w-[53%]">
       <div className="text-[#F2F4F7] text-sm">{title}</div>
       <div className="text-white text-base font-bold">{total}</div>
       {score > 0 && (

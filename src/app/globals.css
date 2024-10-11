@@ -54,3 +54,18 @@ body {
   grid-template-columns: 30px auto auto auto auto auto auto auto auto;
   grid-template-rows: auto auto auto auto auto auto auto auto 30px;
 }
+
+ul.counter-list {
+  list-style: none; /* Removes default bullet points */
+  counter-reset: list-counter; /* Initializes the counter */
+}
+
+ul.counter-list li::before {
+  content: counter(list-counter) ". "; /* Adds the counter before each list item */
+  counter-increment: list-counter; /* Increments the counter for each item */
+  font-weight: bold;
+  font-size: 16px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}

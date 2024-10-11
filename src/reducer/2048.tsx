@@ -6,6 +6,7 @@ import {
   useContext,
   useState,
 } from "react";
+import { keccak256, toHex } from "viem";
 
 export type Direction = "up" | "down" | "left" | "right";
 export type Grid = (number | null)[][];
@@ -60,8 +61,31 @@ const gridsAreEqual = (grid1: Grid, grid2: Grid): boolean => {
   return true;
 };
 
+const seedRandom = (seed: number): (() => number) => {
+  let currentSeed = seed;
+
+  return () => {
+    const x = Math.sin(currentSeed++) * 10000;
+
+    return x - Math.floor(x);
+  };
+};
+
+// Function to hash the grid into a seed
+const keccakToSeedFromGrid = (grid: Grid): number => {
+  // Serialize the grid to a JSON string
+  const gridString = JSON.stringify(grid);
+
+  // Hash the JSON string using keccak256 and get the hexadecimal representation
+  const hash = keccak256(toHex(gridString));
+
+  // Convert a portion of the hash into a number (e.g., first 8 characters of the hex string)
+  return parseInt(hash.slice(0, 8), 16);
+};
+
 // Helper functions
-const getRandomTile = (): number => (Math.random() < 0.9 ? 2 : 4);
+// const getNewTile = (): number => (Math.random() < 0.9 ? 2 : 4);
+const getNewTile = (): number => 2;
 
 const getRandomPosition = (grid: Grid): { x: number; y: number } | null => {
   const emptyPositions: { x: number; y: number }[] = [];
@@ -73,7 +97,19 @@ const getRandomPosition = (grid: Grid): { x: number; y: number } | null => {
   }
   if (emptyPositions.length === 0) return null;
 
-  return emptyPositions[Math.floor(Math.random() * emptyPositions.length)];
+  // Generate a numeric seed based on the current state of the grid
+  const seed = keccakToSeedFromGrid(grid);
+
+  // Create the seeded random generator
+  const random = seedRandom(seed);
+
+  // Get a random index based on the seed
+  const randomIndex = Math.floor(random() * emptyPositions.length);
+
+  // Return the randomly selected position
+  return emptyPositions[randomIndex];
+
+  // return emptyPositions[Math.floor(Math.random() * emptyPositions.length)];
 };
 
 const getEmptyGrid = (): Grid => {
@@ -97,7 +133,7 @@ const spawnNewTile = (grid: Grid): Grid => {
   if (!pos) return grid;
   const newGrid = deepCloneGrid(grid); // Deep clone the grid
 
-  newGrid[pos.x][pos.y] = getRandomTile();
+  newGrid[pos.x][pos.y] = getNewTile();
 
   return newGrid;
 };
