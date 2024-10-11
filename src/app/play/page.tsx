@@ -8,21 +8,13 @@ import { Navbar } from "@/app/components/Navbar";
 import useTheme from "@/app/hooks/useTheme";
 import Game2048 from "@/app/components/2048Game";
 import { use2048 } from "@/reducer/2048";
-
-interface Player {
-  name: string;
-  score: number;
-}
+import { Player } from "@/app/components/ResultModal";
 
 export default function Game2048Page() {
   const [state, dispatch] = use2048();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
-  const [ranking, setRanking] = useState<Player[]>([
-    { name: "Ez", score: 1800 },
-    { name: "Cz", score: 1800 },
-    { name: "Dz", score: 1800 },
-  ]);
+  const [ranking, setRanking] = useState<Player[]>([]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
@@ -103,6 +95,7 @@ export default function Game2048Page() {
                           className="text-base"
                           grid={state.board[peerId!]}
                           player={state.players[peerId!]}
+                          rankingData={ranking}
                           score={state.score[peerId!]}
                         />
                       </div>
@@ -121,6 +114,7 @@ export default function Game2048Page() {
                                   className="text-sm"
                                   grid={state.board[player]}
                                   player={state.players[player]}
+                                  rankingData={ranking}
                                   score={state.score[player]}
                                 />
                               </div>

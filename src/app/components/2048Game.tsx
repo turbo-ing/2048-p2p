@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 
 import { Grid, GRID_SIZE } from "@/reducer/2048";
 import ScoreBoard from "@/app/components/2048ScoreBoard";
+import { Player, ResultModal } from "@/app/components/ResultModal";
 
 // Helper function to get background and text color based on tile value
 const getTileStyle = (value: number | null) => {
@@ -80,14 +81,16 @@ const hasValidMoves = (grid: Grid): boolean => {
 interface Game2048Props {
   grid: Grid; // Initial state passed as a prop
   score: number; // Score passed as a prop
-  className?: string; // Optional className prop
   player: string;
+  rankingData: Player[];
+  className?: string; // Optional className prop
 }
 
 const Game2048: React.FC<Game2048Props> = ({
   grid,
   score,
   player,
+  rankingData,
   className,
 }) => {
   const [gameOver, setGameOver] = useState<boolean>(false); // Track if the game is over
@@ -109,15 +112,10 @@ const Game2048: React.FC<Game2048Props> = ({
   return (
     <div>
       {gameOver && (
-        <div className="absolute flex justify-center items-center text-4xl text-white font-bold m-0 w-full h-full z-10 bg-red-700">
-          Game Over! No more moves.
-        </div>
+        <ResultModal isWinner={false} open={true} rankingData={rankingData} />
       )}
       {gameWon && (
-        <div className="absolute flex justify-center items-center text-4xl text-white font-bold m-0 w-full h-full z-10 bg-green-700">
-          {/* eslint-disable-next-line react/no-unescaped-entities */}
-          Congratulations! You've won!
-        </div>
+        <ResultModal isWinner={true} open={true} rankingData={rankingData} />
       )}
       <div className="flex justify-center mb-6">
         <ScoreBoard title="Score" total={score} />
