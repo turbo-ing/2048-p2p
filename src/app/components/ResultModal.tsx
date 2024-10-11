@@ -62,9 +62,7 @@ export const ResultModal = ({
         <div className="mt-6 flex gap-3">
           <button
             className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-1/3"
-            onClick={() => {
-              router.push("/");
-            }}
+            onClick={() => window.location.reload()}
           >
             <img alt="" src="/svg/home.svg" />
             <div>Home</div>
@@ -72,7 +70,7 @@ export const ResultModal = ({
           <button
             className="rounded-full py-2.5 px-4 bg-[#F23939] text-white text-base font-semibold gap-1.5 flex items-center justify-center w-full"
             onClick={() => {
-              router.push("/play");
+              router.push("/");
             }}
           >
             <img alt="" src="/svg/repeat.svg" />

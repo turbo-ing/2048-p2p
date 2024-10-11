@@ -3,6 +3,7 @@
 import { ThemeProvider } from "styled-components";
 import { useEffect, useState } from "react";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
+import { useRouter } from "next/navigation";
 
 import { Navbar } from "@/app/components/Navbar";
 import useTheme from "@/app/hooks/useTheme";
@@ -11,6 +12,7 @@ import { use2048 } from "@/reducer/2048";
 import { Player } from "@/app/components/ResultModal";
 
 export default function Game2048Page() {
+  const router = useRouter();
   const [state, dispatch] = use2048();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
@@ -69,6 +71,8 @@ export default function Game2048Page() {
     setRanking(sortedPlayers);
   }, [state]);
 
+  if (!state || state.playersCount < 1) return router.push("/");
+
   return (
     <div>
       <ThemeProvider theme={themeValue}>
@@ -84,7 +88,7 @@ export default function Game2048Page() {
           >
             <div className="max-w-7xl mx-auto lg:px-8">
               {!state || state.playersCount < 1 ? (
-                <div className="items-center">Loading...</div>
+                <div className="items-center">Loading</div>
               ) : (
                 <div className="flex items-center min-h-[calc(100vh-80px)] max-w-[960px] mx-auto">
                   <div className="w-full flex flex-row justify-center -mx-5">
