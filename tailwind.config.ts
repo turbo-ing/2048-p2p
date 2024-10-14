@@ -21,9 +21,20 @@ const config: Config = {
           "0%": { transform: "translateY(0)", opacity: "0.9" },
           "100%": { transform: "translateY(-50px)", opacity: "0" },
         },
+        newTileAppear: {
+          "0%": { transform: "scale(0.5)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        mergeTile: {
+          "0%": { transform: "scale(1)", opacity: "1" },
+          "50%": { transform: "scale(1.2)", opacity: "0.8" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         fadeOut: "fadeOut 1s ease-out forwards",
+        newTileAppear: "newTileAppear 0.3s ease",
+        mergeTile: "mergeTile 0.3s ease",
       },
     },
   },

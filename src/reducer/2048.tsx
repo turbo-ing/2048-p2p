@@ -9,7 +9,14 @@ import {
 import { keccak256, toHex } from "viem";
 
 export type Direction = "up" | "down" | "left" | "right";
-export type Grid = (number | null)[][];
+
+export interface Tile {
+  value: number;
+  isNew: boolean;
+  isMerging: boolean;
+}
+
+export type Grid = (Tile | null)[][];
 export type Game2048State = {
   board: { [playerId: string]: Grid };
   score: { [playerId: string]: number };
@@ -52,7 +59,7 @@ const error = (message: string) => {
 const gridsAreEqual = (grid1: Grid, grid2: Grid): boolean => {
   for (let i = 0; i < GRID_SIZE; i++) {
     for (let j = 0; j < GRID_SIZE; j++) {
-      if (grid1[i][j] !== grid2[i][j]) {
+      if (grid1[i][j]?.value !== grid2[i][j]?.value) {
         return false;
       }
     }
@@ -85,7 +92,11 @@ const keccakToSeedFromGrid = (grid: Grid): number => {
 
 // Helper functions
 // const getNewTile = (): number => (Math.random() < 0.9 ? 2 : 4);
-const getNewTile = (): number => 2;
+const getNewTile = (): Tile => ({
+  value: 2,
+  isNew: true,
+  isMerging: false,
+});
 
 const getRandomPosition = (grid: Grid): { x: number; y: number } | null => {
   const emptyPositions: { x: number; y: number }[] = [];
@@ -108,8 +119,6 @@ const getRandomPosition = (grid: Grid): { x: number; y: number } | null => {
 
   // Return the randomly selected position
   return emptyPositions[randomIndex];
-
-  // return emptyPositions[Math.floor(Math.random() * emptyPositions.length)];
 };
 
 const getEmptyGrid = (): Grid => {
@@ -139,7 +148,7 @@ const spawnNewTile = (grid: Grid): Grid => {
 };
 
 // Helper to slide tiles in a row (remove nulls, and slide values to the left)
-const slide = (row: (number | null)[]): (number | null)[] => {
+const slide = (row: (Tile | null)[]): (Tile | null)[] => {
   const newRow = row.filter((val) => val !== null); // Filter out nulls
   const emptySpaces = GRID_SIZE - newRow.length; // Calculate empty spaces
 
@@ -148,17 +157,22 @@ const slide = (row: (number | null)[]): (number | null)[] => {
 
 // Helper to merge tiles in a row (combine adjacent tiles with the same value)
 const merge = (
-  row: (number | null)[],
-): { newRow: (number | null)[]; score: number } => {
+  row: (Tile | null)[],
+): { newRow: (Tile | null)[]; score: number } => {
   let score = 0;
   const newRow = [...row]; // Copy the row
 
   for (let i = 0; i < GRID_SIZE - 1; i++) {
-    if (newRow[i] !== null && newRow[i] === newRow[i + 1]) {
-      const newValue = newRow[i]! * 2;
+    if (
+      newRow[i] &&
+      newRow[i + 1] &&
+      newRow[i]!.value === newRow[i + 1]!.value
+    ) {
+      const newValue = newRow[i]!.value * 2;
+      const newTile = { value: newValue, isNew: false, isMerging: true };
 
       score += newValue; // Add merged value to the score
-      newRow[i] = newValue; // Merge tiles
+      newRow[i] = newTile; // Merge tiles
       newRow[i + 1] = null; // Set the next tile to null after merge
     }
   }
@@ -168,8 +182,15 @@ const merge = (
 
 // Function to move and merge a single row or column
 const moveAndMergeRow = (
-  row: (number | null)[],
-): { row: (number | null)[]; score: number } => {
+  row: (Tile | null)[],
+): { row: (Tile | null)[]; score: number } => {
+  // reset the flag for merging and new tiles
+  row.forEach((tile) => {
+    if (tile) {
+      tile.isMerging = false;
+      tile.isNew = false;
+    }
+  });
   const slidRow = slide(row); // First slide to remove empty spaces
   const { newRow: mergedRow, score } = merge(slidRow); // Then merge adjacent tiles
 

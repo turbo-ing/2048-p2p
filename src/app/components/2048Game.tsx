@@ -2,16 +2,16 @@
 
 import React, { useEffect, useState } from "react";
 
-import { Grid, GRID_SIZE } from "@/reducer/2048";
+import { Grid, GRID_SIZE, Tile } from "@/reducer/2048";
 import ScoreBoard from "@/app/components/2048ScoreBoard";
 import { Player, ResultModal } from "@/app/components/ResultModal";
 
 // Helper function to get background and text color based on tile value
-const getTileStyle = (value: number | null) => {
-  if (value === null) {
+const getTileStyle = (tile: Tile | null) => {
+  if (tile === null) {
     return { backgroundColor: "#cdc1b4", color: "#776e65" }; // Empty tile
   }
-  switch (value) {
+  switch (tile.value) {
     case 2:
       return { backgroundColor: "#eee4da", color: "#776e65" };
     case 4:
@@ -42,7 +42,7 @@ const getTileStyle = (value: number | null) => {
 const hasWon = (grid: Grid): boolean => {
   for (let row of grid) {
     for (let tile of row) {
-      if (tile && tile === 2048) {
+      if (tile && tile.value === 2048) {
         return true;
       }
     }
@@ -123,23 +123,25 @@ const Game2048: React.FC<Game2048Props> = ({
       <div className="grid grid-cols-4 gap-2.5">
         {grid &&
           grid.map((row, rowIndex) => (
-            <>
+            <React.Fragment key={rowIndex}>
               {row.map((tile, colIndex) => {
                 const { backgroundColor, color } = getTileStyle(tile);
+                const isMerged = tile && tile.isMerging;
+                const isNew = tile && tile.isNew;
 
                 return (
                   <div
                     key={`${rowIndex}-${colIndex}`}
-                    className="pt-[100%] relative bg-[#cdc1b4] flex items-center justify-center rounded-md transition-all duration-300"
+                    className={`pt-[100%] relative bg-[#cdc1b4] flex items-center justify-center rounded-md transition-transform duration-300 ${isNew ? "animate-newTileAppear" : ""} ${isMerged ? "animate-mergeTile" : ""}`}
                     style={{ backgroundColor, color }}
                   >
                     <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                      {tile ? tile : ""}
+                      {tile ? tile.value : ""}
                     </span>
                   </div>
                 );
               })}
-            </>
+            </React.Fragment>
           ))}
       </div>
       <div className="border-b-1 border-white pb-3">
