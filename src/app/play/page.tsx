@@ -10,10 +10,12 @@ import useTheme from "@/app/hooks/useTheme";
 import Game2048 from "@/app/components/2048Game";
 import { use2048 } from "@/reducer/2048";
 import { Player } from "@/app/components/ResultModal";
+import useIsMobile from "@/app/hooks/useIsMobile";
 
 export default function Game2048Page() {
   const router = useRouter();
   const [state, dispatch] = use2048();
+  const isMobile = useIsMobile();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
   const [ranking, setRanking] = useState<Player[]>([]);
@@ -91,8 +93,8 @@ export default function Game2048Page() {
                 <div className="items-center">Loading</div>
               ) : (
                 <div className="flex items-center min-h-[calc(100vh-80px)] max-w-[960px] mx-auto">
-                  <div className="w-full flex flex-row justify-center -mx-5">
-                    <div className="w-1/2 px-5">
+                  <div className="w-full flex lg:flex-row flex-col justify-center lg:-mx-5">
+                    <div className="lg:w-1/2 px-5 w-full">
                       <div className="max-w-[365px] mx-auto text-3xl">
                         <Game2048
                           key={peerId}
@@ -105,26 +107,27 @@ export default function Game2048Page() {
                       </div>
                     </div>
                     {state.playersCount > 1 && (
-                      <div className="relative flex flex-row flex-wrap w-1/2 px-5 -mx-2.5 gap-y-2 before:bg-white before:content-[''] before:absolute before:left-0 before:top-[10%] before:bottom-[10%] before:w-[1px]">
-                        {state.playerId.map(
-                          (player) =>
-                            player !== peerId && (
-                              <div
-                                key={`${player}-id`}
-                                className="w-1/2 px-2.5 text-xl"
-                              >
-                                <Game2048
-                                  key={player}
-                                  className="text-sm"
-                                  grid={state.board[player]}
-                                  player={state.players[player]}
-                                  rankingData={ranking}
-                                  score={state.score[player]}
-                                />
-                              </div>
-                            ),
-                        )}
-                        <div className="w-1/2 px-2.5 text-xl">
+                      <div className="relative flex flex-row flex-wrap lg:w-1/2 w-full px-5 lg:-mx-2.5 gap-y-2 lg:before:bg-white lg:before:content-[''] lg:before:absolute lg:before:left-0 lg:before:top-[10%] lg:before:bottom-[10%] lg:before:w-[1px]">
+                        {!isMobile &&
+                          state.playerId.map(
+                            (player) =>
+                              player !== peerId && (
+                                <div
+                                  key={`${player}-id`}
+                                  className="w-1/2 px-2.5 text-xl"
+                                >
+                                  <Game2048
+                                    key={player}
+                                    className="text-sm"
+                                    grid={state.board[player]}
+                                    player={state.players[player]}
+                                    rankingData={ranking}
+                                    score={state.score[player]}
+                                  />
+                                </div>
+                              ),
+                          )}
+                        <div className="lg:w-1/2 px-2.5 lg:text-xl w-full text-base">
                           <p className="text-center text-2xl mb-2">Ranking</p>
                           <ul className="counter-list">
                             {ranking.map((player) => (
