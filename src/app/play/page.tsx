@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/app/components/Navbar";
 import useTheme from "@/app/hooks/useTheme";
 import Game2048 from "@/app/components/2048Game";
-import { use2048 } from "@/reducer/2048";
+import { Direction, use2048 } from "@/reducer/2048";
 import { Player } from "@/app/components/ResultModal";
 import useIsMobile from "@/app/hooks/useIsMobile";
 
@@ -23,27 +23,27 @@ export default function Game2048Page() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    switch (e.key) {
-      case "ArrowUp":
+  const dispatchDirection = (dir: Direction) => {
+    switch (dir) {
+      case "up":
         dispatch({
           type: "MOVE",
           payload: "up",
         });
         break;
-      case "ArrowDown":
+      case "down":
         dispatch({
           type: "MOVE",
           payload: "down",
         });
         break;
-      case "ArrowLeft":
+      case "left":
         dispatch({
           type: "MOVE",
           payload: "left",
         });
         break;
-      case "ArrowRight":
+      case "right":
         dispatch({
           type: "MOVE",
           payload: "right",
@@ -53,14 +53,6 @@ export default function Game2048Page() {
         return;
     }
   };
-
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleKeyDown]);
 
   useEffect(() => {
     const sortedScores = Object.entries(state.score) // Convert to array of [playerId, score]
@@ -99,6 +91,7 @@ export default function Game2048Page() {
                         <Game2048
                           key={peerId}
                           className="text-base"
+                          dispatchDirection={dispatchDirection}
                           grid={state.board[peerId!]}
                           player={state.players[peerId!]}
                           rankingData={ranking}
@@ -119,6 +112,7 @@ export default function Game2048Page() {
                                   <Game2048
                                     key={player}
                                     className="text-sm"
+                                    dispatchDirection={dispatchDirection}
                                     grid={state.board[player]}
                                     player={state.players[player]}
                                     rankingData={ranking}

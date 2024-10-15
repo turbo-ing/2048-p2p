@@ -1,61 +1,74 @@
-import { RefObject, useCallback, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
-import { Vector } from "@/utils/types";
-import { DIRECTION_MAP } from "@/utils/constants";
+import { Direction } from "@/reducer/2048";
 
-const isTouchDevice = () => "ontouchstart" in window;
+// Define the threshold for detecting a swipe gesture
+const SWIPE_THRESHOLD = 50; // Minimum distance in pixels to be considered a swipe
 
-// Similar to useArrowKeyPress, use callback to let hook user decide when to rerender
-const useSwipe = <T extends HTMLElement>(
-  ref: RefObject<T>,
-  cb: (dir: Vector) => void,
-  threshold = 3,
-) => {
-  const posRef = useRef({ x: 0, y: 0 });
-
-  const onTouchStart = useCallback(({ changedTouches }: TouchEvent) => {
-    posRef.current = {
-      x: changedTouches[0].clientX,
-      y: changedTouches[0].clientY,
-    };
-  }, []);
-
-  const onTouchEnd = useCallback(
-    ({ changedTouches }: TouchEvent) => {
-      if (changedTouches?.length > 0) {
-        const {
-          current: { x, y },
-        } = posRef;
-        const cx = changedTouches[0].clientX;
-        const cy = changedTouches[0].clientY;
-        const dx = cx - x;
-        const dy = cy - y;
-
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > threshold) {
-          cb(cx > x ? DIRECTION_MAP.Right : DIRECTION_MAP.Left);
-        } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > threshold) {
-          cb(cy > y ? DIRECTION_MAP.Down : DIRECTION_MAP.Up);
-        }
-      }
-    },
-    [cb, threshold],
+const useSwipe = (cb: (dir: Direction) => void) => {
+  const [swipeDirection, setSwipeDirection] = useState<string | null>(null);
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(
+    null,
   );
 
-  useEffect(() => {
-    const el = ref.current;
+  // Handle touch start event
+  const handleTouchStart = (e: TouchEvent) => {
+    const touch = e.touches[0];
 
-    if (isTouchDevice()) {
-      el?.addEventListener("touchstart", onTouchStart);
-      el?.addEventListener("touchend", onTouchEnd);
+    setTouchStart({ x: touch.clientX, y: touch.clientY });
+  };
+
+  // Handle touch end event
+  const handleTouchEnd = (e: TouchEvent) => {
+    if (!touchStart) return;
+
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStart.x;
+    const deltaY = touch.clientY - touchStart.y;
+
+    // Calculate the absolute difference for both X and Y directions
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    // Determine if it's a valid swipe
+    if (absX > SWIPE_THRESHOLD || absY > SWIPE_THRESHOLD) {
+      // Determine swipe direction
+      if (absX > absY) {
+        if (deltaX > 0) {
+          setSwipeDirection("right");
+          cb("right");
+        } else {
+          setSwipeDirection("left");
+          cb("left");
+        }
+      } else {
+        if (deltaY > 0) {
+          setSwipeDirection("down");
+          cb("down");
+        } else {
+          setSwipeDirection("up");
+          cb("up");
+        }
+      }
     }
 
+    // Reset the touch start state after detecting swipe
+    setTouchStart(null);
+  };
+
+  useEffect(() => {
+    // Attach touch event listeners
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchend", handleTouchEnd);
+
+    // Clean up event listeners on component unmount
     return () => {
-      if (isTouchDevice()) {
-        el?.removeEventListener("touchstart", onTouchStart);
-        el?.removeEventListener("touchend", onTouchEnd);
-      }
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [onTouchEnd, onTouchStart, ref]);
+  }, [touchStart]);
+
+  return swipeDirection; // Return the swipe direction
 };
 
 export default useSwipe;

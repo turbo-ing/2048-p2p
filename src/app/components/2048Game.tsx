@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 
-import { Grid, GRID_SIZE, Tile } from "@/reducer/2048";
+import { Direction, Grid, GRID_SIZE, Tile } from "@/reducer/2048";
 import ScoreBoard from "@/app/components/2048ScoreBoard";
 import { Player, ResultModal } from "@/app/components/ResultModal";
+import useArrowKeyPress from "@/app/hooks/useArrowKeyPress";
+import useSwipe from "@/app/hooks/useSwipe";
 
 // Helper function to get background and text color based on tile value
 const getTileStyle = (tile: Tile | null) => {
@@ -84,6 +86,7 @@ interface Game2048Props {
   player: string;
   rankingData: Player[];
   className?: string; // Optional className prop
+  dispatchDirection: (dir: Direction) => void; // Dispatch function to handle direction
 }
 
 const Game2048: React.FC<Game2048Props> = ({
@@ -92,6 +95,7 @@ const Game2048: React.FC<Game2048Props> = ({
   player,
   rankingData,
   className,
+  dispatchDirection,
 }) => {
   const [gameOver, setGameOver] = useState<boolean>(false); // Track if the game is over
   const [gameWon, setGameWon] = useState<boolean>(false); // Track if the player won
@@ -106,6 +110,9 @@ const Game2048: React.FC<Game2048Props> = ({
       setGameOver(true);
     }
   }, [grid]);
+
+  useArrowKeyPress(dispatchDirection);
+  useSwipe(dispatchDirection);
 
   const baseStyles = "text-center mt-6 text-white";
 
