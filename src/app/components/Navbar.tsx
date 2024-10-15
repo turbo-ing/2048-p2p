@@ -5,7 +5,6 @@ import { useState } from "react";
 
 import useIsMobile from "../hooks/useIsMobile";
 
-import { ethers } from "ethers";
 import Drawer from "./Drawer";
 
 interface NavbarProps {
@@ -13,7 +12,6 @@ interface NavbarProps {
   onClick?: () => void;
   isShowButton?: boolean;
   walletBalance?: string;
-  wallet?: ethers.Wallet | null;
   address?: string;
 }
 export const Navbar = ({
@@ -21,7 +19,6 @@ export const Navbar = ({
   onClick,
   isShowButton = false,
   address,
-  wallet,
   walletBalance,
 }: NavbarProps) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
