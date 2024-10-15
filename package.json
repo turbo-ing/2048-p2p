@@ -28,7 +28,7 @@
     "framer-motion": "^11.5.4",
     "install": "^0.13.0",
     "long": "^5.2.3",
-    "next": "14.2.5",
+    "next": "14.2.15",
     "nice-grpc": "^2.1.9",
     "nice-grpc-web": "^3.3.4",
     "noble-hashes": "^0.3.1",
