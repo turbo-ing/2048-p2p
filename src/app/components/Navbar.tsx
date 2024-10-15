@@ -5,7 +5,6 @@ import { useState } from "react";
 
 import useIsMobile from "../hooks/useIsMobile";
 
-import { ethers } from "ethers";
 import Drawer from "./Drawer";
 
 interface NavbarProps {
@@ -13,7 +12,6 @@ interface NavbarProps {
   onClick?: () => void;
   isShowButton?: boolean;
   walletBalance?: string;
-  wallet?: ethers.Wallet | null;
   address?: string;
 }
 export const Navbar = ({
@@ -21,7 +19,6 @@ export const Navbar = ({
   onClick,
   isShowButton = false,
   address,
-  wallet,
   walletBalance,
 }: NavbarProps) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -33,15 +30,20 @@ export const Navbar = ({
 
   return (
     <div className="absolute z-50 w-full bg-black">
-      <div className="flex justify-between h-20 max-w-7xl mx-auto items-center lg:px-8 px-4 ">
+      <div className="flex justify-between h-20 max-w-7xl mx-auto items-center lg:px-8 px-4">
         <div className="flex gap-10 items-center">
           <Link href="/" onClick={onClick}>
-            <img alt="" className="w-36" src={"/svg/logo.svg"} />
+            <img
+              alt=""
+              className="max-h-8"
+              src={isDark ? "/svg/2048-logo.svg" : "/svg/2048-logo.svg"}
+            />
           </Link>
           {!isMobile && (
             <Link
-              className={`text-white
-               text-base font-semibold`}
+              className={`${
+                isDark ? "text-white" : "text-[#475467]"
+              } text-base font-semibold`}
               href="/"
               onClick={onClick}
             >
@@ -50,6 +52,7 @@ export const Navbar = ({
           )}
         </div>
         {isMobile ? (
+          // eslint-disable-next-line jsx-a11y/no-static-element-interactions,jsx-a11y/click-events-have-key-events
           <div onClick={toggleDrawer}>
             <svg
               fill="none"
@@ -80,7 +83,7 @@ export const Navbar = ({
                     </div>
                   )} */}
                 <div className="bg-white rounded-full p-2 flex gap-2 items-center">
-                  <img src="/svg/chain/turbo.svg" alt="" />
+                  <img alt="" src="/svg/chain/turbo.svg" />
                   <div className="text-lg font-bold text-[#25292E]">Turbo</div>
                 </div>
                 <div className="bg-white rounded-full py-2 px-3 flex gap-2 items-center">

@@ -1,408 +1,152 @@
 "use client";
 
-import { Card } from "@nextui-org/react";
-import cx from "classnames";
-import { ethers } from "ethers";
-import { motion } from "framer-motion";
-import Image from "next/image";
-import { createChannel, createClient } from "nice-grpc-web";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-
-import { Color } from "../../pb/game";
-import { Navbar } from "../components/Navbar";
-import { ResultModal } from "../components/ResultModal";
-import { onCellClick, sendSequencerFee } from "../core/play";
-import useIsMobile from "../hooks/useIsMobile";
-
-import { NodeDefinition, Position } from "@/pb/query";
-import { getPossibleMoves, useChess } from "@/reducer/chess";
+import { ThemeProvider } from "styled-components";
+import { useEffect, useState } from "react";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { useRouter } from "next/navigation";
-import { ConnectingModal } from "../components/ConnectingModal";
 
-const pieceToSvg: Record<string, string> = {
-  r: "/assets/rook-b.svg",
-  n: "/assets/knight-b.svg",
-  b: "/assets/bishop-b.svg",
-  q: "/assets/queen-b.svg",
-  k: "/assets/king-b.svg",
-  p: "/assets/pawn-b.svg",
-  R: "/assets/rook-w.svg",
-  N: "/assets/knight-w.svg",
-  B: "/assets/bishop-w.svg",
-  Q: "/assets/queen-w.svg",
-  K: "/assets/king-w.svg",
-  P: "/assets/pawn-w.svg",
-};
+import { Navbar } from "@/app/components/Navbar";
+import useTheme from "@/app/hooks/useTheme";
+import Game2048 from "@/app/components/2048Game";
+import { Direction, use2048 } from "@/reducer/2048";
+import { Player } from "@/app/components/ResultModal";
+import useIsMobile from "@/app/hooks/useIsMobile";
+import { useDisableScroll } from "@/app/hooks/useSwipe";
 
-export default function Play() {
-  const [gameState, dispatch, connected, room, setRoom] = useChess();
+export default function Game2048Page() {
+  const router = useRouter();
+  const [state, dispatch] = use2048();
+  const isMobile = useIsMobile();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
-  const publicKey = peerId || "";
+  const [ranking, setRanking] = useState<Player[]>([]);
 
-  const whitePlayer = gameState.whitePlayer;
-  const blackPlayer = gameState.blackPlayer;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [{ name: themeName, value: themeValue }] = useTheme("dark");
 
-  // const isBlackPlayer = publicKey === blackPlayer;
-  const isWhitePlayer = publicKey === whitePlayer;
-
-  console.log(gameState);
-
-  // const [gameState, setGameState] = useState<GameState>({} as GameState);
-  const [selectedCell, _setSelectedCell] = useState<Position | null>(null);
-  const [nextMoves, setNextMoves] = useState<{ [pos: string]: Boolean }>({});
-  const [isBoardReversed, setIsBoardReversed] = useState<Boolean>(false);
-  const [localPrivateKey, setLocalPrivateKey] = useState<string>("");
-  const [provider, setProvider] =
-    useState<ethers.providers.Web3Provider | null>(null);
-  const [wallet, setWallet] = useState<ethers.Wallet | null>(null);
-  const [resultModal, setResultModal] = useState(false);
-  const [walletBalance, setWalletBalance] = useState("0");
-  const [txSent, setTxSent] = useState<string | null>(null);
-  const router = useRouter();
-
-  const fetchBalance = async () => {
-    if (provider && wallet) {
-      const localPublicKey = await wallet?.getAddress();
-
-      if (!localPublicKey) return;
-      const walletBalance = await provider.getBalance(localPublicKey!);
-      const walletBalanceInEth = ethers.utils.formatEther(walletBalance);
-
-      setWalletBalance(walletBalanceInEth);
-    }
-  };
-  const channel = createChannel(
-    (process.env.NEXT_PUBLIC_CHANNEL as string) || "http://127.0.0.1:50050",
-  );
-  const client = createClient(NodeDefinition, channel);
-  const isMobile = useIsMobile();
-  const letters = ["A", "B", "C", "D", "E", "F", "G", "H"];
-  const numbers = [8, 7, 6, 5, 4, 3, 2, 1];
-
-  function shortenAddress(address: string): string {
-    return address;
-    // // Ensure that the address is long enough to be shortened
-    // if (address.length <= 4 + 3) {
-    //   return address;
-    // }
-
-    // // Slice the start and end part of the string
-    // const start = address.slice(0, 4);
-    // const end = address.slice(-3);
-
-    // // Return the shortened version with "..."
-    // return `${start}...${end}`;
-  }
-
-  // usePeersFetcher(setPublicKey, setProvider);
-  // useGameStateFetcher({
-  //   setGameState,
-  //   setResultModal,
-  //   setIsWinner,
-  //   client,
-  //   publicKey,
-  //   whitePlayer,
-  //   blackPlayer,
-  // });
-
-  // useEffect(() => {
-  //   setLocalPrivateKey(sessionStorage.getItem("localPrivateKey")!);
-  //   setWhitePlayer(sessionStorage.getItem("whitePlayer")!);
-  //   setBlackPlayer(sessionStorage.getItem("blackPlayer")!);
-  // }, []);
-
-  useEffect(() => {
-    if (!room) {
-      router.push("/");
-    }
-  }, [room]);
-
-  useEffect(() => {
-    fetchBalance();
-  }, [wallet]);
-
-  useEffect(() => {
-    setIsBoardReversed(publicKey === blackPlayer);
-  }, [blackPlayer, publicKey]);
-
-  useEffect(() => {
-    if (provider) {
-      if (localPrivateKey) {
-        setWallet(new ethers.Wallet(localPrivateKey).connect(provider!));
-      }
-    }
-  }, [provider, localPrivateKey]);
-
-  const setSelectedCell: Dispatch<SetStateAction<Position | null>> = (
-    position: SetStateAction<Position | null>,
-  ) => {
-    if (typeof position !== "function" && position && gameState.board) {
-      const actualRow = isBoardReversed ? 7 - position.x : position.x;
-      const actualCol = isBoardReversed ? position.y : position.y;
-      const piece = gameState.board.rows[actualRow].cells[actualCol].piece;
-
-      if (piece?.color !== (isWhitePlayer ? Color.WHITE : Color.BLACK)) {
+  const dispatchDirection = (dir: Direction) => {
+    switch (dir) {
+      case "up":
+        dispatch({
+          type: "MOVE",
+          payload: "up",
+        });
+        break;
+      case "down":
+        dispatch({
+          type: "MOVE",
+          payload: "down",
+        });
+        break;
+      case "left":
+        dispatch({
+          type: "MOVE",
+          payload: "left",
+        });
+        break;
+      case "right":
+        dispatch({
+          type: "MOVE",
+          payload: "right",
+        });
+        break;
+      default:
         return;
-      }
-
-      const nextMoves = getPossibleMoves(
-        piece,
-        { row: actualRow, col: actualCol },
-        gameState.board,
-      );
-
-      const moveMap: { [pos: string]: boolean } = {};
-
-      for (const move of nextMoves) {
-        moveMap[`${isBoardReversed ? 7 - move.row : move.row},${move.col}`] =
-          true;
-      }
-
-      setNextMoves(moveMap);
-    }
-
-    if (!position) {
-      setNextMoves({});
-    }
-
-    _setSelectedCell(position);
-  };
-
-  const makeMove = async (from: Position, to: Position) => {
-    const newBoard = JSON.parse(JSON.stringify(gameState.board));
-    const piece = newBoard.rows[from.x].cells[from.y].piece;
-
-    if (piece) {
-      newBoard.rows[to.x].cells[to.y].piece = piece;
-      newBoard.rows[from.x].cells[from.y].piece = null;
-
-      dispatch({
-        type: "MOVE",
-        payload: {
-          from: {
-            row: from.x,
-            col: from.y,
-          },
-          to: {
-            row: to.x,
-            col: to.y,
-          },
-        },
-      });
-
-      // setGameState({ ...gameState, board: newBoard });
     }
   };
 
-  const getFigSrc = (row: number, col: number): string => {
-    const actualRow = isBoardReversed ? 7 - row : row;
-    const actualCol = isBoardReversed ? col : col;
-    const fig = gameState.board?.rows[actualRow].cells[actualCol].piece;
-
-    if (!fig) return "";
-
-    return fig.color === Color.WHITE
-      ? pieceToSvg[fig.kind.toUpperCase()]
-      : pieceToSvg[fig.kind.toLowerCase()];
-  };
-
-  const onEndGameClick = async () => {
-    dispatch({
-      type: "LEAVE",
-    });
-  };
-
-  const [isTurn, setIsTurn] = useState(true);
+  useDisableScroll(isMobile);
 
   useEffect(() => {
-    setIsTurn(
-      (gameState.turn === Color.WHITE && whitePlayer === publicKey) ||
-        (blackPlayer === publicKey && gameState.turn === Color.BLACK),
-    );
+    const sortedScores = Object.entries(state.score) // Convert to array of [playerId, score]
+      .sort(([, scoreA], [, scoreB]) => scoreB - scoreA);
+    const sortedPlayers: Player[] = sortedScores.map(([name, score]) => ({
+      name: state.players[name],
+      score,
+    }));
 
-    const executeSendSequencerFee = async () => {
-      if (txSent) {
-        return;
-      }
-      const txHash = await sendSequencerFee({ wallet });
-      setTxSent(txHash);
-      console.log(txHash);
-    };
+    setRanking(sortedPlayers);
+  }, [state]);
 
-    executeSendSequencerFee();
-  }, [gameState]);
+  if (!state || state.playersCount < 1) return router.push("/");
 
   return (
-    <div className="bg-black">
-      <Navbar
-        isDark
-        isShowButton
-        walletBalance={walletBalance}
-        address={shortenAddress(publicKey)}
-        wallet={wallet}
-        onClick={() => window.location.reload()}
-      />
-      <main className="flex items-center justify-between min-h-screen gap-6 max-w-7xl mx-auto lg:flex-nowrap flex-wrap pt-20">
-        {isMobile ? (
-          <div className="py-5 text-center w-full">
-            {(gameState.turn === Color.WHITE && whitePlayer == publicKey) ||
-            (blackPlayer == publicKey && gameState.turn === Color.BLACK) ? (
-              <div className="text-[#FCFCFD] text-lg font-semibold">
-                Your Turn
-              </div>
-            ) : (
-              <div className="text-[#FCFCFD] text-lg font-semibold">
-                Opponent&apos;s Turn
-              </div>
-            )}
-            {/* <div className="text-[#FCFCFD] mt-2 text-6xl font-semibold">
-              0:12
-            </div> */}
-          </div>
-        ) : (
-          <div className="lg:block hidden w-96">
-            <div className="py-5 text-center">
-              {(gameState.turn === Color.WHITE && whitePlayer == publicKey) ||
-              (blackPlayer == publicKey && gameState.turn === Color.BLACK) ? (
-                <div className="text-[#FCFCFD] text-4xl font-semibold">
-                  Your Turn
-                </div>
+    <div>
+      <ThemeProvider theme={themeValue}>
+        <Navbar isDark={true} isShowButton={true} />
+        <main className="absolute inset-0 w-full h-full text-white text-4xl transition-opacity duration-1000 lg:pt-20">
+          <div
+            className="h-full"
+            style={{
+              backgroundImage: "url('/img/2048_home_bg.png')",
+              backgroundSize: "cover",
+              backgroundRepeat: "no-repeat",
+            }}
+          >
+            <div className="max-w-7xl mx-auto lg:px-8">
+              {!state || state.playersCount < 1 ? (
+                <div className="items-center">Loading</div>
               ) : (
-                <div className="text-[#FCFCFD] text-4xl font-semibold">
-                  Opponent&apos;s Turn
+                <div className="flex items-center min-h-[calc(100vh-80px)] max-w-[960px] mx-auto">
+                  <div className="w-full flex lg:flex-row flex-col justify-center lg:-mx-5">
+                    <div className="lg:w-1/2 px-5 w-full">
+                      <div className="max-w-[365px] mx-auto text-3xl">
+                        <Game2048
+                          key={peerId}
+                          className="text-base"
+                          dispatchDirection={dispatchDirection}
+                          grid={state.board[peerId!]}
+                          player={state.players[peerId!]}
+                          rankingData={ranking}
+                          score={state.score[peerId!]}
+                        />
+                      </div>
+                    </div>
+                    {state.playersCount > 1 && (
+                      <div className="relative flex flex-row flex-wrap lg:w-1/2 w-full px-5 lg:-mx-2.5 gap-y-2 lg:before:bg-white lg:before:content-[''] lg:before:absolute lg:before:left-0 lg:before:top-[10%] lg:before:bottom-[10%] lg:before:w-[1px]">
+                        {!isMobile &&
+                          state.playerId.map(
+                            (player) =>
+                              player !== peerId && (
+                                <div
+                                  key={`${player}-id`}
+                                  className="w-1/2 px-2.5 text-xl"
+                                >
+                                  <Game2048
+                                    key={player}
+                                    className="text-sm"
+                                    dispatchDirection={dispatchDirection}
+                                    grid={state.board[player]}
+                                    player={state.players[player]}
+                                    rankingData={ranking}
+                                    score={state.score[player]}
+                                  />
+                                </div>
+                              ),
+                          )}
+                        <div className="lg:w-1/2 px-2.5 lg:text-xl w-full text-base">
+                          <p className="text-center text-2xl mb-2">Ranking</p>
+                          <ul className="counter-list">
+                            {ranking.map((player) => (
+                              <li
+                                key={player.name}
+                                className="flex justify-between relative px-5 mb-2 last:mb-0"
+                              >
+                                <p>{player.name}</p>
+                                <p>{player.score}</p>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
-              {/* <div className="text-[#FCFCFD] mt-2 text-6xl font-semibold">
-                0:12
-              </div> */}
-            </div>
-
-            <div className="mt-8 px-6 flex justify-between">
-              <button
-                className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-full"
-                onClick={onEndGameClick}
-              >
-                <div className="flex items-center justify-center">
-                  <img alt="" src="/svg/close.svg" />
-                  <div className="ml-2">End Game</div>
-                </div>
-              </button>
-              {/* <button className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center">
-                <img alt="" src="/svg/rematch.svg" />
-                <div>Rematch</div>
-              </button> */}
             </div>
           </div>
-        )}
-        <ResultModal
-          isWinner={
-            gameState.winner === (isWhitePlayer ? Color.WHITE : Color.BLACK)
-          }
-          isDraw={gameState.winner === null}
-          open={gameState.winner !== undefined}
-          onClose={() => setResultModal(false)}
-        />
-        <ConnectingModal open={!connected}></ConnectingModal>
-        <div className="flex justify-center w-full">
-          <Card className="pr-2 md:pl-2.5 md:pb-2.5 md:pt-10 md:pr-10 pt-4 bg-[#CFD1D21A] shadow-lg rounded-lg w-screen lg:w-[700px] lg:h-[700px] md:max-w-[700px] lg:max-w-[680px] max-h-screen">
-            <div className="grid-container gap-0 relative w-full aspect-square">
-              {/* Main Chessboard */}
-              {gameState.board?.rows.map((row, rowIndex) => (
-                <>
-                  <div
-                    key={`number-${rowIndex}`}
-                    className="flex justify-center items-center text-sm md:text-xl font-bold text-[#D8E3DA]"
-                  >
-                    {numbers[rowIndex]}
-                  </div>
-                  {row.cells.map((_, colIndex) => {
-                    const pieceSrc = getFigSrc(rowIndex, colIndex);
-                    const pieceKey = `${gameState.board?.rows[rowIndex].cells[colIndex].piece?.color}${gameState.board?.rows[rowIndex].cells[colIndex].piece?.kind}${rowIndex}${colIndex}`;
-
-                    return (
-                      <div
-                        key={`${rowIndex}-${colIndex}`}
-                        className={cx(
-                          "w-full h-full flex items-center justify-center transition",
-                          selectedCell?.x === rowIndex &&
-                            selectedCell?.y === colIndex
-                            ? "border-2 border-blue-500"
-                            : "",
-                          (rowIndex + colIndex) % 2 === 0
-                            ? nextMoves[`${rowIndex},${colIndex}`]
-                              ? "bg-[#e91010]"
-                              : "bg-[#F24545]"
-                            : nextMoves[`${rowIndex},${colIndex}`]
-                            ? "bg-[#7c7c7c]"
-                            : "bg-[#9B9B9B]",
-                        )}
-                        role="button"
-                        tabIndex={0}
-                        onClick={async () =>
-                          await onCellClick({
-                            selectedCell,
-                            setSelectedCell,
-                            makeMove,
-                            whitePlayer,
-                            blackPlayer,
-                            client,
-                            wallet,
-                            player: publicKey,
-                            isBoardReversed,
-                            pos: { x: rowIndex, y: colIndex },
-                            isTurn: isTurn,
-                            txSent,
-                            setTxSent,
-                            board: gameState.board!,
-                          })
-                        }
-                        onKeyDown={() => null}
-                      >
-                        {pieceSrc && (
-                          <motion.div
-                            animate={{ opacity: 1 }}
-                            initial={{ opacity: 0 }}
-                            layoutId={pieceKey}
-                            style={{ position: "absolute" }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            {isMobile ? (
-                              <Image
-                                alt=""
-                                height={30}
-                                src={pieceSrc}
-                                width={30}
-                              />
-                            ) : (
-                              <Image
-                                alt=""
-                                height={50}
-                                src={pieceSrc}
-                                width={50}
-                              />
-                            )}
-                          </motion.div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </>
-              ))}
-              <div />
-              {letters.map((letter, index) => (
-                <div
-                  key={index}
-                  className="flex justify-center items-center text-sm md:text-xl font-bold text-[#D8E3DA]"
-                >
-                  {letter}
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-      </main>
+        </main>
+      </ThemeProvider>
     </div>
   );
 }
