@@ -72,3 +72,29 @@ const useSwipe = (cb: (dir: Direction) => void) => {
 };
 
 export default useSwipe;
+
+export const useDisableScroll = (disable: boolean) => {
+  useEffect(() => {
+    if (disable) {
+      // Disable scrolling
+      document.body.style.overflow = "hidden";
+      document.addEventListener("touchmove", preventDefault, {
+        passive: false,
+      });
+    } else {
+      // Re-enable scrolling
+      document.body.style.overflow = "";
+      document.removeEventListener("touchmove", preventDefault);
+    }
+
+    // Cleanup on unmount or when disable changes
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("touchmove", preventDefault);
+    };
+  }, [disable]);
+
+  const preventDefault = (e: TouchEvent) => {
+    e.preventDefault();
+  };
+};

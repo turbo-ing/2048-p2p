@@ -11,6 +11,7 @@ import Game2048 from "@/app/components/2048Game";
 import { Direction, use2048 } from "@/reducer/2048";
 import { Player } from "@/app/components/ResultModal";
 import useIsMobile from "@/app/hooks/useIsMobile";
+import { useDisableScroll } from "@/app/hooks/useSwipe";
 
 export default function Game2048Page() {
   const router = useRouter();
@@ -53,6 +54,8 @@ export default function Game2048Page() {
         return;
     }
   };
+
+  useDisableScroll(isMobile);
 
   useEffect(() => {
     const sortedScores = Object.entries(state.score) // Convert to array of [playerId, score]

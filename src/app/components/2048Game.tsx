@@ -101,13 +101,15 @@ const Game2048: React.FC<Game2048Props> = ({
   const [gameWon, setGameWon] = useState<boolean>(false); // Track if the player won
 
   useEffect(() => {
-    // Check if the player has won
-    if (hasWon(grid)) {
-      setGameWon(true);
-    }
-    // Check if there are no valid moves left (game over)
-    else if (!hasValidMoves(grid)) {
-      setGameOver(true);
+    if (grid && grid.length > 0) {
+      // Check if the player has won
+      if (hasWon(grid)) {
+        setGameWon(true);
+      }
+      // Check if there are no valid moves left (game over)
+      else if (!hasValidMoves(grid)) {
+        setGameOver(true);
+      }
     }
   }, [grid]);
 
@@ -129,6 +131,7 @@ const Game2048: React.FC<Game2048Props> = ({
       </div>
       <div className="grid grid-cols-4 gap-2.5">
         {grid &&
+          grid.length > 0 &&
           grid.map((row, rowIndex) => (
             <React.Fragment key={rowIndex}>
               {row.map((tile, colIndex) => {
