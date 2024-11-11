@@ -1,6 +1,6 @@
+import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 
 import Modal from "./Modal";
 
@@ -27,6 +27,7 @@ export const PlayNow = ({
   const [gameTimesInput, setGameTimesInput] = useState(0);
   const [numOfPlayers, setNumOfPlayers] = useState(0);
   const [roomIdInput, setRoomIdInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
 
@@ -61,6 +62,7 @@ export const PlayNow = ({
   };
 
   const playSoloMode = async () => {
+    setIsLoading(true);
     setRoom("solomode");
     setNumOfPlayers(1);
   };
@@ -91,6 +93,13 @@ export const PlayNow = ({
 
   return (
     <>
+      {isLoading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-white border-opacity-75"></div>
+          </div>
+        </div>
+      )}
       <div
         className={`absolute inset-0 w-full h-full text-[#D9D9D9] text-4xl transition-opacity duration-1000 ${
           activeIndex === 1 ? "opacity-100 z-20" : "opacity-0 z-10"
