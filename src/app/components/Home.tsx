@@ -1,13 +1,12 @@
 interface HomeProps {
-  activeIndex: number;
-  goToSlide: (index: number) => void;
+  // activeIndex: number;
+  openModel: () => void;
 }
-export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
+export const Home = ({ openModel }: HomeProps) => {
   return (
     <div
-      className={`absolute inset-0 w-full h-full flex items-center justify-center text-white text-4xl transition-opacity duration-1000 ${
-        activeIndex === 0 ? "opacity-100 z-20" : "opacity-0 z-10"
-      }`}
+      className={`absolute inset-0 w-full h-full flex items-center justify-center text-white text-4xl transition-opacity duration-1000`}
+      // ${activeIndex === 0 ? "opacity-100 z-20" : "opacity-0 z-10"}
     >
       <img
         alt=""
@@ -36,7 +35,7 @@ export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
           <button
             className="py-4 px-[22px] shadow-sm border border-[#F23939] bg-[#F23939] rounded-full flex items-center"
             onClick={() => {
-              goToSlide(1);
+              openModel();
             }}
           >
             <div className="text-lg">Play now</div>
