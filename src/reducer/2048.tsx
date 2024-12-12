@@ -8,12 +8,20 @@ import {
 } from "react";
 import { keccak256, toHex } from "viem";
 
+import { gridsAreEqual } from "@/utils/helper";
+
 export type Direction = "up" | "down" | "left" | "right";
 
 export interface Tile {
+  id: string;
   value: number;
   isNew: boolean;
   isMerging: boolean;
+  x: number;
+  y: number;
+  prevX?: number;
+  prevY?: number;
+  isMoving?: boolean;
 }
 
 export type Grid = (Tile | null)[][];
@@ -55,19 +63,6 @@ const error = (message: string) => {
   console.error(message);
 };
 
-// Helper function to check if two grids are the same
-const gridsAreEqual = (grid1: Grid, grid2: Grid): boolean => {
-  for (let i = 0; i < GRID_SIZE; i++) {
-    for (let j = 0; j < GRID_SIZE; j++) {
-      if (grid1[i][j]?.value !== grid2[i][j]?.value) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-};
-
 const seedRandom = (seed: number): (() => number) => {
   let currentSeed = seed;
 
@@ -92,10 +87,13 @@ const keccakToSeedFromGrid = (grid: Grid): number => {
 
 // Helper functions
 // const getNewTile = (): number => (Math.random() < 0.9 ? 2 : 4);
-const getNewTile = (): Tile => ({
+const getNewTile = (x: number, y: number): Tile => ({
+  id: crypto.randomUUID(),
   value: 2,
   isNew: true,
   isMerging: false,
+  x,
+  y,
 });
 
 const getRandomPosition = (grid: Grid): { x: number; y: number } | null => {
@@ -141,8 +139,10 @@ const spawnNewTile = (grid: Grid): Grid => {
 
   if (!pos) return grid;
   const newGrid = deepCloneGrid(grid); // Deep clone the grid
+  console.log("pos", pos);
+  newGrid[pos.x][pos.y] = getNewTile(pos.y, pos.x); // Add a new tile to the grid
 
-  newGrid[pos.x][pos.y] = getNewTile();
+  console.log("spawnNewTile new", newGrid);
 
   return newGrid;
 };
@@ -158,6 +158,7 @@ const slide = (row: (Tile | null)[]): (Tile | null)[] => {
 // Helper to merge tiles in a row (combine adjacent tiles with the same value)
 const merge = (
   row: (Tile | null)[],
+  rowIndex: number,
 ): { newRow: (Tile | null)[]; score: number } => {
   let score = 0;
   const newRow = [...row]; // Copy the row
@@ -169,7 +170,15 @@ const merge = (
       newRow[i]!.value === newRow[i + 1]!.value
     ) {
       const newValue = newRow[i]!.value * 2;
-      const newTile = { value: newValue, isNew: false, isMerging: true };
+      const newTile = {
+        id: crypto.randomUUID(),
+        value: newValue,
+        isNew: false,
+        isMerging: true,
+        x: rowIndex,
+        y: i,
+        isMoving: false,
+      };
 
       score += newValue; // Add merged value to the score
       newRow[i] = newTile; // Merge tiles
@@ -183,18 +192,31 @@ const merge = (
 // Function to move and merge a single row or column
 const moveAndMergeRow = (
   row: (Tile | null)[],
+  rowIndex: number,
 ): { row: (Tile | null)[]; score: number } => {
   // reset the flag for merging and new tiles
   row.forEach((tile) => {
     if (tile) {
       tile.isMerging = false;
       tile.isNew = false;
+      tile.prevX = tile.x;
+      tile.prevY = tile.y;
+      tile.isMoving = false;
     }
   });
   const slidRow = slide(row); // First slide to remove empty spaces
-  const { newRow: mergedRow, score } = merge(slidRow); // Then merge adjacent tiles
+  const { newRow: mergedRow, score } = merge(slidRow, rowIndex); // Then merge adjacent tiles
 
-  return { row: slide(mergedRow), score }; // Slide again to remove any new empty spaces
+  const finalRow = slide(mergedRow);
+
+  finalRow.forEach((tile, colIndex) => {
+    if (tile) {
+      tile.x = rowIndex;
+      tile.y = colIndex;
+    }
+  });
+
+  return { row: finalRow, score }; // Slide again to remove any new empty spaces
 };
 
 // Transpose the grid (convert columns to rows and vice versa) for vertical movement
@@ -213,8 +235,8 @@ const moveGrid = (
   switch (direction) {
     case "left":
       // Move left: process each row normally
-      newGrid = grid.map((row) => {
-        const { row: newRow, score } = moveAndMergeRow(row);
+      newGrid = grid.map((row, rowIdx) => {
+        const { row: newRow, score } = moveAndMergeRow(row, rowIdx);
 
         totalScore += score;
 
@@ -224,9 +246,9 @@ const moveGrid = (
 
     case "right":
       // Move right: reverse each row, process, then reverse again
-      newGrid = grid.map((row) => {
+      newGrid = grid.map((row, rowIdx) => {
         const reversedRow = [...row].reverse();
-        const { row: newRow, score } = moveAndMergeRow(reversedRow);
+        const { row: newRow, score } = moveAndMergeRow(reversedRow, rowIdx);
 
         totalScore += score;
 
@@ -237,8 +259,8 @@ const moveGrid = (
     case "up":
       // Move up: transpose, process rows as columns, then transpose back
       newGrid = transposeGrid(
-        transposeGrid(grid).map((row) => {
-          const { row: newRow, score } = moveAndMergeRow(row);
+        transposeGrid(grid).map((row, rowIdx) => {
+          const { row: newRow, score } = moveAndMergeRow(row, rowIdx);
 
           totalScore += score;
 
@@ -250,9 +272,9 @@ const moveGrid = (
     case "down":
       // Move down: transpose, reverse rows (as columns), process, reverse, then transpose back
       newGrid = transposeGrid(
-        transposeGrid(grid).map((row) => {
+        transposeGrid(grid).map((row, rowIdx) => {
           const reversedRow = [...row].reverse();
-          const { row: newRow, score } = moveAndMergeRow(reversedRow);
+          const { row: newRow, score } = moveAndMergeRow(reversedRow, rowIdx);
 
           totalScore += score;
 
@@ -270,6 +292,8 @@ const moveGrid = (
 
 export const initializeBoard = () => {
   let newGrid = getEmptyGrid();
+
+  console.log("initializeBoard new", newGrid);
 
   for (let i = 0; i < INITIAL_TILES; i++) {
     newGrid = spawnNewTile(newGrid);

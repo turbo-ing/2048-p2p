@@ -21,8 +21,8 @@ const config: Config = {
           "0%": { transform: "translateY(0)", opacity: "0.9" },
           "100%": { transform: "translateY(-50px)", opacity: "0" },
         },
-        newTileAppear: {
-          "0%": { transform: "scale(0.5)", opacity: "0" },
+        newTile: {
+          "0%": { transform: "scale(0)", opacity: "0" },
           "100%": { transform: "scale(1)", opacity: "1" },
         },
         mergeTile: {
@@ -30,11 +30,16 @@ const config: Config = {
           "50%": { transform: "scale(1.2)", opacity: "0.8" },
           "100%": { transform: "scale(1)", opacity: "1" },
         },
+        moveTile: {
+          "0%": { transform: "translate(var(--prevX, 0), var(--prevY, 0))" },
+          "100%": { transform: "translate(var(--x, 0), var(--y, 0))" },
+        },
       },
       animation: {
         fadeOut: "fadeOut 1s ease-out forwards",
-        newTileAppear: "newTileAppear 0.3s ease",
+        newTile: "newTile 0.3s ease",
         mergeTile: "mergeTile 0.3s ease",
+        moveTile: "moveTile 0.3s ease-in-out",
       },
     },
   },

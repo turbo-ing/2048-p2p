@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { Direction, Grid, GRID_SIZE, Tile } from "@/reducer/2048";
 import ScoreBoard from "@/app/components/2048ScoreBoard";
 import { Player, ResultModal } from "@/app/components/ResultModal";
 import useArrowKeyPress from "@/app/hooks/useArrowKeyPress";
 import useSwipe from "@/app/hooks/useSwipe";
+import { gridsAreEqual } from "@/utils/helper";
+
+// Animation Phases
+type AnimationPhase = "move" | "merge" | "new";
 
 // Helper function to get background and text color based on tile value
 const getTileStyle = (tile: Tile | null) => {
@@ -87,6 +91,8 @@ interface Game2048Props {
   rankingData: Player[];
   className?: string; // Optional className prop
   dispatchDirection: (dir: Direction) => void; // Dispatch function to handle direction
+  width: number;
+  height: number;
 }
 
 const Game2048: React.FC<Game2048Props> = ({
@@ -96,9 +102,74 @@ const Game2048: React.FC<Game2048Props> = ({
   rankingData,
   className,
   dispatchDirection,
+  width,
+  height,
 }) => {
+  const [currentGrid, setCurrentGrid] = useState<Grid>(grid); // Current grid state
+  const previousGridRef = useRef<Grid | null>(null);
   const [gameOver, setGameOver] = useState<boolean>(false); // Track if the game is over
   const [gameWon, setGameWon] = useState<boolean>(false); // Track if the player won
+  // const [animationPhase, setAnimationPhase] = useState<AnimationPhase>("move");
+
+  const updateGrid = (newGrid: Grid) => {
+    console.log("newGrid", newGrid);
+    console.log("previousGridRef.current", previousGridRef.current);
+    if (!previousGridRef.current) {
+      previousGridRef.current = currentGrid;
+
+      return;
+    }
+
+    if (gridsAreEqual(newGrid, previousGridRef.current)) {
+      // console.log("newGrid", newGrid);
+      // console.log("previousGridRef.current", previousGridRef.current);
+
+      return;
+    }
+
+    let isMoved = false;
+    const updatedGrid = newGrid.map((row, y) =>
+      row.map((tile, x) => {
+        if (!tile) return null;
+
+        let prevX = x;
+        let prevY = y;
+
+        if (previousGridRef.current) {
+          for (let py = 0; py < GRID_SIZE; py++) {
+            for (let px = 0; px < GRID_SIZE; px++) {
+              const prevTile = previousGridRef.current[py][px];
+
+              if (prevTile && prevTile.id === tile.id) {
+                prevX = px;
+                prevY = py;
+                isMoved = true;
+                break;
+              }
+            }
+          }
+        }
+
+        previousGridRef.current = currentGrid;
+
+        return {
+          ...tile,
+          prevX,
+          prevY,
+          x,
+          y,
+          isMoving: isMoved,
+          isMerging: tile.isMerging,
+          isNew: tile.isNew,
+        };
+      }),
+    );
+
+    console.log("updatedGrid", updatedGrid);
+
+    setCurrentGrid(updatedGrid);
+    // setAnimationPhase("move");
+  };
 
   useEffect(() => {
     if (grid && grid.length > 0) {
@@ -111,7 +182,19 @@ const Game2048: React.FC<Game2048Props> = ({
         setGameOver(true);
       }
     }
+    updateGrid(grid);
   }, [grid]);
+
+  // Animation Phases
+  // useEffect(() => {
+  //   if (animationPhase === "move") {
+  //     setTimeout(() => setAnimationPhase("merge"), 300);
+  //   } else if (animationPhase === "merge") {
+  //     setTimeout(() => setAnimationPhase("new"), 200);
+  //   } else if (animationPhase === "new") {
+  //     setTimeout(() => setAnimationPhase("move"), 200);
+  //   }
+  // }, [animationPhase]);
 
   useArrowKeyPress(dispatchDirection);
   useSwipe(dispatchDirection);
@@ -129,30 +212,40 @@ const Game2048: React.FC<Game2048Props> = ({
       <div className="flex justify-center mb-6">
         <ScoreBoard title="Score" total={score} />
       </div>
-      <div className="grid grid-cols-4 gap-2.5">
-        {grid &&
-          grid.length > 0 &&
-          grid.map((row, rowIndex) => (
-            <React.Fragment key={rowIndex}>
-              {row.map((tile, colIndex) => {
-                const { backgroundColor, color } = getTileStyle(tile);
-                const isMerged = tile && tile.isMerging;
-                const isNew = tile && tile.isNew;
+      <div className="relative grid grid-cols-4 gap-2.5 w-[365px] h-[365px]">
+        {currentGrid &&
+          currentGrid.map((row) =>
+            row.map((tile) => {
+              if (!tile) return null;
+              const { backgroundColor, color } = getTileStyle(tile);
 
-                return (
-                  <div
-                    key={`${rowIndex}-${colIndex}`}
-                    className={`pt-[100%] relative bg-[#cdc1b4] flex items-center justify-center rounded-md transition-transform duration-300 ${isNew ? "animate-newTileAppear" : ""} ${isMerged ? "animate-mergeTile" : ""}`}
-                    style={{ backgroundColor, color }}
-                  >
-                    <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                      {tile ? tile.value : ""}
-                    </span>
-                  </div>
-                );
-              })}
-            </React.Fragment>
-          ))}
+              return (
+                <div
+                  key={`${tile.id}`}
+                  className={`absolute bg-[#cdc1b4] flex items-center justify-center rounded-md
+                  ${tile.isMoving ? "animate-moveTile" : ""} ${tile.isMerging ? "animate-mergeTile" : ""} ${tile.isNew ? "animate-newTile" : ""}`}
+                  style={
+                    {
+                      backgroundColor,
+                      color,
+                      width: `${width}px`,
+                      height: `${height}px`,
+                      transform: `translate(${tile.x * 100}%, ${tile.y * 100}%)`,
+                      "--prevX": `${tile.prevX! * 100}%`,
+                      "--prevY": `${tile.prevY! * 100}%`,
+                      "--x": `${tile.x * 100}%`,
+                      "--y": `${tile.y * 100}%`,
+                      // animation: "move 0.3s ease-in-out",
+                    } as React.CSSProperties
+                  }
+                >
+                  <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    {tile ? tile.value : ""}
+                  </span>
+                </div>
+              );
+            }),
+          )}
       </div>
       <div className="border-b-1 border-white pb-3">
         <p className={`${baseStyles} ${className}`}>Player: {player}</p>

@@ -90,15 +90,17 @@ export default function Game2048Page() {
                 <div className="flex items-center min-h-[calc(100vh-80px)] max-w-[960px] mx-auto">
                   <div className="w-full flex lg:flex-row flex-col justify-center lg:-mx-5">
                     <div className="lg:w-1/2 px-5 w-full">
-                      <div className="max-w-[365px] mx-auto text-3xl">
+                      <div className="max-w-[365px] mx-auto text-3xl w-[365px] h-[365px]">
                         <Game2048
                           key={peerId}
                           className="text-base"
                           dispatchDirection={dispatchDirection}
                           grid={state.board[peerId!]}
+                          height={80}
                           player={state.players[peerId!]}
                           rankingData={ranking}
                           score={state.score[peerId!]}
+                          width={80}
                         />
                       </div>
                     </div>
@@ -117,9 +119,11 @@ export default function Game2048Page() {
                                     className="text-sm"
                                     dispatchDirection={dispatchDirection}
                                     grid={state.board[player]}
+                                    height={40}
                                     player={state.players[player]}
                                     rankingData={ranking}
                                     score={state.score[player]}
+                                    width={40}
                                   />
                                 </div>
                               ),
