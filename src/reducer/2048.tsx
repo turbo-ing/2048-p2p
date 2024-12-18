@@ -19,9 +19,8 @@ export interface Tile {
   isMerging: boolean;
   x: number;
   y: number;
-  prevX?: number;
-  prevY?: number;
-  isMoving?: boolean;
+  prevX: number;
+  prevY: number;
 }
 
 export type Grid = (Tile | null)[][];
@@ -76,7 +75,16 @@ const seedRandom = (seed: number): (() => number) => {
 // Function to hash the grid into a seed
 const keccakToSeedFromGrid = (grid: Grid): number => {
   // Serialize the grid to a JSON string
-  const gridString = JSON.stringify(grid);
+  const gridString = JSON.stringify(
+    grid.flatMap((row) =>
+      row.flatMap((tile) => {
+        if (tile) {
+          return { value: tile.value, x: tile.x, y: tile.y };
+        }
+        return [];
+      }),
+    ),
+  );
 
   // Hash the JSON string using keccak256 and get the hexadecimal representation
   const hash = keccak256(toHex(gridString));
@@ -142,7 +150,7 @@ const spawnNewTile = (grid: Grid): Grid => {
   if (!pos) return grid;
   const newGrid = deepCloneGrid(grid); // Deep clone the grid
   console.log("pos", pos);
-  newGrid[pos.x][pos.y] = getNewTile(pos.x, pos.y); // Add a new tile to the grid
+  newGrid[pos.x][pos.y] = getNewTile(pos.y, pos.x); // Add a new tile to the grid
 
   return newGrid;
 };
@@ -171,15 +179,15 @@ const merge = (
     ) {
       const newValue = newRow[i]!.value * 2;
       const newTile = {
-        // Merging animations rely on consistent tile ID
-        // id: crypto.randomUUID(),
-        id: newRow[i]!.id,
+        id: crypto.randomUUID(),
         value: newValue,
         isNew: false,
         isMerging: true,
         x: rowIndex,
         y: i,
         isMoving: false,
+        prevX: newRow[i]!.x,
+        prevY: newRow[i]!.y,
       };
 
       score += newValue; // Add merged value to the score
@@ -203,7 +211,6 @@ const moveAndMergeRow = (
       tile.isNew = false;
       tile.prevX = tile.x;
       tile.prevY = tile.y;
-      tile.isMoving = false;
     }
   });
   const slidRow = slide(row); // First slide to remove empty spaces
