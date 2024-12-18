@@ -27,19 +27,15 @@ const config: Config = {
         },
         mergeTile: {
           "0%": { transform: "scale(1)", opacity: "1" },
-          "50%": { transform: "scale(1.2)", opacity: "0.8" },
+          "50%": { transform: "scale(1.2)", opacity: "1" },
           "100%": { transform: "scale(1)", opacity: "1" },
-        },
-        moveTile: {
-          "0%": { transform: "translate(var(--prevX, 0), var(--prevY, 0))" },
-          "100%": { transform: "translate(var(--x, 0), var(--y, 0))" },
         },
       },
       animation: {
         fadeOut: "fadeOut 1s ease-out forwards",
         newTile: "newTile 0.3s ease",
         mergeTile: "mergeTile 0.3s ease",
-        moveTile: "moveTile 0.3s ease-in-out",
+        
       },
     },
   },

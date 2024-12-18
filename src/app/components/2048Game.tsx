@@ -1,96 +1,63 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-
-import { Direction, Grid, GRID_SIZE, Tile } from "@/reducer/2048";
+import { Direction, Grid, GRID_SIZE, Tile as TileType } from "@/reducer/2048";
 import ScoreBoard from "@/app/components/2048ScoreBoard";
 import { Player, ResultModal } from "@/app/components/ResultModal";
 import useArrowKeyPress from "@/app/hooks/useArrowKeyPress";
 import useSwipe from "@/app/hooks/useSwipe";
 import { gridsAreEqual } from "@/utils/helper";
+import { Tile } from "./Tile";
 
-// Animation Phases
-type AnimationPhase = "move" | "merge" | "new";
+// --- Constants ---
+const NUM_CELLS = 4;
+const DEFAULT_GAP = 10;
 
-// Helper function to get background and text color based on tile value
-const getTileStyle = (tile: Tile | null) => {
-  if (tile === null) {
-    return { backgroundColor: "#cdc1b4", color: "#776e65" }; // Empty tile
-  }
-  switch (tile.value) {
-    case 2:
-      return { backgroundColor: "#eee4da", color: "#776e65" };
-    case 4:
-      return { backgroundColor: "#ede0c8", color: "#776e65" };
-    case 8:
-      return { backgroundColor: "#f2b179", color: "#f9f6f2" };
-    case 16:
-      return { backgroundColor: "#f59563", color: "#f9f6f2" };
-    case 32:
-      return { backgroundColor: "#f67c5f", color: "#f9f6f2" };
-    case 64:
-      return { backgroundColor: "#f65e3b", color: "#f9f6f2" };
-    case 128:
-      return { backgroundColor: "#edcf72", color: "#f9f6f2" };
-    case 256:
-      return { backgroundColor: "#edcc61", color: "#f9f6f2" };
-    case 512:
-      return { backgroundColor: "#edc850", color: "#f9f6f2" };
-    case 1024:
-      return { backgroundColor: "#edc53f", color: "#f9f6f2" };
-    case 2048:
-      return { backgroundColor: "#edc22e", color: "#f9f6f2" };
-    default:
-      return { backgroundColor: "#3c3a32", color: "#f9f6f2" }; // For values above 2048
-  }
-};
-
-const hasWon = (grid: Grid): boolean => {
-  for (let row of grid) {
-    for (let tile of row) {
-      if (tile && tile.value === 2048) {
+function hasWon(grid: Grid): boolean {
+  for (const row of grid) {
+    for (const tile of row) {
+      if (tile?.value === 2048) {
         return true;
       }
     }
   }
-
   return false;
-};
+}
 
-// **New helper function** to check if there are any valid moves left
-const hasValidMoves = (grid: Grid): boolean => {
-  // Check if there's any empty tile
-  for (let row of grid) {
-    for (let tile of row) {
-      if (tile === null) {
-        return true;
-      }
+function hasValidMoves(grid: Grid): boolean {
+  // Check for empty spaces
+  for (const row of grid) {
+    for (const tile of row) {
+      if (tile === null) return true;
     }
   }
 
-  // Check if adjacent tiles have the same value (horizontal and vertical)
+  // Check for adjacent equal tiles horizontally or vertically
   for (let i = 0; i < GRID_SIZE; i++) {
     for (let j = 0; j < GRID_SIZE - 1; j++) {
+      const current = grid[i][j];
+      const right = grid[i][j + 1];
+      const down = grid[j + 1]?.[i];
+      const below = grid[j]?.[i];
+
       if (
-        (grid[i][j] && grid[i][j + 1] && grid[i][j]! === grid[i][j + 1]!) || // Horizontal
-        (grid[j][i] && grid[j + 1][i] && grid[j][i]! === grid[j + 1][i]!) // Vertical
+        (current && right && current.value === right.value) ||
+        (below && down && below.value === down.value)
       ) {
         return true;
       }
     }
   }
+  return false;
+}
 
-  return false; // No valid moves left
-};
-
-// Refactored Game2048 component
 interface Game2048Props {
-  grid: Grid; // Initial state passed as a prop
-  score: number; // Score passed as a prop
+  grid: Grid;
+  score: number;
   player: string;
   rankingData: Player[];
-  className?: string; // Optional className prop
-  dispatchDirection: (dir: Direction) => void; // Dispatch function to handle direction
+  className?: string;
+  dispatchDirection: (dir: Direction) => void;
   width: number;
   height: number;
 }
@@ -102,55 +69,74 @@ const Game2048: React.FC<Game2048Props> = ({
   rankingData,
   className,
   dispatchDirection,
-  width,
-  height,
 }) => {
-  const [currentGrid, setCurrentGrid] = useState<Grid>(grid); // Current grid state
+  const [currentGrid, setCurrentGrid] = useState<Grid>(grid);
   const previousGridRef = useRef<Grid | null>(null);
-  const [gameOver, setGameOver] = useState<boolean>(false); // Track if the game is over
-  const [gameWon, setGameWon] = useState<boolean>(false); // Track if the player won
-  // const [animationPhase, setAnimationPhase] = useState<AnimationPhase>("move");
+  const [gameOver, setGameOver] = useState<boolean>(false);
+  const [gameWon, setGameWon] = useState<boolean>(false);
+
+  const boardRef = useRef<HTMLDivElement>(null);
+  const [boardSize, setBoardSize] = useState<number>(0);
+  const [cellSize, setCellSize] = useState<number>(0);
+  const [gap, setGap] = useState<number>(DEFAULT_GAP);
+
+  useEffect(() => {
+    if (!boardRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const width = entry.contentRect.width;
+        const totalGaps = NUM_CELLS - 1;
+        const newGap = gap; // could be dynamic if desired
+        const newCellSize = (width - totalGaps * newGap) / NUM_CELLS;
+
+        setBoardSize(width);
+        setCellSize(newCellSize);
+      }
+    });
+
+    observer.observe(boardRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [gap]);
 
   const updateGrid = (newGrid: Grid) => {
-    console.log("newGrid", newGrid);
-    console.log("previousGridRef.current", previousGridRef.current);
-    if (!previousGridRef.current) {
-      previousGridRef.current = currentGrid;
+    const previousGrid = previousGridRef.current;
 
-      return;
-    }
-
-    if (gridsAreEqual(newGrid, previousGridRef.current)) {
-      // console.log("newGrid", newGrid);
-      // console.log("previousGridRef.current", previousGridRef.current);
-
-      return;
-    }
-
-    let isMoved = false;
+    // Build updatedGrid with prevX, prevY set
     const updatedGrid = newGrid.map((row, y) =>
       row.map((tile, x) => {
         if (!tile) return null;
 
         let prevX = x;
         let prevY = y;
+        let isMoved = false;
 
-        if (previousGridRef.current) {
+        if (previousGrid) {
+          // Find the tile in the previous grid
+          let foundPrevTile = false;
           for (let py = 0; py < GRID_SIZE; py++) {
             for (let px = 0; px < GRID_SIZE; px++) {
-              const prevTile = previousGridRef.current[py][px];
-
+              const prevTile = previousGrid[py][px];
               if (prevTile && prevTile.id === tile.id) {
                 prevX = px;
                 prevY = py;
-                isMoved = true;
+                foundPrevTile = true;
+                if (prevX !== x || prevY !== y) {
+                  isMoved = true;
+                }
                 break;
               }
             }
+            if (foundPrevTile) break;
           }
+        } else {
+          // Initial load: set prevX/prevY to current position
+          prevX = x;
+          prevY = y;
         }
-
-        previousGridRef.current = currentGrid;
 
         return {
           ...tile,
@@ -159,96 +145,95 @@ const Game2048: React.FC<Game2048Props> = ({
           x,
           y,
           isMoving: isMoved,
-          isMerging: tile.isMerging,
-          isNew: tile.isNew,
         };
       }),
     );
 
-    console.log("updatedGrid", updatedGrid);
+    if (previousGrid && gridsAreEqual(newGrid, previousGrid)) {
+      return;
+    }
 
+    previousGridRef.current = newGrid;
     setCurrentGrid(updatedGrid);
-    // setAnimationPhase("move");
   };
 
   useEffect(() => {
-    if (grid && grid.length > 0) {
-      // Check if the player has won
-      if (hasWon(grid)) {
-        setGameWon(true);
-      }
-      // Check if there are no valid moves left (game over)
-      else if (!hasValidMoves(grid)) {
-        setGameOver(true);
-      }
+    // On initial mount, ensure tiles have their initial prevX and prevY set
+    if (grid && grid.length > 0 && !previousGridRef.current) {
+      updateGrid(grid);
     }
-    updateGrid(grid);
   }, [grid]);
 
-  // Animation Phases
-  // useEffect(() => {
-  //   if (animationPhase === "move") {
-  //     setTimeout(() => setAnimationPhase("merge"), 300);
-  //   } else if (animationPhase === "merge") {
-  //     setTimeout(() => setAnimationPhase("new"), 200);
-  //   } else if (animationPhase === "new") {
-  //     setTimeout(() => setAnimationPhase("move"), 200);
-  //   }
-  // }, [animationPhase]);
+  useEffect(() => {
+    if (!grid || grid.length === 0) return;
 
+    if (hasWon(grid)) {
+      setGameWon(true);
+      return;
+    }
+
+    if (!hasValidMoves(grid)) {
+      setGameOver(true);
+      return;
+    }
+
+    // If this isn't the initial setup, update grid positions
+    if (previousGridRef.current) {
+      updateGrid(grid);
+    }
+  }, [grid]);
+
+  // Input Hooks
   useArrowKeyPress(dispatchDirection);
   useSwipe(dispatchDirection);
 
-  const baseStyles = "text-center mt-6 text-white";
-
   return (
-    <div>
-      {gameOver && (
-        <ResultModal isWinner={false} open={true} rankingData={rankingData} />
+    <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4">
+      {(gameOver || gameWon) && (
+        <ResultModal isWinner={gameWon} open={true} rankingData={rankingData} />
       )}
-      {gameWon && (
-        <ResultModal isWinner={true} open={true} rankingData={rankingData} />
-      )}
-      <div className="flex justify-center mb-6">
+
+      <div className="flex justify-center mb-6 w-full">
         <ScoreBoard title="Score" total={score} />
       </div>
-      <div className="relative grid grid-cols-4 gap-2.5 w-[365px] h-[365px]">
-        {currentGrid &&
-          currentGrid.map((row) =>
+
+      <div
+        ref={boardRef}
+        className="relative w-full aspect-square bg-boardBackground rounded-md"
+      >
+        <div
+          className="absolute inset-0 grid"
+          style={{
+            gridTemplateColumns: `repeat(${NUM_CELLS}, 1fr)`,
+            gridTemplateRows: `repeat(${NUM_CELLS}, 1fr)`,
+            gap: `${gap}px`,
+            pointerEvents: "none",
+          }}
+        >
+          {Array.from({ length: NUM_CELLS * NUM_CELLS }, (_, i) => (
+            <div
+              key={i}
+              className="bg-[#cdc1b4] rounded-md w-full h-full"
+            ></div>
+          ))}
+        </div>
+
+        <div className="absolute top-0 left-0 w-full h-full">
+          {currentGrid.map((row) =>
             row.map((tile) => {
               if (!tile) return null;
-              const { backgroundColor, color } = getTileStyle(tile);
-
               return (
-                <div
-                  key={`${tile.id}`}
-                  className={`absolute bg-[#cdc1b4] flex items-center justify-center rounded-md
-                  ${tile.isMoving ? "animate-moveTile" : ""} ${tile.isMerging ? "animate-mergeTile" : ""} ${tile.isNew ? "animate-newTile" : ""}`}
-                  style={
-                    {
-                      backgroundColor,
-                      color,
-                      width: `${width}px`,
-                      height: `${height}px`,
-                      transform: `translate(${tile.x * 100}%, ${tile.y * 100}%)`,
-                      "--prevX": `${tile.prevX! * 100}%`,
-                      "--prevY": `${tile.prevY! * 100}%`,
-                      "--x": `${tile.x * 100}%`,
-                      "--y": `${tile.y * 100}%`,
-                      // animation: "move 0.3s ease-in-out",
-                    } as React.CSSProperties
-                  }
-                >
-                  <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    {tile ? tile.value : ""}
-                  </span>
-                </div>
+                <Tile key={tile.id} tile={tile} cellSize={cellSize} gap={gap} />
               );
             }),
           )}
+        </div>
       </div>
-      <div className="border-b-1 border-white pb-3">
-        <p className={`${baseStyles} ${className}`}>Player: {player}</p>
+
+      <div className="border-b border-white pb-3 mt-6 w-full">
+        <p className={`text-center text-white ${className}`}>
+          Player: {player}
+        </p>
       </div>
     </div>
   );

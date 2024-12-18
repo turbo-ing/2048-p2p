@@ -94,6 +94,8 @@ const getNewTile = (x: number, y: number): Tile => ({
   isMerging: false,
   x,
   y,
+  prevX: x,
+  prevY: y,
 });
 
 const getRandomPosition = (grid: Grid): { x: number; y: number } | null => {
@@ -140,9 +142,7 @@ const spawnNewTile = (grid: Grid): Grid => {
   if (!pos) return grid;
   const newGrid = deepCloneGrid(grid); // Deep clone the grid
   console.log("pos", pos);
-  newGrid[pos.x][pos.y] = getNewTile(pos.y, pos.x); // Add a new tile to the grid
-
-  console.log("spawnNewTile new", newGrid);
+  newGrid[pos.x][pos.y] = getNewTile(pos.x, pos.y); // Add a new tile to the grid
 
   return newGrid;
 };
@@ -171,7 +171,9 @@ const merge = (
     ) {
       const newValue = newRow[i]!.value * 2;
       const newTile = {
-        id: crypto.randomUUID(),
+        // Merging animations rely on consistent tile ID
+        // id: crypto.randomUUID(),
+        id: newRow[i]!.id,
         value: newValue,
         isNew: false,
         isMerging: true,
