@@ -1,6 +1,7 @@
 import { MergeEvent } from "@/reducer/2048";
 import { Tile } from "./Tile";
 import { Tile as TileType } from "@/reducer/2048";
+import { Fragment } from "react";
 
 interface MergePreviews {
   merges: MergeEvent[];
@@ -43,22 +44,22 @@ export const MergePreview: React.FC<MergePreviews> = ({
         };
 
         return (
-          <>
+          <Fragment key={merge.tileId}>
             <Tile
-              key={merge.tileId + "1"}
+              key={merge.tileId + "-1"}
               tile={from1}
               cellSize={cellSize}
               gap={gap}
               style={{ zIndex: 1 }}
             />
             <Tile
-              key={merge.tileId + "2"}
+              key={merge.tileId + "-2"}
               tile={from2}
               cellSize={cellSize}
               gap={gap}
               style={{ zIndex: 1 }}
             />
-          </>
+          </Fragment>
         );
       })}
     </>
