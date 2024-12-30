@@ -31,17 +31,9 @@ interface TileProps {
   cellSize: number;
   gap: number;
   style?: React.CSSProperties;
-  // Optionally: a callback for ephemeral tiles
-  // onAnimationEnd?: (tileId: string) => void;
 }
 
-export const Tile: React.FC<TileProps> = ({
-  tile,
-  cellSize,
-  gap,
-  // onAnimationEnd,
-  style,
-}) => {
+export const Tile: React.FC<TileProps> = ({ tile, cellSize, gap, style }) => {
   const tileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -67,26 +59,11 @@ export const Tile: React.FC<TileProps> = ({
       el.style.transform = `translate(${tile.x * (cellSize + gap)}px, ${
         tile.y * (cellSize + gap)
       }px)`;
-
-      // If this is an ephemeral (merge) tile, remove it after the transition ends.
-      // if (isEphemeral && onAnimationEnd) {
-      //   const handleTransitionEnd = () => {
-      //     onAnimationEnd(tile.id);
-      //   };
-      //   el.addEventListener("transitionend", handleTransitionEnd, {
-      //     once: true,
-      //   });
-      // }
     } else {
       // No movement => no transition needed
       el.style.transition = "none";
     }
-  }, [
-    tile,
-    cellSize,
-    gap,
-    // , onAnimationEnd
-  ]);
+  }, [tile, cellSize, gap]);
 
   return (
     <div
