@@ -1,3 +1,5 @@
+"use client";
+
 import { EdgeAction, useEdgeReducerV0 } from "@turbo-ing/edge-v0";
 import {
   createContext,
@@ -7,6 +9,8 @@ import {
   useState,
 } from "react";
 import { keccak256, toHex } from "viem";
+
+import ZkClient from "@/workers/zkClient";
 
 export type Direction = "up" | "down" | "left" | "right";
 
@@ -24,6 +28,8 @@ export type Game2048State = {
   players: { [playerId: string]: string };
   playersCount: number;
   totalPlayers: number;
+  actionPeerId?: string;
+  actionDirection?: Direction;
 };
 
 // Constants for grid size and initial tiles
@@ -311,6 +317,8 @@ const game2048Reducer = (
         ...state,
         board: { ...newBoards },
         score: { ...newScores },
+        actionPeerId: action.peerId,
+        actionDirection: action.payload,
       };
     case "JOIN":
       console.log("Payload on JOIN", action.payload);
@@ -331,6 +339,7 @@ const game2048Reducer = (
       }
       newState.board[action.peerId!] = action.payload.grid;
       newState.score[action.peerId!] = 0;
+      newState.actionPeerId = action.peerId;
 
       return { ...newState };
 
@@ -351,6 +360,8 @@ const Game2048Context = createContext<
       boolean,
       string,
       Dispatch<SetStateAction<string>>,
+      ZkClient | null,
+      Dispatch<SetStateAction<ZkClient | null>>,
     ]
   | null
 >(null);
@@ -366,6 +377,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     playersCount: 0,
     totalPlayers: 0,
   };
+  const [zkClient, setZkClient] = useState<ZkClient | null>(null);
   const [room, setRoom] = useState("");
 
   const [state, dispatch, connected] = useEdgeReducerV0(
@@ -378,7 +390,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <Game2048Context.Provider
-      value={[state, dispatch, connected, room, setRoom]}
+      value={[state, dispatch, connected, room, setRoom, zkClient, setZkClient]}
     >
       {children}
     </Game2048Context.Provider>

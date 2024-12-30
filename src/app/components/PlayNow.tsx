@@ -5,6 +5,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Modal from "./Modal";
 
 import { generateRoomCode, initializeBoard, use2048 } from "@/reducer/2048";
+import ZkClient from "@/workers/zkClient";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -17,7 +18,8 @@ export const PlayNow = ({
   setSelectedMode,
   selectedMode,
 }: PlayNowProps) => {
-  const [state, dispatch, connected, room, setRoom] = use2048();
+  const [state, dispatch, connected, room, setRoom, zkClient, setZkClient] =
+    use2048();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
 
@@ -63,6 +65,7 @@ export const PlayNow = ({
 
   const playSoloMode = async () => {
     setIsLoading(true);
+    await zkClient?.compileZKProgram();
     setRoom("solomode");
     setNumOfPlayers(1);
   };
@@ -70,11 +73,13 @@ export const PlayNow = ({
   useEffect(() => {
     if (connected && peerId && room) {
       // check condition to dispatch JOIN event
+      const initBoard = initializeBoard();
+
       dispatch({
         type: "JOIN",
         payload: {
           name: nameInput === "" ? "No Name" : nameInput,
-          grid: initializeBoard(),
+          grid: initBoard,
           numPlayers: numOfPlayers,
         },
       });
@@ -91,12 +96,18 @@ export const PlayNow = ({
     }
   }, [state]);
 
+  useEffect(() => {
+    const zk = new ZkClient();
+
+    setZkClient(zk);
+  }, []);
+
   return (
     <>
       {isLoading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-white border-opacity-75"></div>
+            <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-white border-opacity-75" />
           </div>
         </div>
       )}

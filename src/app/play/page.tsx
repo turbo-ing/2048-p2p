@@ -1,9 +1,10 @@
 "use client";
 
 import { ThemeProvider } from "styled-components";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { useRouter } from "next/navigation";
+import { Proof } from "o1js";
 
 import { Navbar } from "@/app/components/Navbar";
 import useTheme from "@/app/hooks/useTheme";
@@ -12,19 +13,21 @@ import { Direction, use2048 } from "@/reducer/2048";
 import { Player } from "@/app/components/ResultModal";
 import useIsMobile from "@/app/hooks/useIsMobile";
 import { useDisableScroll } from "@/app/hooks/useSwipe";
+import { GameBoard } from "@/lib/game2048ZKLogic";
 
 export default function Game2048Page() {
   const router = useRouter();
-  const [state, dispatch] = use2048();
+  const [state, dispatch, , , , zkClient] = use2048();
   const isMobile = useIsMobile();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
   const [ranking, setRanking] = useState<Player[]>([]);
+  const proofs = useRef<{ [playerId: string]: Proof<GameBoard, void> }>({});
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
 
-  const dispatchDirection = (dir: Direction) => {
+  const dispatchDirection = async (dir: Direction) => {
     switch (dir) {
       case "up":
         dispatch({
@@ -66,6 +69,38 @@ export default function Game2048Page() {
     }));
 
     setRanking(sortedPlayers);
+
+    const calculateProof = async () => {
+      if (!zkClient) return;
+
+      const peerId = state.actionPeerId;
+      const dir = state.actionDirection;
+
+      console.log("peerId", peerId);
+      console.log("dir", dir);
+
+      if (!peerId) return;
+
+      // init first proof for each player if not exists
+      const currentProof = proofs.current;
+
+      console.log("proofs.current", currentProof);
+      if (!currentProof[peerId]) {
+        if (!state.board[peerId]) return;
+        currentProof[peerId] = await zkClient.initZKProof(
+          peerId,
+          state.board[peerId],
+        );
+
+        proofs.current = currentProof;
+      }
+
+      // add move to cache and generate proof if enough moves to batch
+      if (!dir) return;
+      await zkClient.addMove(peerId, state.board[peerId], dir);
+    };
+
+    calculateProof().catch(console.error);
   }, [state]);
 
   if (!state || state.playersCount < 1) return router.push("/");
