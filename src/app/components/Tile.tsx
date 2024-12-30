@@ -1,5 +1,7 @@
 import { useRef, useEffect } from "react";
-import { Tile as TileType } from "../../reducer/2048";
+import { MergeEvent, Tile as TileType } from "../../reducer/2048";
+import classNames from "classnames";
+import { BASE_ANIMATION_SPEED } from "../../../tailwind.config";
 
 function getTileStyle(tile: TileType | null) {
   if (!tile) {
@@ -25,11 +27,21 @@ function getTileStyle(tile: TileType | null) {
 
 interface TileProps {
   tile: TileType;
+  isEphemeral?: boolean;
   cellSize: number;
   gap: number;
+  style?: React.CSSProperties;
+  // Optionally: a callback for ephemeral tiles
+  // onAnimationEnd?: (tileId: string) => void;
 }
 
-export const Tile: React.FC<TileProps> = ({ tile, cellSize, gap }) => {
+export const Tile: React.FC<TileProps> = ({
+  tile,
+  cellSize,
+  gap,
+  // onAnimationEnd,
+  style,
+}) => {
   const tileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,41 +52,61 @@ export const Tile: React.FC<TileProps> = ({ tile, cellSize, gap }) => {
     const startX = tile.prevX ?? tile.x;
     const startY = tile.prevY ?? tile.y;
 
-    // Initial position (no transition)
+    // Immediately position the tile at its START position (no transition).
     el.style.transition = "none";
     el.style.transform = `translate(${startX * (cellSize + gap)}px, ${
       startY * (cellSize + gap)
     }px)`;
 
-    // Force reflow
+    // Force reflow (so the browser actually applies the above transform).
     void el.offsetHeight;
 
-    // If tile moved, animate to new position
+    // If the tile has actually moved, animate to the new position.
     if (startX !== tile.x || startY !== tile.y) {
-      el.style.transition = "transform 0.3s ease-in-out";
+      el.style.transition = `transform ${BASE_ANIMATION_SPEED}s ease-in-out`;
       el.style.transform = `translate(${tile.x * (cellSize + gap)}px, ${
         tile.y * (cellSize + gap)
       }px)`;
+
+      // If this is an ephemeral (merge) tile, remove it after the transition ends.
+      // if (isEphemeral && onAnimationEnd) {
+      //   const handleTransitionEnd = () => {
+      //     onAnimationEnd(tile.id);
+      //   };
+      //   el.addEventListener("transitionend", handleTransitionEnd, {
+      //     once: true,
+      //   });
+      // }
     } else {
-      // No movement, no transition needed
+      // No movement => no transition needed
       el.style.transition = "none";
     }
-  }, [tile, cellSize, gap]);
+  }, [
+    tile,
+    cellSize,
+    gap,
+    // , onAnimationEnd
+  ]);
 
   return (
     <div
       ref={tileRef}
-      className="absolute"
+      className="absolute z-10"
       style={{
         width: `${cellSize}px`,
         height: `${cellSize}px`,
+        ...style,
       }}
     >
       <div
+        className={classNames(
+          "rounded-md w-full h-full flex items-center justify-center z-10",
+          {
+            "animate-newTile": tile.isNew,
+            "animate-mergeTile": tile.isMerging,
+          },
+        )}
         style={getTileStyle(tile)}
-        className={`rounded-md w-full h-full flex items-center justify-center ${
-          tile.isNew ? "animate-newTile" : ""
-        } ${tile.isMerging ? "animate-mergeTile" : ""}`}
       >
         <span>{tile.value}</span>
       </div>

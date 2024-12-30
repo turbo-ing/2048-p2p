@@ -71,10 +71,14 @@ export default function Game2048Page() {
   if (!state || state.playersCount < 1) return router.push("/");
 
   return (
-    <div>
+    <div className="flex">
       <ThemeProvider theme={themeValue}>
-        <Navbar isDark={true} isShowButton={true} />
-        <main className="absolute inset-0 w-full h-full text-white text-4xl transition-opacity duration-1000 lg:pt-20">
+        <Navbar
+          isDark={true}
+          isShowButton={true}
+          onClick={() => (window.location.href = "/")}
+        />
+        <main className="mt-20 w-full h-full text-white text-4xl transition-opacity duration-1000">
           <div
             className="h-full"
             style={{
@@ -89,13 +93,13 @@ export default function Game2048Page() {
               ) : (
                 <div className="flex items-center min-h-[calc(100vh-80px)] max-w-[960px] mx-auto">
                   <div className="w-full flex lg:flex-row flex-col justify-center lg:-mx-5">
-                    <div className="lg:w-1/2 px-5 w-full">
-                      <div className="max-w-[365px] mx-auto text-3xl w-[365px] h-[365px]">
+                    <div className="lg:w-1/2 mx-auto size-full ">
+                      <div className="max-w-[365px] mx-auto text-3xl w-[365px] ">
                         <Game2048
                           key={peerId}
                           className="text-base"
                           dispatchDirection={dispatchDirection}
-                          grid={state.board[peerId!]}
+                          board={state.board[peerId!]}
                           height={80}
                           player={state.players[peerId!]}
                           rankingData={ranking}
@@ -118,7 +122,7 @@ export default function Game2048Page() {
                                     key={player}
                                     className="text-sm"
                                     dispatchDirection={dispatchDirection}
-                                    grid={state.board[player]}
+                                    board={state.board[player]}
                                     height={40}
                                     player={state.players[player]}
                                     rankingData={ranking}
