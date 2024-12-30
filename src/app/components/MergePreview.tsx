@@ -45,12 +45,14 @@ export const MergePreview: React.FC<MergePreviews> = ({
         return (
           <>
             <Tile
+              key={merge.tileId + "1"}
               tile={from1}
               cellSize={cellSize}
               gap={gap}
               style={{ zIndex: 1 }}
             />
             <Tile
+              key={merge.tileId + "2"}
               tile={from2}
               cellSize={cellSize}
               gap={gap}
