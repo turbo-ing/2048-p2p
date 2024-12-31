@@ -3,12 +3,15 @@ import { Field, Proof } from "o1js";
 
 import { Game2048ZKProgram } from "@/lib/game2048ZKProgram";
 import {
-  Direction, GameBoard,
+  Direction,
+  GameBoard,
   GameBoardWithSeed,
   MAX_MOVES,
   printBoard,
 } from "@/lib/game2048ZKLogic";
+import { DirectionMap } from "@/utils/constants";
 
+type MoveType = "up" | "down" | "left" | "right";
 let compiled = false;
 const proofCache: { [key: string]: Proof<GameBoardWithSeed, void> } = {};
 const moveCache: { [key: string]: string[] } = {};
@@ -23,7 +26,6 @@ export const zkWorkerAPI = {
     console.log("Compiled ZK program");
   },
 
-  // async initZKProof(peerId: string, zkBoard: GameBoard, seed: Field) {
   async initZKProof(peerId: string, boardNums: Number[], seedNum: Number) {
     console.log("[Worker] Initializing ZK proof", peerId, boardNums, seedNum);
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
@@ -37,12 +39,7 @@ export const zkWorkerAPI = {
       seed,
     });
 
-    console.log("[Worker] zkBoardWithSeed", zkBoardWithSeed);
-    // printBoard(zkBoardWithSeed.getBoard());
-
     const result = await Game2048ZKProgram.initialize(zkBoardWithSeed);
-
-    console.log("have result", result);
 
     proofCache[peerId] = result.proof;
 
@@ -59,24 +56,9 @@ export const zkWorkerAPI = {
     console.log("proofCache", proofCache[peerId]);
     const proof = proofCache[peerId];
 
-    let moveNums = moves.map((move) => {
-      switch (move) {
-        case "up":
-          return 1;
-        case "down":
-          return 2;
-        case "left":
-          return 3;
-        case "right":
-          return 4;
-        default:
-          return 0;
-      }
+    const directionsFields = moves.map((move) => {
+      return Field.from(DirectionMap[move as MoveType] ?? 0);
     });
-
-    console.log(moveNums);
-
-    const directionsFields = moveNums.map((d) => Field(d));
     const directions = new Direction(directionsFields);
 
     console.log(directions);

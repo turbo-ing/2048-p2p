@@ -1,4 +1,4 @@
-import { SelfProof, ZkProgram } from "o1js";
+import { Provable, SelfProof, ZkProgram } from "o1js";
 
 import {
   addRandomTile,
@@ -16,7 +16,7 @@ export const Game2048ZKProgram = ZkProgram({
       privateInputs: [],
 
       async method(input: GameBoardWithSeed) {
-        // Do not need to do anything here
+        Provable.log("initialize", input);
       },
     },
     /**

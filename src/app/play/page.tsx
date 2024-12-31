@@ -103,7 +103,7 @@ export default function Game2048Page() {
       await zkClient.addMove(peerId, state.zkBoard[peerId], dir);
     };
 
-    // calculateProof().catch(console.error);
+    calculateProof().catch(console.error);
   }, [state]);
 
   if (!state || state.playersCount < 1) return router.push("/");

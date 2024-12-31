@@ -554,7 +554,7 @@ export function addRandomTile(
     );
   }
 
-  return [board, nextSeed];
+  return [board, Field.fromBits(nextSeed.toBits().slice(200))];
 }
 
 /**

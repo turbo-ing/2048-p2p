@@ -67,7 +67,7 @@ export const PlayNow = ({
 
   const playSoloMode = async () => {
     setIsLoading(true);
-    // await zkClient?.compileZKProgram();
+    await zkClient?.compileZKProgram();
     setRoom("solomode");
     setNumOfPlayers(1);
   };
@@ -87,7 +87,7 @@ export const PlayNow = ({
           grid: initBoard,
           zkBoard: new GameBoardWithSeed({
             board: new GameBoard(zkField),
-            seed: Field.random(),
+            seed: Field.from(Math.floor(Math.random() * 1000000000)),
           }),
           numPlayers: numOfPlayers,
         },

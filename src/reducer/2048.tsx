@@ -179,7 +179,7 @@ const game2048Reducer = (
 
         const dir = Field.from(DirectionMap[action.payload] ?? 0);
         const oldZkBoard = state.zkBoard[boardKey].board;
-        let currentZkBoard = state.zkBoard[boardKey].board;
+        let currentZkBoard = oldZkBoard;
         let currentZkSeed = state.zkBoard[boardKey].seed;
         const newZkBoard = applyOneMoveCircuit(currentZkBoard, dir);
         const equalBool = newZkBoard.hash().equals(currentZkBoard.hash()).not();
@@ -196,6 +196,7 @@ const game2048Reducer = (
         printBoard(newZkBoard);
         console.log("Current ZK Board");
         printBoard(currentZkBoard);
+        console.log("Current ZK Seed 2", currentZkSeed);
         let idxNew = 0;
         let totalScore = 0;
 
