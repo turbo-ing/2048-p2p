@@ -4,3 +4,5 @@ export const DirectionMap = {
   left: 3,
   right: 4,
 };
+
+export type MoveType = "up" | "down" | "left" | "right";

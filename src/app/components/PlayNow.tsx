@@ -4,10 +4,8 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import Modal from "./Modal";
 
-import { generateRoomCode, initializeBoard, use2048 } from "@/reducer/2048";
+import { generateRoomCode, initBoardWithSeed, use2048 } from "@/reducer/2048";
 import ZkClient from "@/workers/zkClient";
-import {Field} from "o1js";
-import {GameBoard, GameBoardWithSeed} from "@/lib/game2048ZKLogic";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -75,20 +73,16 @@ export const PlayNow = ({
   useEffect(() => {
     if (connected && peerId && room) {
       // check condition to dispatch JOIN event
-      const initBoard = initializeBoard();
-      const zkField = initBoard.flat().map((tile) => {
-        return tile ? Field(tile.value) : Field(0);
-      });
+      const [gridBoard, zkBoard] = initBoardWithSeed(
+        Math.floor(Math.random() * 100000000000),
+      );
 
       dispatch({
         type: "JOIN",
         payload: {
           name: nameInput === "" ? "No Name" : nameInput,
-          grid: initBoard,
-          zkBoard: new GameBoardWithSeed({
-            board: new GameBoard(zkField),
-            seed: Field.from(Math.floor(Math.random() * 1000000000)),
-          }),
+          grid: gridBoard,
+          zkBoard: zkBoard,
           numPlayers: numOfPlayers,
         },
       });

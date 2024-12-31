@@ -37,7 +37,7 @@ export default class ZkClient {
     const boardNums = zkBoard
       .getBoard()
       .cells.map((cell) => Number(cell.toBigInt()));
-    const seedNums = Number(zkBoard.getSeed().toBigInt());
+    const seedNums = zkBoard.getSeed().toBigInt();
 
     return this.remoteApi.addMoveToCache(peerId, boardNums, seedNums, move);
   }

@@ -9,11 +9,12 @@ import { Proof } from "o1js";
 import { Navbar } from "@/app/components/Navbar";
 import useTheme from "@/app/hooks/useTheme";
 import Game2048 from "@/app/components/2048Game";
-import { Direction, use2048 } from "@/reducer/2048";
+import { use2048 } from "@/reducer/2048";
 import { Player } from "@/app/components/ResultModal";
 import useIsMobile from "@/app/hooks/useIsMobile";
 import { useDisableScroll } from "@/app/hooks/useSwipe";
 import { GameBoardWithSeed } from "@/lib/game2048ZKLogic";
+import { MoveType } from "@/utils/constants";
 
 export default function Game2048Page() {
   const router = useRouter();
@@ -29,7 +30,7 @@ export default function Game2048Page() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
 
-  const dispatchDirection = async (dir: Direction) => {
+  const dispatchDirection = async (dir: MoveType) => {
     switch (dir) {
       case "up":
         dispatch({

@@ -8,19 +8,17 @@ import {
   useContext,
   useState,
 } from "react";
-import { keccak256, toHex } from "viem";
-import { Field, UInt64 } from "o1js";
+import { Bool, Field, UInt64 } from "o1js";
 
 import ZkClient from "@/workers/zkClient";
 import {
   addRandomTile,
   applyOneMoveCircuit,
+  GameBoard,
   GameBoardWithSeed,
   printBoard,
 } from "@/lib/game2048ZKLogic";
-import { DirectionMap } from "@/utils/constants";
-
-export type Direction = "up" | "down" | "left" | "right";
+import { DirectionMap, MoveType } from "@/utils/constants";
 
 export interface Tile {
   value: number;
@@ -38,7 +36,7 @@ export type Game2048State = {
   playersCount: number;
   totalPlayers: number;
   actionPeerId?: string;
-  actionDirection?: Direction;
+  actionDirection?: MoveType;
 };
 
 // Constants for grid size and initial tiles
@@ -47,7 +45,7 @@ export const INITIAL_TILES = 2;
 
 interface MoveAction extends EdgeAction<Game2048State> {
   type: "MOVE";
-  payload: Direction;
+  payload: MoveType;
 }
 
 interface JoinAction extends EdgeAction<Game2048State> {
@@ -71,59 +69,6 @@ const error = (message: string) => {
   console.error(message);
 };
 
-const seedRandom = (seed: number): (() => number) => {
-  let currentSeed = seed;
-
-  return () => {
-    const x = Math.sin(currentSeed++) * 10000;
-
-    return x - Math.floor(x);
-  };
-};
-
-// Function to hash the grid into a seed
-const keccakToSeedFromGrid = (grid: Grid): number => {
-  // Serialize the grid to a JSON string
-  const gridString = JSON.stringify(grid);
-
-  // Hash the JSON string using keccak256 and get the hexadecimal representation
-  const hash = keccak256(toHex(gridString));
-
-  // Convert a portion of the hash into a number (e.g., first 8 characters of the hex string)
-  return parseInt(hash.slice(0, 8), 16);
-};
-
-// Helper functions
-// const getNewTile = (): number => (Math.random() < 0.9 ? 2 : 4);
-const getNewTile = (): Tile => ({
-  value: 2,
-  isNew: true,
-  isMerging: false,
-});
-
-const getRandomPosition = (grid: Grid): { x: number; y: number } | null => {
-  const emptyPositions: { x: number; y: number }[] = [];
-
-  for (let i = 0; i < GRID_SIZE; i++) {
-    for (let j = 0; j < GRID_SIZE; j++) {
-      if (!grid[i][j]) emptyPositions.push({ x: i, y: j });
-    }
-  }
-  if (emptyPositions.length === 0) return null;
-
-  // Generate a numeric seed based on the current state of the grid
-  const seed = keccakToSeedFromGrid(grid);
-
-  // Create the seeded random generator
-  const random = seedRandom(seed);
-
-  // Get a random index based on the seed
-  const randomIndex = Math.floor(random() * emptyPositions.length);
-
-  // Return the randomly selected position
-  return emptyPositions[randomIndex];
-};
-
 export const getEmptyGrid = (): Grid => {
   const grid: Grid = [];
 
@@ -134,30 +79,40 @@ export const getEmptyGrid = (): Grid => {
   return grid;
 };
 
-// Function to deep clone the grid
-const deepCloneGrid = (grid: Grid): Grid => {
-  return grid.map((row) => [...row]);
-};
+export const initBoardWithSeed = (seed: number): [Grid, GameBoardWithSeed] => {
+  const zkBoard = new GameBoardWithSeed({
+    board: new GameBoard(new Array(16).fill(Field.from(0))),
+    seed: Field.from(seed),
+  });
 
-const spawnNewTile = (grid: Grid): Grid => {
-  const pos = getRandomPosition(grid);
-
-  if (!pos) return grid;
-  const newGrid = deepCloneGrid(grid); // Deep clone the grid
-
-  newGrid[pos.x][pos.y] = getNewTile();
-
-  return newGrid;
-};
-
-export const initializeBoard = () => {
-  let newGrid = getEmptyGrid();
+  let board = zkBoard.getBoard();
+  let seedField = zkBoard.getSeed();
 
   for (let i = 0; i < INITIAL_TILES; i++) {
-    newGrid = spawnNewTile(newGrid);
+    [board, seedField] = addRandomTile(board, seedField, new Bool(true));
+  }
+  zkBoard.setBoard(board);
+  zkBoard.setSeed(seedField);
+
+  let gird = getEmptyGrid();
+
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      const cell = Number(board.getCell(i, j).toBigInt()).valueOf();
+
+      if (cell === 0) {
+        gird[i][j] = null;
+      } else {
+        gird[i][j] = {
+          value: cell,
+          isNew: true,
+          isMerging: false,
+        };
+      }
+    }
   }
 
-  return newGrid;
+  return [gird, zkBoard];
 };
 
 const game2048Reducer = (
@@ -181,6 +136,7 @@ const game2048Reducer = (
         const oldZkBoard = state.zkBoard[boardKey].board;
         let currentZkBoard = oldZkBoard;
         let currentZkSeed = state.zkBoard[boardKey].seed;
+        console.log("currentZkSeed old", currentZkSeed);
         const newZkBoard = applyOneMoveCircuit(currentZkBoard, dir);
         const equalBool = newZkBoard.hash().equals(currentZkBoard.hash()).not();
 

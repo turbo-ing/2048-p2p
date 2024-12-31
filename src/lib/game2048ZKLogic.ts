@@ -1,6 +1,6 @@
 import { Bool, Field, Poseidon, Provable, Struct, UInt64 } from "o1js";
 
-export const MAX_MOVES = 1;
+export const MAX_MOVES = 2;
 /* -------------------------------------------------------------------------- */
 /*                                  GameBoard                                  */
 
@@ -65,8 +65,17 @@ export class GameBoardWithSeed extends Struct({
   getBoard(): GameBoard {
     return this.board;
   }
+
+  setBoard(board: GameBoard): void {
+    this.board = board;
+  }
+
   getSeed(): Field {
     return this.seed;
+  }
+
+  setSeed(seed: Field): void {
+    this.seed = seed;
   }
 }
 

@@ -9,9 +9,8 @@ import {
   MAX_MOVES,
   printBoard,
 } from "@/lib/game2048ZKLogic";
-import { DirectionMap } from "@/utils/constants";
+import { DirectionMap, MoveType } from "@/utils/constants";
 
-type MoveType = "up" | "down" | "left" | "right";
 let compiled = false;
 const proofCache: { [key: string]: Proof<GameBoardWithSeed, void> } = {};
 const moveCache: { [key: string]: string[] } = {};
@@ -78,7 +77,7 @@ export const zkWorkerAPI = {
   async addMoveToCache(
     peerId: string,
     boardNums: Number[],
-    seedNum: Number,
+    seedNum: bigint,
     move: string,
   ) {
     if (!moveCache[peerId]) {
@@ -94,12 +93,12 @@ export const zkWorkerAPI = {
 
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
     const zkBoard = new GameBoard(boardFields);
-    const seed = Field(seedNum.valueOf());
+    const seed = Field(seedNum);
     const zkBoardWithSeed = new GameBoardWithSeed({
       board: zkBoard,
       seed,
     });
-
+    console.log("[addMoveToCache] seedNum", seedNum);
     printBoard(zkBoard);
 
     proofCache[peerId] = await this.generateZKProof(
