@@ -9,10 +9,16 @@ import {
   useState,
 } from "react";
 import { keccak256, toHex } from "viem";
-import {Field, UInt64} from "o1js";
+import { Field, UInt64 } from "o1js";
 
 import ZkClient from "@/workers/zkClient";
-import {addRandomTile, applyOneMoveCircuit, GameBoardWithSeed, printBoard} from "@/lib/game2048ZKLogic";
+import {
+  addRandomTile,
+  applyOneMoveCircuit,
+  GameBoardWithSeed,
+  printBoard,
+} from "@/lib/game2048ZKLogic";
+import { DirectionMap } from "@/utils/constants";
 
 export type Direction = "up" | "down" | "left" | "right";
 
@@ -63,19 +69,6 @@ type Action = MoveAction | JoinAction | LeaveAction;
 
 const error = (message: string) => {
   console.error(message);
-};
-
-// Helper function to check if two grids are the same
-const gridsAreEqual = (grid1: Grid, grid2: Grid): boolean => {
-  for (let i = 0; i < GRID_SIZE; i++) {
-    for (let j = 0; j < GRID_SIZE; j++) {
-      if (grid1[i][j]?.value !== grid2[i][j]?.value) {
-        return false;
-      }
-    }
-  }
-
-  return true;
 };
 
 const seedRandom = (seed: number): (() => number) => {
@@ -131,7 +124,7 @@ const getRandomPosition = (grid: Grid): { x: number; y: number } | null => {
   return emptyPositions[randomIndex];
 };
 
-const getEmptyGrid = (): Grid => {
+export const getEmptyGrid = (): Grid => {
   const grid: Grid = [];
 
   for (let i = 0; i < GRID_SIZE; i++) {
@@ -157,127 +150,6 @@ const spawnNewTile = (grid: Grid): Grid => {
   return newGrid;
 };
 
-// Helper to slide tiles in a row (remove nulls, and slide values to the left)
-const slide = (row: (Tile | null)[]): (Tile | null)[] => {
-  const newRow = row.filter((val) => val !== null); // Filter out nulls
-  const emptySpaces = GRID_SIZE - newRow.length; // Calculate empty spaces
-
-  return [...newRow, ...new Array(emptySpaces).fill(null)]; // Add empty spaces to the end
-};
-
-// Helper to merge tiles in a row (combine adjacent tiles with the same value)
-const merge = (
-  row: (Tile | null)[],
-): { newRow: (Tile | null)[]; score: number } => {
-  let score = 0;
-  const newRow = [...row]; // Copy the row
-
-  for (let i = 0; i < GRID_SIZE - 1; i++) {
-    if (
-      newRow[i] &&
-      newRow[i + 1] &&
-      newRow[i]!.value === newRow[i + 1]!.value
-    ) {
-      const newValue = newRow[i]!.value * 2;
-      const newTile = { value: newValue, isNew: false, isMerging: true };
-
-      score += newValue; // Add merged value to the score
-      newRow[i] = newTile; // Merge tiles
-      newRow[i + 1] = null; // Set the next tile to null after merge
-    }
-  }
-
-  return { newRow, score };
-};
-
-// Function to move and merge a single row or column
-const moveAndMergeRow = (
-  row: (Tile | null)[],
-): { row: (Tile | null)[]; score: number } => {
-  // reset the flag for merging and new tiles
-  row.forEach((tile) => {
-    if (tile) {
-      tile.isMerging = false;
-      tile.isNew = false;
-    }
-  });
-  const slidRow = slide(row); // First slide to remove empty spaces
-  const { newRow: mergedRow, score } = merge(slidRow); // Then merge adjacent tiles
-
-  return { row: slide(mergedRow), score }; // Slide again to remove any new empty spaces
-};
-
-// Transpose the grid (convert columns to rows and vice versa) for vertical movement
-const transposeGrid = (grid: Grid): Grid => {
-  return grid[0].map((_, colIndex) => grid.map((row) => row[colIndex]));
-};
-
-// Function to move the grid based on direction
-const moveGrid = (
-  grid: Grid,
-  direction: Direction,
-): { newGrid: Grid; score: number } => {
-  let newGrid: Grid;
-  let totalScore = 0;
-
-  switch (direction) {
-    case "left":
-      // Move left: process each row normally
-      newGrid = grid.map((row) => {
-        const { row: newRow, score } = moveAndMergeRow(row);
-
-        totalScore += score;
-
-        return newRow;
-      });
-      break;
-
-    case "right":
-      // Move right: reverse each row, process, then reverse again
-      newGrid = grid.map((row) => {
-        const reversedRow = [...row].reverse();
-        const { row: newRow, score } = moveAndMergeRow(reversedRow);
-
-        totalScore += score;
-
-        return newRow.reverse(); // Reverse back to get the correct order
-      });
-      break;
-
-    case "up":
-      // Move up: transpose, process rows as columns, then transpose back
-      newGrid = transposeGrid(
-        transposeGrid(grid).map((row) => {
-          const { row: newRow, score } = moveAndMergeRow(row);
-
-          totalScore += score;
-
-          return newRow;
-        }),
-      );
-      break;
-
-    case "down":
-      // Move down: transpose, reverse rows (as columns), process, reverse, then transpose back
-      newGrid = transposeGrid(
-        transposeGrid(grid).map((row) => {
-          const reversedRow = [...row].reverse();
-          const { row: newRow, score } = moveAndMergeRow(reversedRow);
-
-          totalScore += score;
-
-          return newRow.reverse(); // Reverse back after processing
-        }),
-      );
-      break;
-
-    default:
-      newGrid = grid; // Return the grid unchanged if no valid direction is provided
-  }
-
-  return { newGrid, score: totalScore };
-};
-
 export const initializeBoard = () => {
   let newGrid = getEmptyGrid();
 
@@ -298,29 +170,14 @@ const game2048Reducer = (
       console.log("State on MOVE", state);
       const newBoards = { ...state.board };
       const newScores = { ...state.score };
+      const newZkBoards = { ...state.zkBoard };
 
       for (let boardKey in state.board) {
         if (boardKey !== action.peerId) {
           continue;
         }
-        let dir: Field;
 
-        switch (action.payload) {
-          case "up":
-            dir = Field.from(1);
-            break;
-          case "down":
-            dir = Field.from(2);
-            break;
-          case "left":
-            dir = Field.from(3);
-            break;
-          case "right":
-            dir = Field.from(4);
-            break;
-          default:
-            dir = Field.from(0);
-        }
+        const dir = Field.from(DirectionMap[action.payload] ?? 0);
         const oldZkBoard = state.zkBoard[boardKey].board;
         let currentZkBoard = state.zkBoard[boardKey].board;
         let currentZkSeed = state.zkBoard[boardKey].seed;
@@ -333,17 +190,33 @@ const game2048Reducer = (
           currentZkSeed,
           equalBool,
         );
+        console.log("Old ZK Board");
+        printBoard(oldZkBoard);
+        console.log("New ZK Board");
+        printBoard(newZkBoard);
+        console.log("Current ZK Board");
+        printBoard(currentZkBoard);
+        let idxNew = 0;
+        let totalScore = 0;
 
-        const currentGird = state.board[boardKey];
+        for (let i = 0; i < newZkBoard.cells.length; i++) {
+          if (
+            currentZkBoard.cells[i]
+              .equals(newZkBoard.cells[i])
+              .not()
+              .toBoolean()
+          ) {
+            idxNew = i;
+            break;
+          }
+        }
+
+        const currentGird = getEmptyGrid();
 
         for (let row = 0; row < 4; row++) {
           for (let col = 0; col < 4; col++) {
             const oldCell = new UInt64(oldZkBoard.getCell(row, col).value);
             const newCell = new UInt64(currentZkBoard.getCell(row, col).value);
-
-            console.log(
-              `Cell (${row}, ${col}) changed from ${oldCell.toBigInt()} to ${newCell.toBigInt()}`,
-            );
 
             if (newCell.equals(UInt64.zero).toBoolean()) {
               currentGird[row][col] = null;
@@ -359,34 +232,42 @@ const game2048Reducer = (
             }
             if (newCell.greaterThan(oldCell).toBoolean()) {
               const isMerged = newCell.greaterThan(new UInt64(2)).toBoolean();
+              const idxNewCell = row * 4 + col;
+              const isNew = idxNew === idxNewCell && !isMerged;
 
+              totalScore = isMerged
+                ? totalScore + Number(newCell.toBigInt()) / 2
+                : totalScore;
               currentGird[row][col] = {
                 value: Number(newCell.toBigInt()),
-                isNew: !isMerged,
+                isNew: isNew,
                 isMerging: isMerged,
+              };
+              continue;
+            }
+            if (newCell.lessThan(oldCell).toBoolean()) {
+              currentGird[row][col] = {
+                value: Number(newCell.toBigInt()),
+                isNew: false,
+                isMerging: false,
               };
             }
           }
         }
+        console.log("New Board");
+        console.log(currentGird);
         newBoards[boardKey] = currentGird;
-
-        // const { newGrid, score } = moveGrid(
-        //   state.board[boardKey],
-        //   action.payload,
-        // );
-        // const newScore = state.score[boardKey] + score;
-        // let updateGrid = newGrid;
-        //
-        // if (!gridsAreEqual(state.board[boardKey], newGrid)) {
-        //   updateGrid = spawnNewTile(newGrid);
-        // }
-        // newBoards[boardKey] = updateGrid;
-        // newScores[boardKey] = newScore;
+        newZkBoards[boardKey] = new GameBoardWithSeed({
+          board: currentZkBoard,
+          seed: currentZkSeed,
+        });
+        newScores[boardKey] = state.score[boardKey] + totalScore;
       }
 
       return {
         ...state,
         board: { ...newBoards },
+        zkBoard: { ...newZkBoards },
         score: { ...newScores },
         actionPeerId: action.peerId,
         actionDirection: action.payload,

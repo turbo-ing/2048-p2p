@@ -24,13 +24,21 @@ export default class ZkClient {
   async initZKProof(peerId: string, zkBoard: GameBoardWithSeed) {
     console.log("Initializing ZK proof", peerId, zkBoard);
     printBoard(zkBoard.getBoard());
+    const boardNums = zkBoard
+      .getBoard()
+      .cells.map((cell) => Number(cell.toBigInt()));
+    const seedNums = Number(zkBoard.getSeed().toBigInt());
 
-    return this.remoteApi.initZKProof(peerId, zkBoard);
+    return this.remoteApi.initZKProof(peerId, boardNums, seedNums);
   }
 
   async addMove(peerId: string, zkBoard: GameBoardWithSeed, move: string) {
     console.log("Adding move to cache", peerId, zkBoard, move);
+    const boardNums = zkBoard
+      .getBoard()
+      .cells.map((cell) => Number(cell.toBigInt()));
+    const seedNums = Number(zkBoard.getSeed().toBigInt());
 
-    return this.remoteApi.addMoveToCache(peerId, zkBoard, move);
+    return this.remoteApi.addMoveToCache(peerId, boardNums, seedNums, move);
   }
 }

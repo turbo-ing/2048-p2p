@@ -2,7 +2,12 @@ import * as Comlink from "comlink";
 import { Field, Proof } from "o1js";
 
 import { Game2048ZKProgram } from "@/lib/game2048ZKProgram";
-import { Direction, GameBoardWithSeed, MAX_MOVES } from "@/lib/game2048ZKLogic";
+import {
+  Direction, GameBoard,
+  GameBoardWithSeed,
+  MAX_MOVES,
+  printBoard,
+} from "@/lib/game2048ZKLogic";
 
 let compiled = false;
 const proofCache: { [key: string]: Proof<GameBoardWithSeed, void> } = {};
@@ -18,10 +23,24 @@ export const zkWorkerAPI = {
     console.log("Compiled ZK program");
   },
 
-  async initZKProof(peerId: string, zkBoard: GameBoardWithSeed) {
-    console.log("Initializing ZK proof");
+  // async initZKProof(peerId: string, zkBoard: GameBoard, seed: Field) {
+  async initZKProof(peerId: string, boardNums: Number[], seedNum: Number) {
+    console.log("[Worker] Initializing ZK proof", peerId, boardNums, seedNum);
+    const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
+    const zkBoard = new GameBoard(boardFields);
+    const seed = Field(seedNum.valueOf());
 
-    const result = await Game2048ZKProgram.initialize(zkBoard);
+    printBoard(zkBoard);
+
+    const zkBoardWithSeed = new GameBoardWithSeed({
+      board: zkBoard,
+      seed,
+    });
+
+    console.log("[Worker] zkBoardWithSeed", zkBoardWithSeed);
+    // printBoard(zkBoardWithSeed.getBoard());
+
+    const result = await Game2048ZKProgram.initialize(zkBoardWithSeed);
 
     console.log("have result", result);
 
@@ -76,7 +95,8 @@ export const zkWorkerAPI = {
 
   async addMoveToCache(
     peerId: string,
-    zkBoard: GameBoardWithSeed,
+    boardNums: Number[],
+    seedNum: Number,
     move: string,
   ) {
     if (!moveCache[peerId]) {
@@ -90,7 +110,21 @@ export const zkWorkerAPI = {
     }
     const moves = moveCache[peerId];
 
-    proofCache[peerId] = await this.generateZKProof(peerId, zkBoard, moves);
+    const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
+    const zkBoard = new GameBoard(boardFields);
+    const seed = Field(seedNum.valueOf());
+    const zkBoardWithSeed = new GameBoardWithSeed({
+      board: zkBoard,
+      seed,
+    });
+
+    printBoard(zkBoard);
+
+    proofCache[peerId] = await this.generateZKProof(
+      peerId,
+      zkBoardWithSeed,
+      moves,
+    );
     moveCache[peerId] = [];
   },
 };
