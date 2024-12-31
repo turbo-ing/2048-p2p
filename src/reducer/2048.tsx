@@ -9,8 +9,10 @@ import {
   useState,
 } from "react";
 import { keccak256, toHex } from "viem";
+import {Field, UInt64} from "o1js";
 
 import ZkClient from "@/workers/zkClient";
+import {addRandomTile, applyOneMoveCircuit, GameBoardWithSeed, printBoard} from "@/lib/game2048ZKLogic";
 
 export type Direction = "up" | "down" | "left" | "right";
 
@@ -23,6 +25,7 @@ export interface Tile {
 export type Grid = (Tile | null)[][];
 export type Game2048State = {
   board: { [playerId: string]: Grid };
+  zkBoard: { [playerId: string]: GameBoardWithSeed };
   score: { [playerId: string]: number };
   playerId: string[];
   players: { [playerId: string]: string };
@@ -46,6 +49,7 @@ interface JoinAction extends EdgeAction<Game2048State> {
   payload: {
     name: string;
     grid: Grid;
+    zkBoard: GameBoardWithSeed;
     numPlayers: number;
   };
 }
@@ -299,18 +303,85 @@ const game2048Reducer = (
         if (boardKey !== action.peerId) {
           continue;
         }
-        const { newGrid, score } = moveGrid(
-          state.board[boardKey],
-          action.payload,
-        );
-        const newScore = state.score[boardKey] + score;
-        let updateGrid = newGrid;
+        let dir: Field;
 
-        if (!gridsAreEqual(state.board[boardKey], newGrid)) {
-          updateGrid = spawnNewTile(newGrid);
+        switch (action.payload) {
+          case "up":
+            dir = Field.from(1);
+            break;
+          case "down":
+            dir = Field.from(2);
+            break;
+          case "left":
+            dir = Field.from(3);
+            break;
+          case "right":
+            dir = Field.from(4);
+            break;
+          default:
+            dir = Field.from(0);
         }
-        newBoards[boardKey] = updateGrid;
-        newScores[boardKey] = newScore;
+        const oldZkBoard = state.zkBoard[boardKey].board;
+        let currentZkBoard = state.zkBoard[boardKey].board;
+        let currentZkSeed = state.zkBoard[boardKey].seed;
+        const newZkBoard = applyOneMoveCircuit(currentZkBoard, dir);
+        const equalBool = newZkBoard.hash().equals(currentZkBoard.hash()).not();
+
+        currentZkBoard = newZkBoard;
+        [currentZkBoard, currentZkSeed] = addRandomTile(
+          currentZkBoard,
+          currentZkSeed,
+          equalBool,
+        );
+
+        const currentGird = state.board[boardKey];
+
+        for (let row = 0; row < 4; row++) {
+          for (let col = 0; col < 4; col++) {
+            const oldCell = new UInt64(oldZkBoard.getCell(row, col).value);
+            const newCell = new UInt64(currentZkBoard.getCell(row, col).value);
+
+            console.log(
+              `Cell (${row}, ${col}) changed from ${oldCell.toBigInt()} to ${newCell.toBigInt()}`,
+            );
+
+            if (newCell.equals(UInt64.zero).toBoolean()) {
+              currentGird[row][col] = null;
+              continue;
+            }
+            if (newCell.equals(oldCell).toBoolean()) {
+              currentGird[row][col] = {
+                value: Number(newCell.toBigInt()),
+                isNew: false,
+                isMerging: false,
+              };
+              continue;
+            }
+            if (newCell.greaterThan(oldCell).toBoolean()) {
+              const isMerged = newCell.greaterThan(new UInt64(2)).toBoolean();
+
+              currentGird[row][col] = {
+                value: Number(newCell.toBigInt()),
+                isNew: !isMerged,
+                isMerging: isMerged,
+              };
+            }
+          }
+        }
+        newBoards[boardKey] = currentGird;
+
+        // const { newGrid, score } = moveGrid(
+        //   state.board[boardKey],
+        //   action.payload,
+        // );
+        // const newScore = state.score[boardKey] + score;
+        // let updateGrid = newGrid;
+        //
+        // if (!gridsAreEqual(state.board[boardKey], newGrid)) {
+        //   updateGrid = spawnNewTile(newGrid);
+        // }
+        // newBoards[boardKey] = updateGrid;
+        // newScores[boardKey] = newScore;
       }
 
       return {
@@ -322,6 +393,7 @@ const game2048Reducer = (
       };
     case "JOIN":
       console.log("Payload on JOIN", action.payload);
+      printBoard(action.payload.zkBoard.board);
       const newState = state;
       let newNumPlayers = action.payload.numPlayers;
 
@@ -337,6 +409,7 @@ const game2048Reducer = (
         newState.players[action.peerId!] = action.payload.name;
         newState.playerId.push(action.peerId!);
       }
+      newState.zkBoard[action.peerId!] = action.payload.zkBoard;
       newState.board[action.peerId!] = action.payload.grid;
       newState.score[action.peerId!] = 0;
       newState.actionPeerId = action.peerId;
@@ -371,6 +444,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const initialState: Game2048State = {
     board: {},
+    zkBoard: {},
     score: {},
     players: {},
     playerId: [],

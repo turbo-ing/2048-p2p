@@ -13,7 +13,7 @@ import { Direction, use2048 } from "@/reducer/2048";
 import { Player } from "@/app/components/ResultModal";
 import useIsMobile from "@/app/hooks/useIsMobile";
 import { useDisableScroll } from "@/app/hooks/useSwipe";
-import { GameBoard } from "@/lib/game2048ZKLogic";
+import { GameBoardWithSeed } from "@/lib/game2048ZKLogic";
 
 export default function Game2048Page() {
   const router = useRouter();
@@ -22,7 +22,9 @@ export default function Game2048Page() {
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
   const [ranking, setRanking] = useState<Player[]>([]);
-  const proofs = useRef<{ [playerId: string]: Proof<GameBoard, void> }>({});
+  const proofs = useRef<{ [playerId: string]: Proof<GameBoardWithSeed, void> }>(
+    {},
+  );
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
@@ -80,16 +82,17 @@ export default function Game2048Page() {
       console.log("dir", dir);
 
       if (!peerId) return;
+      console.log("state.zkBoard", state.zkBoard[peerId]);
 
       // init first proof for each player if not exists
       const currentProof = proofs.current;
 
       console.log("proofs.current", currentProof);
       if (!currentProof[peerId]) {
-        if (!state.board[peerId]) return;
+        if (!state.zkBoard[peerId]) return;
         currentProof[peerId] = await zkClient.initZKProof(
           peerId,
-          state.board[peerId],
+          state.zkBoard[peerId],
         );
 
         proofs.current = currentProof;
@@ -97,7 +100,7 @@ export default function Game2048Page() {
 
       // add move to cache and generate proof if enough moves to batch
       if (!dir) return;
-      await zkClient.addMove(peerId, state.board[peerId], dir);
+      await zkClient.addMove(peerId, state.zkBoard[peerId], dir);
     };
 
     calculateProof().catch(console.error);
