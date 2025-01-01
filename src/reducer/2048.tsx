@@ -140,6 +140,12 @@ const game2048Reducer = (
         const newZkBoard = applyOneMoveCircuit(currentZkBoard, dir);
         const equalBool = newZkBoard.hash().equals(currentZkBoard.hash()).not();
 
+        if (!equalBool.toBoolean()) {
+          console.log("------No change state with this move");
+
+          return state;
+        }
+
         currentZkBoard = newZkBoard;
         [currentZkBoard, currentZkSeed] = addRandomTile(
           currentZkBoard,

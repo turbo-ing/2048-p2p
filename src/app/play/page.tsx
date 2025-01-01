@@ -26,6 +26,7 @@ export default function Game2048Page() {
   const proofs = useRef<{ [playerId: string]: Proof<GameBoardWithSeed, void> }>(
     {},
   );
+  const isInitialized = useRef(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
@@ -89,19 +90,24 @@ export default function Game2048Page() {
       const currentProof = proofs.current;
 
       console.log("proofs.current", currentProof);
-      if (!currentProof[peerId]) {
+      if (!currentProof[peerId] && !isInitialized.current) {
         if (!state.zkBoard[peerId]) return;
-        currentProof[peerId] = await zkClient.initZKProof(
-          peerId,
-          state.zkBoard[peerId],
-        );
-
-        proofs.current = currentProof;
+        isInitialized.current = true;
+        zkClient
+          .initZKProof(peerId, state.zkBoard[peerId])
+          .then((proof) => {
+            currentProof[peerId] = proof;
+            proofs.current = currentProof;
+          })
+          .catch((err) => {
+            console.error(`Error initializing proof for ${peerId}`, err);
+          });
       }
+      console.log("continue call move");
 
       // add move to cache and generate proof if enough moves to batch
       if (!dir) return;
-      await zkClient.addMove(peerId, state.zkBoard[peerId], dir);
+      zkClient.addMove(peerId, state.zkBoard[peerId], dir);
     };
 
     calculateProof().catch(console.error);
