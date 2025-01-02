@@ -4,7 +4,6 @@ import { ThemeProvider } from "styled-components";
 import { useEffect, useRef, useState } from "react";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { useRouter } from "next/navigation";
-import { Proof } from "o1js";
 
 import { Navbar } from "@/app/components/Navbar";
 import useTheme from "@/app/hooks/useTheme";
@@ -13,7 +12,6 @@ import { use2048 } from "@/reducer/2048";
 import { Player } from "@/app/components/ResultModal";
 import useIsMobile from "@/app/hooks/useIsMobile";
 import { useDisableScroll } from "@/app/hooks/useSwipe";
-import { GameBoardWithSeed } from "@/lib/game2048ZKLogic";
 import { MoveType } from "@/utils/constants";
 
 export default function Game2048Page() {
@@ -23,9 +21,6 @@ export default function Game2048Page() {
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
   const [ranking, setRanking] = useState<Player[]>([]);
-  const proofs = useRef<{ [playerId: string]: Proof<GameBoardWithSeed, void> }>(
-    {},
-  );
   const isInitialized = useRef(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -84,30 +79,25 @@ export default function Game2048Page() {
       console.log("dir", dir);
 
       if (!peerId) return;
-      console.log("state.zkBoard", state.zkBoard[peerId]);
 
       // init first proof for each player if not exists
-      const currentProof = proofs.current;
-
-      console.log("proofs.current", currentProof);
-      if (!currentProof[peerId] && !isInitialized.current) {
+      if (!isInitialized.current) {
         if (!state.zkBoard[peerId]) return;
         isInitialized.current = true;
         zkClient
           .initZKProof(peerId, state.zkBoard[peerId])
-          .then((proof) => {
-            currentProof[peerId] = proof;
-            proofs.current = currentProof;
+          .then(() => {
+            // isInitialized.current = false;
+            console.log(`Initialized proof for ${peerId}`);
           })
           .catch((err) => {
             console.error(`Error initializing proof for ${peerId}`, err);
           });
       }
-      console.log("continue call move");
 
       // add move to cache and generate proof if enough moves to batch
       if (!dir) return;
-      zkClient.addMove(peerId, state.zkBoard[peerId], dir);
+      zkClient.addMove(peerId, state.zkBoard[peerId], dir).catch(console.error);
     };
 
     calculateProof().catch(console.error);
