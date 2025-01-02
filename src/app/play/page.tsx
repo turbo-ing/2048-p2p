@@ -72,32 +72,32 @@ export default function Game2048Page() {
     const calculateProof = async () => {
       if (!zkClient) return;
 
-      const peerId = state.actionPeerId;
+      const remotePeerId = state.actionPeerId;
       const dir = state.actionDirection;
 
-      console.log("peerId", peerId);
+      console.log("remotePeerId", remotePeerId);
       console.log("dir", dir);
 
-      if (!peerId) return;
+      if (!remotePeerId || remotePeerId != peerId) return;
 
       // init first proof for each player if not exists
       if (!isInitialized.current) {
-        if (!state.zkBoard[peerId]) return;
+        if (!state.zkBoard[remotePeerId]) return;
         isInitialized.current = true;
         zkClient
-          .initZKProof(peerId, state.zkBoard[peerId])
+          .initZKProof(state.zkBoard[remotePeerId])
           .then(() => {
             // isInitialized.current = false;
-            console.log(`Initialized proof for ${peerId}`);
+            console.log(`Initialized proof for ${remotePeerId}`);
           })
           .catch((err) => {
-            console.error(`Error initializing proof for ${peerId}`, err);
+            console.error(`Error initializing proof for ${remotePeerId}`, err);
           });
       }
 
       // add move to cache and generate proof if enough moves to batch
       if (!dir) return;
-      zkClient.addMove(peerId, state.zkBoard[peerId], dir).catch(console.error);
+      zkClient.addMove(state.zkBoard[remotePeerId], dir).catch(console.error);
     };
 
     calculateProof().catch(console.error);

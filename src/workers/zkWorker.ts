@@ -5,20 +5,21 @@ import { Game2048ZKProgram } from "@/lib/game2048ZKProgram";
 import {
   Direction,
   GameBoard,
-  GameBoardWithSeed, MAX_MOVES,
+  GameBoardWithSeed,
+  MAX_MOVES,
   printBoard,
 } from "@/lib/game2048ZKLogic";
 import { DirectionMap, MoveType } from "@/utils/constants";
 
-const proofCache: { [key: string]: Proof<GameBoardWithSeed, void> } = {};
+let proofCache: Proof<GameBoardWithSeed, void> | null = null;
 
 export const zkWorkerAPI = {
   async compileZKProgram() {
     await Game2048ZKProgram.compile();
   },
 
-  async initZKProof(peerId: string, boardNums: Number[], seedNum: Number) {
-    console.log("[Worker] Initializing ZK proof", peerId, boardNums, seedNum);
+  async initZKProof(boardNums: Number[], seedNum: Number) {
+    console.log("[Worker] Initializing ZK proof", boardNums, seedNum);
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
     const zkBoard = new GameBoard(boardFields);
     const seed = Field(seedNum.valueOf());
@@ -32,18 +33,16 @@ export const zkWorkerAPI = {
 
     const result = await Game2048ZKProgram.initialize(zkBoardWithSeed);
 
-    proofCache[peerId] = result.proof;
+    proofCache = result.proof;
 
     return result.proof;
   },
 
-  async generateZKProof(
-    peerId: string,
-    zkBoard: GameBoardWithSeed,
-    moves: string[],
-  ) {
-    console.log("[generateZKProof] peerId", peerId);
-    const previousProof = proofCache[peerId];
+  async generateZKProof(zkBoard: GameBoardWithSeed, moves: string[]) {
+    console.log("[generateZKProof] peerId");
+    if (!proofCache) {
+      throw new Error("Proof cache is not initialized");
+    }
     const directionsFields = moves.map((move) => {
       return Field.from(DirectionMap[move as MoveType] ?? 0);
     });
@@ -55,27 +54,21 @@ export const zkWorkerAPI = {
       }
     }
     const directions = new Direction(directionsFields);
-    // console.log(directions);
 
     const result = await Game2048ZKProgram.verifyTransition(
       zkBoard,
-      previousProof,
+      proofCache,
       directions,
     );
 
     // Update the proof cache
-    proofCache[peerId] = result.proof;
+    proofCache = result.proof;
     console.log("[generateZKProof] Generated proof");
 
     return result.proof;
   },
 
-  async addMoveToCache(
-    peerId: string,
-    boardNums: Number[],
-    seedNum: bigint,
-    moves: string[],
-  ) {
+  async generateProof(boardNums: Number[], seedNum: bigint, moves: string[]) {
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
     const zkBoard = new GameBoard(boardFields);
     const seed = Field(seedNum);
@@ -83,9 +76,8 @@ export const zkWorkerAPI = {
       board: zkBoard,
       seed,
     });
-    // printBoard(zkBoard);
 
-    return this.generateZKProof(peerId, zkBoardWithSeed, moves);
+    return this.generateZKProof(zkBoardWithSeed, moves);
   },
 };
 

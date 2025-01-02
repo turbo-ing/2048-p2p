@@ -13,12 +13,11 @@ export default class ZkClient {
 
   compiled = false;
   isProcessing = false;
-  moveCache: { [key: string]: string[] } = {};
-  boardCache: { [key: string]: GameBoardWithSeed[] } = {};
+  moveCache: string[] = [];
+  boardCache: GameBoardWithSeed[] = [];
   intervalId: number | null = null;
-  peerId: string;
 
-  constructor(peerId: string) {
+  constructor() {
     // Initialize the worker from the zkWorker module
     this.worker = new Worker(new URL("./zkWorker.ts", import.meta.url), {
       type: "module",
@@ -26,13 +25,6 @@ export default class ZkClient {
 
     // Wrap the worker with Comlink to enable direct method invocation
     this.remoteApi = Comlink.wrap(this.worker);
-    this.peerId = peerId;
-    if (!this.moveCache[peerId]) {
-      this.moveCache[peerId] = [];
-    }
-    if (!this.boardCache[peerId]) {
-      this.boardCache[peerId] = [];
-    }
     this.startInterval();
   }
 
@@ -52,41 +44,34 @@ export default class ZkClient {
 
         return;
       }
-      if (this.moveCache[this.peerId].length === 0) {
+      if (this.moveCache.length === 0) {
         console.log("No moves to process, skipping interval");
 
         return;
       }
       this.isProcessing = true;
-      console.log("Generating proof for moves", this.moveCache[this.peerId]);
-      const moves = this.moveCache[this.peerId].slice(0, MAX_MOVES);
+      console.log("Generating proof for moves", this.moveCache);
+      const moves = this.moveCache.slice(0, MAX_MOVES);
       const idxBoard = moves.length - 1;
-      const boardState = this.boardCache[this.peerId][idxBoard];
+      const boardState = this.boardCache[idxBoard];
 
-      this.moveCache[this.peerId] = this.moveCache[this.peerId].slice(MAX_MOVES);
-      this.boardCache[this.peerId] = this.boardCache[this.peerId].slice(
-        idxBoard + 1,
-      );
+      this.moveCache = this.moveCache.slice(MAX_MOVES);
+      this.boardCache = this.boardCache.slice(idxBoard + 1);
       const boardNums = boardState
         .getBoard()
         .cells.map((cell) => Number(cell.toBigInt()));
       const seedNums = boardState.getSeed().toBigInt();
 
       console.log("Generating proof for moves", moves);
-      console.log("Moves left in cache", this.moveCache[this.peerId]);
+      console.log("Moves left in cache", this.moveCache);
 
-      await this.remoteApi.addMoveToCache(
-        this.peerId,
-        boardNums,
-        seedNums,
-        moves,
-      );
+      await this.remoteApi.generateProof(boardNums, seedNums, moves);
       this.isProcessing = false;
     }, 10000);
   }
 
-  async initZKProof(peerId: string, zkBoard: GameBoardWithSeed) {
-    console.log("Initializing ZK proof", peerId, zkBoard);
+  async initZKProof(zkBoard: GameBoardWithSeed) {
+    console.log("Initializing ZK proof", zkBoard);
     this.isProcessing = true;
     printBoard(zkBoard.getBoard());
     const boardNums = zkBoard
@@ -94,42 +79,18 @@ export default class ZkClient {
       .cells.map((cell) => Number(cell.toBigInt()));
     const seedNums = Number(zkBoard.getSeed().toBigInt());
 
-    const proof = await this.remoteApi.initZKProof(peerId, boardNums, seedNums);
+    const proof = await this.remoteApi.initZKProof(boardNums, seedNums);
 
     this.isProcessing = false;
 
     return proof;
   }
 
-  async addMove(peerId: string, zkBoard: GameBoardWithSeed, move: string) {
-    console.log("Adding move to cache", peerId, zkBoard, move);
+  async addMove(zkBoard: GameBoardWithSeed, move: string) {
+    console.log("Adding move to cache", zkBoard, move);
     console.log("isProcessing", this.isProcessing);
-    this.moveCache[peerId].push(move);
-    this.boardCache[peerId].push(zkBoard);
-    console.log("Move added to cache: ", this.moveCache[peerId].length);
-    // if (this.moveCache[peerId].length < MAX_MOVES || this.isProcessing) {
-    //   console.log("Move added to cache: ", this.moveCache[peerId].length);
-    //
-    //   return;
-    // }
-
-    // this.isProcessing = true;
-    // console.log("Generating proof for moves", this.moveCache[peerId]);
-    // const moves = this.moveCache[peerId].slice(0, MAX_MOVES);
-    // const idxBoard = moves.length - 1;
-    // const boardState = this.boardCache[peerId][idxBoard];
-    //
-    // this.moveCache[peerId] = this.moveCache[peerId].slice(MAX_MOVES);
-    // this.boardCache[peerId] = this.boardCache[peerId].slice(idxBoard + 1);
-    // const boardNums = boardState
-    //   .getBoard()
-    //   .cells.map((cell) => Number(cell.toBigInt()));
-    // const seedNums = boardState.getSeed().toBigInt();
-    //
-    // console.log("Generating proof for moves", moves);
-    // console.log("Moves left in cache", this.moveCache[peerId]);
-    //
-    // await this.remoteApi.addMoveToCache(peerId, boardNums, seedNums, moves);
-    // this.isProcessing = false;
+    this.moveCache.push(move);
+    this.boardCache.push(zkBoard);
+    console.log("Move added to cache: ", this.moveCache.length);
   }
 }
