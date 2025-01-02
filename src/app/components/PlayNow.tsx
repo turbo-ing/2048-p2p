@@ -100,10 +100,11 @@ export const PlayNow = ({
   }, [state]);
 
   useEffect(() => {
-    const zk = new ZkClient();
+    if (!peerId) return;
+    const zk = new ZkClient(peerId);
 
     setZkClient(zk);
-  }, []);
+  }, [peerId]);
 
   return (
     <>

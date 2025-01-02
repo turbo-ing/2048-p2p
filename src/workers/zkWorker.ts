@@ -5,7 +5,7 @@ import { Game2048ZKProgram } from "@/lib/game2048ZKProgram";
 import {
   Direction,
   GameBoard,
-  GameBoardWithSeed,
+  GameBoardWithSeed, MAX_MOVES,
   printBoard,
 } from "@/lib/game2048ZKLogic";
 import { DirectionMap, MoveType } from "@/utils/constants";
@@ -47,6 +47,13 @@ export const zkWorkerAPI = {
     const directionsFields = moves.map((move) => {
       return Field.from(DirectionMap[move as MoveType] ?? 0);
     });
+
+    if (directionsFields.length < MAX_MOVES) {
+      // pad with 0
+      for (let i = directionsFields.length; i < MAX_MOVES; i++) {
+        directionsFields.push(Field.from(0));
+      }
+    }
     const directions = new Direction(directionsFields);
     // console.log(directions);
 
