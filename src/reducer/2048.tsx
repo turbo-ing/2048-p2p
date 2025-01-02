@@ -8,7 +8,7 @@ import {
 } from "react";
 import { keccak256, toHex } from "viem";
 
-import { gridsAreEqual } from "@/utils/helper";
+import { gridsAreEqual, getGameState } from "@/utils/helper";
 
 export type Direction = "up" | "down" | "left" | "right";
 
@@ -36,6 +36,7 @@ export type Game2048State = {
   players: { [playerId: string]: string };
   playersCount: number;
   totalPlayers: number;
+  isFinished: { [playerId: string]: boolean};
 };
 
 // Constants for grid size and initial tiles
@@ -433,6 +434,7 @@ const game2048Reducer = (
       console.log("State on MOVE", state);
       const newBoards = { ...state.board };
       const newScores = { ...state.score };
+      const newFin = { ...state.isFinished };
 
       for (let boardKey in state.board) {
         if (boardKey !== action.peerId) {
@@ -452,12 +454,18 @@ const game2048Reducer = (
         newBoards[boardKey].grid = updateGrid;
         newBoards[boardKey].merges = merges;
         newScores[boardKey] = newScore;
-      }
 
+        let gameState = getGameState(newBoards[boardKey].grid);
+        if(gameState != "RUNNING"){
+          newFin[boardKey] = true;
+        }
+      }
+      
       return {
         ...state,
         board: { ...newBoards },
         score: { ...newScores },
+        isFinished: { ...newFin },
       };
     case "JOIN":
       console.log("Payload on JOIN", action.payload);
@@ -481,6 +489,7 @@ const game2048Reducer = (
         merges: [],
       };
       newState.score[action.peerId!] = 0;
+      newState.isFinished[action.peerId!] = false;
 
       return { ...newState };
 
@@ -515,6 +524,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     playerId: [],
     playersCount: 0,
     totalPlayers: 0,
+    isFinished: {},
   };
   const [room, setRoom] = useState("");
 
