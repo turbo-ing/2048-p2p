@@ -39,9 +39,10 @@ export default class ZkClient {
     if (this.compiled) {
       return;
     }
-    await this.remoteApi.compileZKProgram();
+    const result = await this.remoteApi.compileZKProgram();
     this.compiled = true;
     console.log("Compiled ZK program");
+    return result;
   }
 
   startInterval() {
