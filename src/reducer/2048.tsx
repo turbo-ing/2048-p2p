@@ -62,8 +62,15 @@ interface LeaveAction extends EdgeAction<Game2048State> {
   type: "LEAVE";
 }
 
+interface SendProofAction extends EdgeAction<Game2048State> {
+  type: "SEND_PROOF";
+  payload: {
+    proof: string;
+  };
+}
+
 // Action Types
-type Action = MoveAction | JoinAction | LeaveAction;
+export type Action = MoveAction | JoinAction | LeaveAction | SendProofAction;
 
 const error = (message: string) => {
   console.error(message);
@@ -262,6 +269,10 @@ const game2048Reducer = (
 
     case "LEAVE":
       error("Not implemented yet");
+
+      return state;
+    case "SEND_PROOF":
+      console.log(`Payload received: ${JSON.stringify(action.payload)} from ${action.peerId}`);
 
       return state;
     default:

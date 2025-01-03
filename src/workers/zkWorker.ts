@@ -18,7 +18,10 @@ export const zkWorkerAPI = {
     await Game2048ZKProgram.compile();
   },
 
-  async initZKProof(boardNums: Number[], seedNum: Number) {
+  async initZKProof(
+    boardNums: Number[],
+    seedNum: Number,
+  ): Promise<[Proof<GameBoardWithSeed, void>, string]> {
     console.log("[Worker] Initializing ZK proof", boardNums, seedNum);
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
     const zkBoard = new GameBoard(boardFields);
@@ -35,10 +38,13 @@ export const zkWorkerAPI = {
 
     proofCache = result.proof;
 
-    return result.proof;
+    return [result.proof, JSON.stringify(result.proof.toJSON())];
   },
 
-  async generateZKProof(zkBoard: GameBoardWithSeed, moves: string[]) {
+  async generateZKProof(
+    zkBoard: GameBoardWithSeed,
+    moves: string[],
+  ): Promise<[Proof<GameBoardWithSeed, void>, string]> {
     console.log("[generateZKProof] peerId");
     if (!proofCache) {
       throw new Error("Proof cache is not initialized");
@@ -65,10 +71,14 @@ export const zkWorkerAPI = {
     proofCache = result.proof;
     console.log("[generateZKProof] Generated proof");
 
-    return result.proof;
+    return [result.proof, JSON.stringify(result.proof.toJSON())];
   },
 
-  async generateProof(boardNums: Number[], seedNum: bigint, moves: string[]) {
+  async generateProof(
+    boardNums: Number[],
+    seedNum: bigint,
+    moves: string[],
+  ): Promise<[Proof<GameBoardWithSeed, void>, string]> {
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
     const zkBoard = new GameBoard(boardFields);
     const seed = Field(seedNum);

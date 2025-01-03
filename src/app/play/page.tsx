@@ -16,7 +16,7 @@ import { MoveType } from "@/utils/constants";
 
 export default function Game2048Page() {
   const router = useRouter();
-  const [state, dispatch, , , , zkClient] = use2048();
+  const [state, dispatch, connected, , , zkClient] = use2048();
   const isMobile = useIsMobile();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
@@ -102,6 +102,11 @@ export default function Game2048Page() {
 
     calculateProof().catch(console.error);
   }, [state]);
+
+  useEffect(() => {
+    if (!connected) return;
+    zkClient?.setDispatch(dispatch);
+  }, [connected]);
 
   if (!state || state.playersCount < 1) return router.push("/");
 

@@ -1,10 +1,12 @@
 import * as Comlink from "comlink";
+import { Dispatch } from "react";
 
 import {
   GameBoardWithSeed,
   MAX_MOVES,
   printBoard,
 } from "@/lib/game2048ZKLogic";
+import { Action } from "@/reducer/2048";
 
 export default class ZkClient {
   worker: Worker;
@@ -16,6 +18,7 @@ export default class ZkClient {
   moveCache: string[] = [];
   boardCache: GameBoardWithSeed[] = [];
   intervalId: number | null = null;
+  dispatch: Dispatch<Action>;
 
   constructor() {
     // Initialize the worker from the zkWorker module
@@ -26,6 +29,10 @@ export default class ZkClient {
     // Wrap the worker with Comlink to enable direct method invocation
     this.remoteApi = Comlink.wrap(this.worker);
     this.startInterval();
+  }
+
+  setDispatch(dispatch: Dispatch<Action>) {
+    this.dispatch = dispatch;
   }
 
   async compileZKProgram() {
@@ -65,7 +72,18 @@ export default class ZkClient {
       console.log("Generating proof for moves", moves);
       console.log("Moves left in cache", this.moveCache);
 
-      await this.remoteApi.generateProof(boardNums, seedNums, moves);
+      const [, proofJSON] = await this.remoteApi.generateProof(
+        boardNums,
+        seedNums,
+        moves,
+      );
+
+      this.dispatch({
+        type: "SEND_PROOF",
+        payload: {
+          proof: proofJSON,
+        },
+      });
       this.isProcessing = false;
     }, 10000);
   }
@@ -79,7 +97,17 @@ export default class ZkClient {
       .cells.map((cell) => Number(cell.toBigInt()));
     const seedNums = Number(zkBoard.getSeed().toBigInt());
 
-    const proof = await this.remoteApi.initZKProof(boardNums, seedNums);
+    const [proof, proofJSON] = await this.remoteApi.initZKProof(
+      boardNums,
+      seedNums,
+    );
+
+    this.dispatch({
+      type: "SEND_PROOF",
+      payload: {
+        proof: proofJSON,
+      },
+    });
 
     this.isProcessing = false;
 
