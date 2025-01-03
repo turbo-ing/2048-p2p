@@ -203,43 +203,47 @@ const Game2048: React.FC<Game2048Props> = ({
         <ScoreBoard title="Score" total={score} />
       </div>
 
-      {/* Waiting Modal */}
-      {(gameOver || gameWon) && (!allFinished) && (player == trueid) &&(
-        <WaitingModal player={player} isWinner={gameWon} open={!hasValidMoves(grid)} rankingData={rankingData} />
-      )}
-
       {/* Board */}
       <div
         ref={boardRef}
         className="relative w-full aspect-square bg-boardBackground rounded-md"
       >
-        {/* Grid background blocks */}
-        <div
-          className="absolute inset-0 grid"
-          style={{ 
-            gridTemplateColumns: `repeat(${NUM_CELLS}, 1fr)`,
-            gridTemplateRows: `repeat(${NUM_CELLS}, 1fr)`,
-            gap: `${gap}px`,
-            pointerEvents: "none",
-          }}
-        >
-          {Array.from({ length: NUM_CELLS * NUM_CELLS }, (_, i) => (
-            <div key={i} className="bg-[#cdc1b4] rounded-md w-full h-full" />
-          ))}
-        </div>
+        {/* Waiting Modal */}
+      {(gameOver || gameWon) && (!allFinished) && (player == trueid) &&(
+        <WaitingModal player={player} isWinner={gameWon} open={!hasValidMoves(grid)} rankingData={rankingData} />
+      )}
+      {( ( (!(gameOver || gameWon)) && (!allFinished)) || 
+      (gameOver && (!allFinished) && (player != trueid))) 
+      && (<div className="relative w-full aspect-square bg-boardBackground rounded-md">
+          {/* Grid background blocks */}
+          <div
+            className="absolute inset-0 grid"
+            style={{ 
+              gridTemplateColumns: `repeat(${NUM_CELLS}, 1fr)`,
+              gridTemplateRows: `repeat(${NUM_CELLS}, 1fr)`,
+              gap: `${gap}px`,
+              pointerEvents: "none",
+            }}
+          >
+            {Array.from({ length: NUM_CELLS * NUM_CELLS }, (_, i) => (
+              <div key={i} className="bg-[#cdc1b4] rounded-md w-full h-full" />
+            ))}
+          </div>
 
-        {/* Actual tiles + merge preview */}
-        <div className="absolute top-0 left-0 w-full h-full">
-          {currentGrid.map((row) =>
-            row.map((tile) => {
-              if (!tile) return null;
-              return (
-                <Tile key={tile.id} tile={tile} cellSize={cellSize} gap={gap} />
-              );
-            }),
-          )}
-          <MergePreview merges={mergeTiles} cellSize={cellSize} gap={gap} />
+          {/* Actual tiles + merge preview */}
+          <div className="absolute top-0 left-0 w-full h-full">
+            {currentGrid.map((row) =>
+              row.map((tile) => {
+                if (!tile) return null;
+                return (
+                  <Tile key={tile.id} tile={tile} cellSize={cellSize} gap={gap} />
+                );
+              }),
+            )}
+            <MergePreview merges={mergeTiles} cellSize={cellSize} gap={gap} />
+          </div>
         </div>
+      )}
       </div>
 
       {/* Player info */}

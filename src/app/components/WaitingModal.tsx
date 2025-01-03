@@ -34,8 +34,7 @@ export const WaitingModal = ({
   })
 
   return (
-    <Modal show={open}>
-      <div>
+    <div>
         <div className="relative flex justify-center items-center">
           <img
             alt=""
@@ -63,6 +62,5 @@ export const WaitingModal = ({
           </div>
         </div>
       </div>
-    </Modal>
   );
 };
