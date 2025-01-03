@@ -24,6 +24,7 @@ interface Game2048Props {
   rankingData: Player[];
   className?: string;
   dispatchDirection: (dir: Direction) => void;
+  leave: () => void;
   width: number;
   height: number;
   isFinished: { [playerId: string]: boolean};
@@ -37,6 +38,7 @@ const Game2048: React.FC<Game2048Props> = ({
   rankingData,
   className,
   dispatchDirection,
+  leave,
   isFinished,
 }) => {
   const { grid, merges } = board;
@@ -195,7 +197,7 @@ const Game2048: React.FC<Game2048Props> = ({
 
       {/* Result Modal */}
       {(gameOver || gameWon) && (allFinished) && (
-        <ResultModal player={trueid} isWinner={gameWon} open={true} rankingData={rankingData} />
+        <ResultModal leave={leave} player={trueid} isWinner={gameWon} open={true} rankingData={rankingData} />
       )}
 
       {/* Scoreboard */}

@@ -494,9 +494,19 @@ const game2048Reducer = (
       return { ...newState };
 
     case "LEAVE":
-      error("Not implemented yet");
-
-      return state;
+      //error("Not implemented yet");
+      console.log("Player "+action.peerId!+" is leaving the game.");
+      console.log(state);
+      const leaveState = state;
+      leaveState.playersCount -= 1;
+      //leaveState.totalPlayers -= 1;
+      delete(leaveState.board[action.peerId!]);
+      delete(leaveState.score[action.peerId!]);
+      delete(leaveState.players[action.peerId!]);
+      delete(leaveState.isFinished[action.peerId!]);
+      delete(leaveState.playerId[leaveState.playerId.indexOf(action.peerId!)]);
+      console.log(leaveState);
+      return leaveState;
     default:
       return state;
   }

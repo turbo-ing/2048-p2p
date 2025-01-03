@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import Modal from "./Modal";
+import { use2048 } from "@/reducer/2048";
 
 export interface Player {
   name: string;
@@ -11,7 +12,8 @@ export interface Player {
 }
 
 interface ResultModalProps {
-  player: String
+  leave : () => void;
+  player: String;
   isWinner: boolean;
   open: boolean;
   rankingData: Player[];
@@ -19,6 +21,7 @@ interface ResultModalProps {
 }
 
 export const ResultModal = ({
+  leave,
   player,
   open,
   onClose,
@@ -68,7 +71,7 @@ export const ResultModal = ({
         <div className="mt-6 flex gap-3">
           <button
             className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-1/3"
-            onClick={() => window.location.reload()}
+            onClick={() => leave()}
           >
             <img alt="" src="/svg/home.svg" />
             <div>Home</div>
