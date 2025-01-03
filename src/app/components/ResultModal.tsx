@@ -44,9 +44,9 @@ export const ResultModal = ({
             {playerCount < 2 && (isWinner ? "You win!" : "Game over!")}
           </div>
           <div className="text-xl my-4">
-            <p className="text-center text-2xl mb-2 font-bold">Ranking</p>
+            <p className="text-center text-2xl mb-2 font-bold">{playerCount > 1 && "Ranking"}</p>
             <ul className="counter-list">
-              {ranking.map((player) => (
+              {playerCount > 1 && (ranking.map((player) => (
                 <li
                   key={player.name}
                   className="flex justify-between relative px-5 mb-2 last:mb-0"
@@ -54,7 +54,8 @@ export const ResultModal = ({
                   <p>{player.name}</p>
                   <p>{player.score}</p>
                 </li>
-              ))}
+              )))}
+              {playerCount < 2 && "Score: "+ranking[0].score}
             </ul>
           </div>
           <div className="mt-3 text-[#94969C] font-medium text-base">
