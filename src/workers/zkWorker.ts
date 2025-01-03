@@ -18,11 +18,12 @@ const moveCache: { [key: string]: string[] } = {};
 export const zkWorkerAPI = {
   async compileZKProgram() {
     if (compiled) {
-      return;
+      return null;
     }
-    await Game2048ZKProgram.compile();
+    const result = await Game2048ZKProgram.compile();
     compiled = true;
     console.log("Compiled ZK program");
+    return result;
   },
 
   async initZKProof(peerId: string, boardNums: Number[], seedNum: Number) {

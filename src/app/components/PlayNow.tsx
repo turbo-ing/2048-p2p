@@ -65,7 +65,8 @@ export const PlayNow = ({
 
   const playSoloMode = async () => {
     setIsLoading(true);
-    await zkClient?.compileZKProgram();
+    const result = await zkClient?.compileZKProgram();
+    console.log("Verification Key", result?.verificationKey);
     setRoom("solomode");
     setNumOfPlayers(1);
   };
