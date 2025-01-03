@@ -2,6 +2,8 @@ import type { Config } from "tailwindcss";
 
 import { nextui } from "@nextui-org/theme";
 
+export const BASE_ANIMATION_SPEED = 0.25;
+
 const config: Config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -21,20 +23,26 @@ const config: Config = {
           "0%": { transform: "translateY(0)", opacity: "0.9" },
           "100%": { transform: "translateY(-50px)", opacity: "0" },
         },
-        newTileAppear: {
-          "0%": { transform: "scale(0.5)", opacity: "0" },
+        // Animation sequences for tile transitions used in visual effects.
+        // Both merge and new animations are set by base animation speed, but delay the start
+        // of their animations by half of the animation speed allowing tile transform/movement
+        // animation to complete without visual conflicts.
+        newTile: {
+          "0%": { transform: "scale(0)", opacity: "0" },
+          "50%": { transform: "scale(0)", opacity: "0" },
           "100%": { transform: "scale(1)", opacity: "1" },
         },
         mergeTile: {
-          "0%": { transform: "scale(1)", opacity: "1" },
-          "50%": { transform: "scale(1.2)", opacity: "0.8" },
+          "0%": { transform: "scale(1)", opacity: "0" },
+          "45%": { transform: "scale(1)", opacity: "0" },
+          "46%": { transform: "scale(1.2)", opacity: "1" },
           "100%": { transform: "scale(1)", opacity: "1" },
         },
       },
       animation: {
         fadeOut: "fadeOut 1s ease-out forwards",
-        newTileAppear: "newTileAppear 0.3s ease",
-        mergeTile: "mergeTile 0.3s ease",
+        newTile: `newTile ${BASE_ANIMATION_SPEED * 2}s ease`,
+        mergeTile: `mergeTile ${BASE_ANIMATION_SPEED * 2}s ease`,
       },
     },
   },

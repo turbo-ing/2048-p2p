@@ -63,7 +63,7 @@ export const PlayNow = ({
 
   const playSoloMode = async () => {
     setIsLoading(true);
-    setRoom("solomode");
+    setRoom("solomode-" + generateRoomCode());
     setNumOfPlayers(1);
   };
 
