@@ -101,9 +101,7 @@ export const PlayNow = ({
   }, [state]);
 
   useEffect(() => {
-    const zk = new ZkClient();
-
-    setZkClient(zk);
+    setZkClient(new ZkClient());
   }, []);
 
   return (

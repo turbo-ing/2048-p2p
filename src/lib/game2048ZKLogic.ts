@@ -1,6 +1,6 @@
 import { Bool, Field, Poseidon, Provable, Struct, UInt64 } from "o1js";
 
-export const MAX_MOVES = 20;
+export const MAX_MOVES = 10;
 /* -------------------------------------------------------------------------- */
 /*                                  GameBoard                                  */
 
@@ -563,7 +563,10 @@ export function addRandomTile(
     );
   }
 
-  return [board, Field.fromBits(nextSeed.toBits().slice(200))];
+  return [
+    board,
+    Provable.if(enabled, Field.fromBits(nextSeed.toBits().slice(200)), seed),
+  ];
 }
 
 /**
