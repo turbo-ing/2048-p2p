@@ -56,20 +56,14 @@ const Game2048: React.FC<Game2048Props> = ({
 
   useEffect(() => {
     /**
-     * TODO: Check if other players have finished their games.
-     * If so, then set allFinished to true.
-     * This will be used to ensure the game over screen is only shown upon all players completing their games
-     * and to bring up an intermediary screen for the remaining time.
+     * Check if other players have finished their games.
      */
-    //Initialise array of "true" the same size as our array
-    console.log(isFinished);
     let allFin = true;
     for(let f in isFinished){
       if(isFinished[f] == false){
         allFin = false;
       }
     }
-    console.log(allFin);
     if(allFin && !allFinished){
       setAllFinished(true);
     }
@@ -201,7 +195,7 @@ const Game2048: React.FC<Game2048Props> = ({
 
       {/* Result Modal */}
       {(gameOver || gameWon) && (allFinished) && (
-        <ResultModal isWinner={gameWon} open={true} rankingData={rankingData} />
+        <ResultModal player={trueid} isWinner={gameWon} open={true} rankingData={rankingData} />
       )}
 
       {/* Scoreboard */}

@@ -11,6 +11,7 @@ export interface Player {
 }
 
 interface ResultModalProps {
+  player: String
   isWinner: boolean;
   open: boolean;
   rankingData: Player[];
@@ -18,6 +19,7 @@ interface ResultModalProps {
 }
 
 export const ResultModal = ({
+  player,
   open,
   onClose,
   isWinner,
@@ -25,6 +27,7 @@ export const ResultModal = ({
 }: ResultModalProps) => {
   const router = useRouter();
   const [ranking, _setRanking] = useState<Player[]>(rankingData);
+  const playerCount = ranking.length;
 
   return (
     <Modal show={open}>
@@ -37,7 +40,8 @@ export const ResultModal = ({
         </div>
         <div className="py-6 text-center">
           <div className="text-[#F5F5F6] font-semibold text-3xl">
-            {isWinner ? "You've won the game!" : "You've lost the game"}
+            {playerCount > 1 && ((player == ranking[0].name) ? "You've won the match!" : "You've been beaten!")}
+            {playerCount < 2 && (isWinner ? "You win!" : "Game over!")}
           </div>
           <div className="text-xl my-4">
             <p className="text-center text-2xl mb-2 font-bold">Ranking</p>
@@ -54,9 +58,10 @@ export const ResultModal = ({
             </ul>
           </div>
           <div className="mt-3 text-[#94969C] font-medium text-base">
-            {isWinner
-              ? "Congratulations! Your strategy and skill have prevailed. Well played!"
-              : "Good effort! Learn from this match and come back stronger. Better luck next time!"}
+          {playerCount > 1 && ((player == ranking[0].name) ? 
+                "Congratulations! Your strategy and skill have prevailed. Well played!"
+              : "Good effort! Learn from this match and come back stronger. Better luck next time!")}
+            {playerCount < 2 && (isWinner ? "You're officially a 2048 master!" : "Better luck next time!")}
           </div>
         </div>
         <div className="mt-6 flex gap-3">

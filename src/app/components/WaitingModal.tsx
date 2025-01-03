@@ -44,8 +44,8 @@ export const WaitingModal = ({
         </div>
         <div className="py-6 text-center">
           <div className="text-[#F5F5F6] font-semibold text-3xl">
-            {isWinner ? "You've won the game!" : "You've lost the game"}, 
-            wait for other players to finish.
+            {isWinner ? "You've won 2048" : "You've lost"}, 
+            ... but have you beaten the others? Wait for the other players to finish.
           </div>
           <div className="text-xl my-4">
             <p className="text-center text-2xl mb-2 font-bold">Current scores</p>
