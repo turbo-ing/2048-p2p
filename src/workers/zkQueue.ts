@@ -5,9 +5,12 @@ import ZkClient from "./zkClient";
 
 // Global Singleton
 export const zkClient: ZkClient = new ZkClient();
-zkClient.compileZKProgram().then((result) => {
-  console.log("Verification Key:", result);
-});
+
+if (typeof window !== "undefined") {
+  zkClient.compileZKProgram().then((result) => {
+    console.log("Verification Key:", result);
+  });
+}
 
 let myPeerId: string = "";
 
