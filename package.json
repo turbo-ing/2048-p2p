@@ -1,5 +1,5 @@
 {
-  "name": "chess",
+  "name": "game-2048",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -23,6 +23,8 @@
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",
     "classnames": "^2.5.1",
+    "comlink": "^4.4.2",
+    "eslint-plugin-react": "^7.35.2",
     "ethers": "5.6.0",
     "framer-motion": "^11.5.4",
     "install": "^0.13.0",
@@ -31,6 +33,7 @@
     "nice-grpc": "^2.1.9",
     "nice-grpc-web": "^3.3.4",
     "noble-hashes": "^0.3.1",
+    "o1js": "^2.2.0",
     "protobufjs": "^7.4.0",
     "react": "^18",
     "react-dom": "^18",

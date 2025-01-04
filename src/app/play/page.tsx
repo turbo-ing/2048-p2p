@@ -1,30 +1,32 @@
 "use client";
 
 import { ThemeProvider } from "styled-components";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { useRouter } from "next/navigation";
 
 import { Navbar } from "@/app/components/Navbar";
 import useTheme from "@/app/hooks/useTheme";
 import Game2048 from "@/app/components/2048Game";
-import { Direction, use2048 } from "@/reducer/2048";
+import { use2048 } from "@/reducer/2048";
 import { Player } from "@/app/components/ResultModal";
 import useIsMobile from "@/app/hooks/useIsMobile";
 import { useDisableScroll } from "@/app/hooks/useSwipe";
+import { MoveType } from "@/utils/constants";
 
 export default function Game2048Page() {
   const router = useRouter();
-  const [state, dispatch] = use2048();
+  const [state, dispatch, connected, , , zkClient] = use2048();
   const isMobile = useIsMobile();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
   const [ranking, setRanking] = useState<Player[]>([]);
+  const isInitialized = useRef(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
 
-  const dispatchDirection = (dir: Direction) => {
+  const dispatchDirection = async (dir: MoveType) => {
     switch (dir) {
       case "up":
         dispatch({
@@ -66,7 +68,45 @@ export default function Game2048Page() {
     }));
 
     setRanking(sortedPlayers);
+
+    const calculateProof = async () => {
+      if (!zkClient) return;
+
+      const remotePeerId = state.actionPeerId;
+      const dir = state.actionDirection;
+
+      console.log("remotePeerId", remotePeerId);
+      console.log("dir", dir);
+
+      if (!remotePeerId || remotePeerId != peerId) return;
+
+      // init first proof for each player if not exists
+      if (!isInitialized.current) {
+        if (!state.zkBoard[remotePeerId]) return;
+        isInitialized.current = true;
+        zkClient
+          .initZKProof(state.zkBoard[remotePeerId])
+          .then(() => {
+            // isInitialized.current = false;
+            console.log(`Initialized proof for ${remotePeerId}`);
+          })
+          .catch((err) => {
+            console.error(`Error initializing proof for ${remotePeerId}`, err);
+          });
+      }
+
+      // add move to cache and generate proof if enough moves to batch
+      if (!dir) return;
+      zkClient.addMove(state.zkBoard[remotePeerId], dir).catch(console.error);
+    };
+
+    calculateProof().catch(console.error);
   }, [state]);
+
+  useEffect(() => {
+    if (!connected) return;
+    zkClient?.setDispatch(dispatch);
+  }, [connected]);
 
   if (!state || state.playersCount < 1) return router.push("/");
 

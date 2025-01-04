@@ -1,3 +1,5 @@
+"use client";
+
 import { EdgeAction, useEdgeReducerV0 } from "@turbo-ing/edge-v0";
 import {
   createContext,
@@ -6,8 +8,17 @@ import {
   useContext,
   useState,
 } from "react";
-import { keccak256, toHex } from "viem";
+import { Bool, Field, UInt64 } from "o1js";
 
+import ZkClient from "@/workers/zkClient";
+import {
+  addRandomTile,
+  applyOneMoveCircuit,
+  GameBoard,
+  GameBoardWithSeed,
+  printBoard,
+} from "@/lib/game2048ZKLogic";
+import { DirectionMap, MoveType } from "@/utils/constants";
 import { gridsAreEqual } from "@/utils/helper";
 
 export type Direction = "up" | "down" | "left" | "right";
@@ -31,11 +42,14 @@ export type Board = {
 export type Grid = (Tile | null)[][];
 export type Game2048State = {
   board: { [playerId: string]: Board };
+  zkBoard: { [playerId: string]: GameBoardWithSeed };
   score: { [playerId: string]: number };
   playerId: string[];
   players: { [playerId: string]: string };
   playersCount: number;
   totalPlayers: number;
+  actionPeerId?: string;
+  actionDirection?: MoveType;
 };
 
 // Constants for grid size and initial tiles
@@ -44,7 +58,7 @@ export const INITIAL_TILES = 2;
 
 interface MoveAction extends EdgeAction<Game2048State> {
   type: "MOVE";
-  payload: Direction;
+  payload: MoveType;
 }
 
 interface JoinAction extends EdgeAction<Game2048State> {
@@ -52,6 +66,7 @@ interface JoinAction extends EdgeAction<Game2048State> {
   payload: {
     name: string;
     grid: Grid;
+    zkBoard: GameBoardWithSeed;
     numPlayers: number;
   };
 }
@@ -60,81 +75,21 @@ interface LeaveAction extends EdgeAction<Game2048State> {
   type: "LEAVE";
 }
 
+interface SendProofAction extends EdgeAction<Game2048State> {
+  type: "SEND_PROOF";
+  payload: {
+    proof: string;
+  };
+}
+
 // Action Types
-type Action = MoveAction | JoinAction | LeaveAction;
+export type Action = MoveAction | JoinAction | LeaveAction | SendProofAction;
 
 const error = (message: string) => {
   console.error(message);
 };
 
-const seedRandom = (seed: number): (() => number) => {
-  let currentSeed = seed;
-
-  return () => {
-    const x = Math.sin(currentSeed++) * 10000;
-
-    return x - Math.floor(x);
-  };
-};
-
-// Function to hash the grid into a seed
-const keccakToSeedFromGrid = (grid: Grid): number => {
-  // Serialize the grid to a JSON string
-  const gridString = JSON.stringify(
-    grid.flatMap((row) =>
-      row.flatMap((tile) => {
-        if (tile) {
-          return { value: tile.value, x: tile.x, y: tile.y };
-        }
-        return [];
-      }),
-    ),
-  );
-
-  // Hash the JSON string using keccak256 and get the hexadecimal representation
-  const hash = keccak256(toHex(gridString));
-
-  // Convert a portion of the hash into a number (e.g., first 8 characters of the hex string)
-  return parseInt(hash.slice(0, 8), 16);
-};
-
-// Helper functions
-// const getNewTile = (): number => (Math.random() < 0.9 ? 2 : 4);
-const getNewTile = (x: number, y: number): Tile => ({
-  id: crypto.randomUUID(),
-  value: 2,
-  isNew: true,
-  isMerging: false,
-  x,
-  y,
-  prevX: x,
-  prevY: y,
-});
-
-const getRandomPosition = (grid: Grid): { x: number; y: number } | null => {
-  const emptyPositions: { x: number; y: number }[] = [];
-
-  for (let i = 0; i < GRID_SIZE; i++) {
-    for (let j = 0; j < GRID_SIZE; j++) {
-      if (!grid[i][j]) emptyPositions.push({ x: i, y: j });
-    }
-  }
-  if (emptyPositions.length === 0) return null;
-
-  // Generate a numeric seed based on the current state of the grid
-  const seed = keccakToSeedFromGrid(grid);
-
-  // Create the seeded random generator
-  const random = seedRandom(seed);
-
-  // Get a random index based on the seed
-  const randomIndex = Math.floor(random() * emptyPositions.length);
-
-  // Return the randomly selected position
-  return emptyPositions[randomIndex];
-};
-
-const getEmptyGrid = (): Grid => {
+export const getEmptyGrid = (): Grid => {
   const grid: Grid = [];
 
   for (let i = 0; i < GRID_SIZE; i++) {
@@ -144,29 +99,6 @@ const getEmptyGrid = (): Grid => {
   return grid;
 };
 
-// Function to deep clone the grid
-const deepCloneGrid = (grid: Grid): Grid => {
-  return grid.map((row) => [...row]);
-};
-
-const spawnNewTile = (grid: Grid): Grid => {
-  const pos = getRandomPosition(grid);
-
-  if (!pos) return grid;
-  const newGrid = deepCloneGrid(grid); // Deep clone the grid
-  newGrid[pos.x][pos.y] = getNewTile(pos.y, pos.x); // Add a new tile to the grid
-
-  return newGrid;
-};
-
-// Helper to slide tiles in a row (remove nulls, and slide values to the left)
-const slide = (row: (Tile | null)[]): (Tile | null)[] => {
-  const newRow = row.filter((val) => val !== null); // Filter out nulls
-  const emptySpaces = GRID_SIZE - newRow.length; // Calculate empty spaces
-
-  return [...newRow, ...new Array(emptySpaces).fill(null)]; // Add empty spaces to the end
-};
-
 export interface MergeEvent {
   tile1: { startX: number; startY: number };
   tile2: { startX: number; startY: number };
@@ -174,6 +106,8 @@ export interface MergeEvent {
   to?: { x: number; y: number };
   value: number;
 }
+
+// ==== Move animation logic ====
 
 interface MergeResult {
   newRow: (Tile | null)[];
@@ -244,6 +178,15 @@ interface MoveAndMergeRowResult {
   score: number;
   merges: MergeEvent[];
 }
+
+// Helper to slide tiles in a row (remove nulls, and slide values to the left)
+const slide = (row: (Tile | null)[]): (Tile | null)[] => {
+  const newRow = row.filter((val) => val !== null); // Filter out nulls
+  const emptySpaces = GRID_SIZE - newRow.length; // Calculate empty spaces
+
+  return [...newRow, ...new Array(emptySpaces).fill(null)]; // Add empty spaces to the end
+};
+
 // Function to move and merge a single row or column
 const moveAndMergeRow = (
   row: (Tile | null)[],
@@ -411,16 +354,49 @@ export function moveGrid(grid: Grid, direction: Direction): GridMoveResult {
   };
 }
 
-export const initializeBoard = () => {
-  let newGrid = getEmptyGrid();
+// ==== End move animation logic ====
 
-  console.log("initializeBoard new", newGrid);
+export const initBoardWithSeed = (seed: number): [Grid, GameBoardWithSeed] => {
+  const zkBoard = new GameBoardWithSeed({
+    board: new GameBoard(new Array(16).fill(Field.from(0))),
+    seed: Field.from(seed),
+  });
+
+  let board = zkBoard.getBoard();
+  let seedField = zkBoard.getSeed();
 
   for (let i = 0; i < INITIAL_TILES; i++) {
-    newGrid = spawnNewTile(newGrid);
+    [board, seedField] = addRandomTile(board, seedField, new Bool(true));
+  }
+  zkBoard.setBoard(board);
+  zkBoard.setSeed(seedField);
+
+  let grid = getEmptyGrid();
+
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      const cell = Number(board.getCell(i, j).toBigInt()).valueOf();
+
+      if (cell === 0) {
+        grid[i][j] = null;
+      } else {
+        grid[i][j] = {
+          value: cell,
+          isNew: true,
+          isMerging: false,
+          id: crypto.randomUUID(),
+          prevY: i,
+          prevX: j,
+          y: i,
+          x: j,
+        };
+      }
+    }
   }
 
-  return newGrid;
+  console.log("initializeBoard new", grid);
+
+  return [grid, zkBoard];
 };
 
 const game2048Reducer = (
@@ -433,34 +409,98 @@ const game2048Reducer = (
       console.log("State on MOVE", state);
       const newBoards = { ...state.board };
       const newScores = { ...state.score };
+      const newZkBoards = { ...state.zkBoard };
 
       for (let boardKey in state.board) {
         if (boardKey !== action.peerId) {
           continue;
         }
 
+        const dir = Field.from(DirectionMap[action.payload] ?? 0);
+        const oldZkBoard = state.zkBoard[boardKey].board;
+        let currentZkBoard = oldZkBoard;
+        let currentZkSeed = state.zkBoard[boardKey].seed;
+        console.log("currentZkSeed old", currentZkSeed);
+        const newZkBoard = applyOneMoveCircuit(currentZkBoard, dir);
+        const equalBool = newZkBoard.hash().equals(currentZkBoard.hash()).not();
+
+        if (!equalBool.toBoolean()) {
+          console.log("------No change state with this move");
+
+          return state;
+        }
+
+        currentZkBoard = newZkBoard;
+        [currentZkBoard, currentZkSeed] = addRandomTile(
+          currentZkBoard,
+          currentZkSeed,
+          equalBool,
+        );
+        console.log("Old ZK Board");
+        printBoard(oldZkBoard);
+        console.log("New ZK Board");
+        printBoard(newZkBoard);
+        console.log("Current ZK Board");
+        printBoard(currentZkBoard);
+        console.log("Current ZK Seed 2", currentZkSeed);
+        let idxNew = -1;
+
+        for (let i = 0; i < newZkBoard.cells.length; i++) {
+          if (
+            currentZkBoard.cells[i]
+              .equals(newZkBoard.cells[i])
+              .not()
+              .toBoolean()
+          ) {
+            idxNew = i;
+            break;
+          }
+        }
+
         const { newGrid, score, merges } = moveGrid(
           state.board[boardKey].grid,
           action.payload,
         );
-        const newScore = state.score[boardKey] + score;
-        let updateGrid = newGrid;
 
-        if (!gridsAreEqual(state.board[boardKey].grid, newGrid)) {
-          updateGrid = spawnNewTile(newGrid);
+        console.log("New Board");
+        console.log(newGrid);
+
+        if (idxNew != -1) {
+          const i = Math.floor(idxNew / GRID_SIZE);
+          const j = idxNew % GRID_SIZE;
+
+          newGrid[i][j] = {
+            value: 2,
+            isNew: true,
+            isMerging: false,
+            id: crypto.randomUUID(),
+            prevY: i,
+            prevX: j,
+            y: i,
+            x: j,
+          };
         }
-        newBoards[boardKey].grid = updateGrid;
+
+        newBoards[boardKey].grid = newGrid;
         newBoards[boardKey].merges = merges;
-        newScores[boardKey] = newScore;
+        newZkBoards[boardKey] = new GameBoardWithSeed({
+          board: currentZkBoard,
+          seed: currentZkSeed,
+        });
+        newScores[boardKey] = state.score[boardKey] + score;
       }
 
       return {
         ...state,
         board: { ...newBoards },
+        zkBoard: { ...newZkBoards },
         score: { ...newScores },
+        actionPeerId: action.peerId,
+        actionDirection: action.payload,
       };
     case "JOIN":
       console.log("Payload on JOIN", action.payload);
+      printBoard(action.payload.zkBoard.board);
       const newState = state;
       let newNumPlayers = action.payload.numPlayers;
 
@@ -476,16 +516,24 @@ const game2048Reducer = (
         newState.players[action.peerId!] = action.payload.name;
         newState.playerId.push(action.peerId!);
       }
+      newState.zkBoard[action.peerId!] = action.payload.zkBoard;
       newState.board[action.peerId!] = {
         grid: action.payload.grid,
         merges: [],
       };
       newState.score[action.peerId!] = 0;
+      newState.actionPeerId = action.peerId;
 
       return { ...newState };
 
     case "LEAVE":
       error("Not implemented yet");
+
+      return state;
+    case "SEND_PROOF":
+      console.log(
+        `Payload received: ${JSON.stringify(action.payload)} from ${action.peerId}`,
+      );
 
       return state;
     default:
@@ -501,6 +549,8 @@ const Game2048Context = createContext<
       boolean,
       string,
       Dispatch<SetStateAction<string>>,
+      ZkClient | null,
+      Dispatch<SetStateAction<ZkClient | null>>,
     ]
   | null
 >(null);
@@ -510,12 +560,14 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const initialState: Game2048State = {
     board: {},
+    zkBoard: {},
     score: {},
     players: {},
     playerId: [],
     playersCount: 0,
     totalPlayers: 0,
   };
+  const [zkClient, setZkClient] = useState<ZkClient | null>(null);
   const [room, setRoom] = useState("");
 
   const [state, dispatch, connected] = useEdgeReducerV0(
@@ -528,7 +580,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <Game2048Context.Provider
-      value={[state, dispatch, connected, room, setRoom]}
+      value={[state, dispatch, connected, room, setRoom, zkClient, setZkClient]}
     >
       {children}
     </Game2048Context.Provider>
