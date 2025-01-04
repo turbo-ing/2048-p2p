@@ -268,11 +268,13 @@ const Game2048: React.FC<Game2048Props> = ({
       </div>
 
       {/* Player info */}
-      <div className="border-b border-white pb-3 mt-6 w-full">
-        <p className={`text-center text-white ${className}`}>
-          Player: {player}
-        </p>
-      </div>
+      {rankingData.length > 1 && (
+        <div className="border-b border-white pb-3 mt-6 w-full">
+          <p className={`text-center text-white ${className}`}>
+            Player: {player}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

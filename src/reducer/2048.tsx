@@ -417,9 +417,12 @@ const game2048Reducer = (
         }
 
         const dir = Field.from(DirectionMap[action.payload] ?? 0);
-        const oldZkBoard = state.zkBoard[boardKey].board;
+        const oldZkBoard = new GameBoard(
+          state.zkBoard[boardKey].board.cells.map(Field),
+        );
+        // Ensure GameBoard type
         let currentZkBoard = oldZkBoard;
-        let currentZkSeed = state.zkBoard[boardKey].seed;
+        let currentZkSeed = Field.from(state.zkBoard[boardKey].seed);
         console.log("currentZkSeed old", currentZkSeed);
         const newZkBoard = applyOneMoveCircuit(currentZkBoard, dir);
         const equalBool = newZkBoard.hash().equals(currentZkBoard.hash()).not();
@@ -500,7 +503,14 @@ const game2048Reducer = (
       };
     case "JOIN":
       console.log("Payload on JOIN", action.payload);
-      printBoard(action.payload.zkBoard.board);
+
+      const payloadBoard = new GameBoardWithSeed({
+        board: new GameBoard(action.payload.zkBoard.board.cells.map(Field)),
+        seed: Field.from(action.payload.zkBoard.seed),
+      });
+
+      printBoard(payloadBoard.board);
+
       const newState = state;
       let newNumPlayers = action.payload.numPlayers;
 
@@ -516,7 +526,7 @@ const game2048Reducer = (
         newState.players[action.peerId!] = action.payload.name;
         newState.playerId.push(action.peerId!);
       }
-      newState.zkBoard[action.peerId!] = action.payload.zkBoard;
+      newState.zkBoard[action.peerId!] = payloadBoard;
       newState.board[action.peerId!] = {
         grid: action.payload.grid,
         merges: [],

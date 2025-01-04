@@ -47,6 +47,11 @@ export default class ZkClient {
 
   startInterval() {
     this.intervalId = window.setInterval(async () => {
+      if (!this.compiled) {
+        console.log("Still compiling, skipping interval");
+
+        return;
+      }
       if (this.isProcessing) {
         console.log("Still processing, skipping interval");
 
@@ -92,6 +97,11 @@ export default class ZkClient {
   async initZKProof(zkBoard: GameBoardWithSeed) {
     console.log("Initializing ZK proof", zkBoard);
     this.isProcessing = true;
+
+    while (!this.compiled) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+
     printBoard(zkBoard.getBoard());
     const boardNums = zkBoard
       .getBoard()

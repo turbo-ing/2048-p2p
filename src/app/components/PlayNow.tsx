@@ -33,6 +33,11 @@ export const PlayNow = ({
 
   const router = useRouter();
 
+  const compileZKProgram = async (zkClient: ZkClient) => {
+    const result = await zkClient?.compileZKProgram();
+    console.log("Verification Key", result?.verificationKey);
+  };
+
   const onClose = () => {
     setIsShowModal(false);
     setRoom("");
@@ -65,8 +70,6 @@ export const PlayNow = ({
 
   const playSoloMode = async () => {
     setIsLoading(true);
-    const result = await zkClient?.compileZKProgram();
-    console.log("Verification Key", result?.verificationKey);
     setRoom("solomode-" + generateRoomCode());
     setNumOfPlayers(1);
   };
@@ -101,7 +104,11 @@ export const PlayNow = ({
   }, [state]);
 
   useEffect(() => {
-    setZkClient(new ZkClient());
+    const zkClient = new ZkClient();
+
+    // Lazily compile zk program on the PlayNow page
+    compileZKProgram(zkClient);
+    setZkClient(zkClient);
   }, []);
 
   return (
