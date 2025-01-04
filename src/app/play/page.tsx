@@ -61,7 +61,7 @@ export default function Game2048Page() {
     });
     location.reload;
     //router.push("/");
-  }
+  };
 
   useDisableScroll(isMobile);
 

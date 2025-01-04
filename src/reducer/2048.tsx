@@ -36,7 +36,7 @@ export type Game2048State = {
   players: { [playerId: string]: string };
   playersCount: number;
   totalPlayers: number;
-  isFinished: { [playerId: string]: boolean};
+  isFinished: { [playerId: string]: boolean };
 };
 
 // Constants for grid size and initial tiles
@@ -456,11 +456,11 @@ const game2048Reducer = (
         newScores[boardKey] = newScore;
 
         let gameState = getGameState(newBoards[boardKey].grid);
-        if(gameState != "RUNNING"){
+        if (gameState != "RUNNING") {
           newFin[boardKey] = true;
         }
       }
-      
+
       return {
         ...state,
         board: { ...newBoards },
@@ -495,16 +495,16 @@ const game2048Reducer = (
 
     case "LEAVE":
       //error("Not implemented yet");
-      console.log("Player "+action.peerId!+" is leaving the game.");
+      console.log("Player " + action.peerId! + " is leaving the game.");
       console.log(state);
       const leaveState = state;
       leaveState.playersCount -= 1;
       //leaveState.totalPlayers -= 1;
-      delete(leaveState.board[action.peerId!]);
-      delete(leaveState.score[action.peerId!]);
-      delete(leaveState.players[action.peerId!]);
-      delete(leaveState.isFinished[action.peerId!]);
-      delete(leaveState.playerId[leaveState.playerId.indexOf(action.peerId!)]);
+      delete leaveState.board[action.peerId!];
+      delete leaveState.score[action.peerId!];
+      delete leaveState.players[action.peerId!];
+      delete leaveState.isFinished[action.peerId!];
+      delete leaveState.playerId[leaveState.playerId.indexOf(action.peerId!)];
       console.log(leaveState);
       return leaveState;
     default:

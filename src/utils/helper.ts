@@ -20,7 +20,7 @@ export const gridsAreEqual = (grid1: Grid, grid2: Grid): boolean => {
  */
 export const hasWon = (grid: Grid): boolean => {
   return grid.some((row) => row.some((tile) => tile?.value === 2048));
-}
+};
 
 /**
  * Checks if there are valid moves left:
@@ -53,7 +53,7 @@ export const hasValidMoves = (grid: Grid): boolean => {
   }
 
   return false;
-}
+};
 
 /**
  * Quick helper to get the current state of the game:
@@ -65,4 +65,4 @@ export const getGameState = (grid: Grid): "WON" | "LOST" | "RUNNING" => {
   if (hasWon(grid)) return "WON";
   if (!hasValidMoves(grid)) return "LOST";
   return "RUNNING";
-}
+};

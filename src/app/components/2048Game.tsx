@@ -20,14 +20,14 @@ interface Game2048Props {
   board: Board;
   score: number;
   player: string;
-  trueid : string;
+  trueid: string;
   rankingData: Player[];
   className?: string;
   dispatchDirection: (dir: Direction) => void;
   leave: () => void;
   width: number;
   height: number;
-  isFinished: { [playerId: string]: boolean};
+  isFinished: { [playerId: string]: boolean };
 }
 
 const Game2048: React.FC<Game2048Props> = ({
@@ -61,12 +61,12 @@ const Game2048: React.FC<Game2048Props> = ({
      * Check if other players have finished their games.
      */
     let allFin = true;
-    for(let f in isFinished){
-      if(isFinished[f] == false){
+    for (let f in isFinished) {
+      if (isFinished[f] == false) {
         allFin = false;
       }
     }
-    if(allFin && !allFinished){
+    if (allFin && !allFinished) {
       setAllFinished(true);
     }
   });
@@ -194,10 +194,15 @@ const Game2048: React.FC<Game2048Props> = ({
 
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4">
-
       {/* Result Modal */}
-      {(gameOver || gameWon) && (allFinished) && (
-        <ResultModal leave={leave} player={trueid} isWinner={gameWon} open={true} rankingData={rankingData} />
+      {(gameOver || gameWon) && allFinished && (
+        <ResultModal
+          leave={leave}
+          player={trueid}
+          isWinner={gameWon}
+          open={true}
+          rankingData={rankingData}
+        />
       )}
 
       {/* Scoreboard */}
@@ -211,41 +216,54 @@ const Game2048: React.FC<Game2048Props> = ({
         className="relative w-full aspect-square bg-boardBackground rounded-md"
       >
         {/* Waiting Modal */}
-      {(gameOver || gameWon) && (!allFinished) && (player == trueid) &&(
-        <WaitingModal player={player} isWinner={gameWon} open={!hasValidMoves(grid)} rankingData={rankingData} />
-      )}
-      {( ( (!(gameOver || gameWon)) && (!allFinished)) || 
-      (gameOver && (!allFinished) && (player != trueid))) 
-      && (<div className="relative w-full aspect-square bg-boardBackground rounded-md">
-          {/* Grid background blocks */}
-          <div
-            className="absolute inset-0 grid"
-            style={{ 
-              gridTemplateColumns: `repeat(${NUM_CELLS}, 1fr)`,
-              gridTemplateRows: `repeat(${NUM_CELLS}, 1fr)`,
-              gap: `${gap}px`,
-              pointerEvents: "none",
-            }}
-          >
-            {Array.from({ length: NUM_CELLS * NUM_CELLS }, (_, i) => (
-              <div key={i} className="bg-[#cdc1b4] rounded-md w-full h-full" />
-            ))}
-          </div>
+        {(gameOver || gameWon) && !allFinished && player == trueid && (
+          <WaitingModal
+            player={player}
+            isWinner={gameWon}
+            open={!hasValidMoves(grid)}
+            rankingData={rankingData}
+          />
+        )}
+        {((!(gameOver || gameWon) && !allFinished) ||
+          (gameOver && !allFinished && player != trueid)) && (
+          <div className="relative w-full aspect-square bg-boardBackground rounded-md">
+            {/* Grid background blocks */}
+            <div
+              className="absolute inset-0 grid"
+              style={{
+                gridTemplateColumns: `repeat(${NUM_CELLS}, 1fr)`,
+                gridTemplateRows: `repeat(${NUM_CELLS}, 1fr)`,
+                gap: `${gap}px`,
+                pointerEvents: "none",
+              }}
+            >
+              {Array.from({ length: NUM_CELLS * NUM_CELLS }, (_, i) => (
+                <div
+                  key={i}
+                  className="bg-[#cdc1b4] rounded-md w-full h-full"
+                />
+              ))}
+            </div>
 
-          {/* Actual tiles + merge preview */}
-          <div className="absolute top-0 left-0 w-full h-full">
-            {currentGrid.map((row) =>
-              row.map((tile) => {
-                if (!tile) return null;
-                return (
-                  <Tile key={tile.id} tile={tile} cellSize={cellSize} gap={gap} />
-                );
-              }),
-            )}
-            <MergePreview merges={mergeTiles} cellSize={cellSize} gap={gap} />
+            {/* Actual tiles + merge preview */}
+            <div className="absolute top-0 left-0 w-full h-full">
+              {currentGrid.map((row) =>
+                row.map((tile) => {
+                  if (!tile) return null;
+                  return (
+                    <Tile
+                      key={tile.id}
+                      tile={tile}
+                      cellSize={cellSize}
+                      gap={gap}
+                    />
+                  );
+                }),
+              )}
+              <MergePreview merges={mergeTiles} cellSize={cellSize} gap={gap} />
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
 
       {/* Player info */}

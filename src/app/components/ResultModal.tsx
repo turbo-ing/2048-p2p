@@ -12,7 +12,7 @@ export interface Player {
 }
 
 interface ResultModalProps {
-  leave : () => void;
+  leave: () => void;
   player: String;
   isWinner: boolean;
   open: boolean;
@@ -43,29 +43,39 @@ export const ResultModal = ({
         </div>
         <div className="py-6 text-center">
           <div className="text-[#F5F5F6] font-semibold text-3xl">
-            {playerCount > 1 && ((player == ranking[0].name) ? "You've won the match!" : "You've been beaten!")}
+            {playerCount > 1 &&
+              (player == ranking[0].name
+                ? "You've won the match!"
+                : "You've been beaten!")}
             {playerCount < 2 && (isWinner ? "You win!" : "Game over!")}
           </div>
           <div className="text-xl my-4">
-            <p className="text-center text-2xl mb-2 font-bold">{playerCount > 1 && "Ranking"}</p>
+            <p className="text-center text-2xl mb-2 font-bold">
+              {playerCount > 1 && "Ranking"}
+            </p>
             <ul className="counter-list">
-              {playerCount > 1 && (ranking.map((player) => (
-                <li
-                  key={player.name}
-                  className="flex justify-between relative px-5 mb-2 last:mb-0"
-                >
-                  <p>{player.name}</p>
-                  <p>{player.score}</p>
-                </li>
-              )))}
-              {playerCount < 2 && "Score: "+ranking[0].score}
+              {playerCount > 1 &&
+                ranking.map((player) => (
+                  <li
+                    key={player.name}
+                    className="flex justify-between relative px-5 mb-2 last:mb-0"
+                  >
+                    <p>{player.name}</p>
+                    <p>{player.score}</p>
+                  </li>
+                ))}
+              {playerCount < 2 && "Score: " + ranking[0].score}
             </ul>
           </div>
           <div className="mt-3 text-[#94969C] font-medium text-base">
-          {playerCount > 1 && ((player == ranking[0].name) ? 
-                "Congratulations! Your strategy and skill have prevailed. Well played!"
-              : "Good effort! Learn from this match and come back stronger. Better luck next time!")}
-            {playerCount < 2 && (isWinner ? "You're officially a 2048 master!" : "Better luck next time!")}
+            {playerCount > 1 &&
+              (player == ranking[0].name
+                ? "Congratulations! Your strategy and skill have prevailed. Well played!"
+                : "Good effort! Learn from this match and come back stronger. Better luck next time!")}
+            {playerCount < 2 &&
+              (isWinner
+                ? "You're officially a 2048 master!"
+                : "Better luck next time!")}
           </div>
         </div>
         <div className="mt-6 flex gap-3">
