@@ -24,13 +24,15 @@ export default class ZkClient {
 
   constructor() {
     // Initialize the worker from the zkWorker module
-    this.worker = new Worker(new URL("./zkWorker.ts", import.meta.url), {
-      type: "module",
-    });
+    if (typeof window !== "undefined") {
+      this.worker = new Worker(new URL("./zkWorker.ts", import.meta.url), {
+        type: "module",
+      });
 
-    // Wrap the worker with Comlink to enable direct method invocation
-    this.remoteApi = Comlink.wrap(this.worker);
-    this.startInterval();
+      // Wrap the worker with Comlink to enable direct method invocation
+      this.remoteApi = Comlink.wrap(this.worker);
+      this.startInterval();
+    }
   }
 
   setDispatch(dispatch: Dispatch<Action>) {
