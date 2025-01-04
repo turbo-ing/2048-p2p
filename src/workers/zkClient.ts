@@ -1,3 +1,5 @@
+"use client";
+
 import * as Comlink from "comlink";
 import { Dispatch } from "react";
 
@@ -22,13 +24,15 @@ export default class ZkClient {
 
   constructor() {
     // Initialize the worker from the zkWorker module
-    this.worker = new Worker(new URL("./zkWorker.ts", import.meta.url), {
-      type: "module",
-    });
+    if (typeof window !== "undefined") {
+      this.worker = new Worker(new URL("./zkWorker.ts", import.meta.url), {
+        type: "module",
+      });
 
-    // Wrap the worker with Comlink to enable direct method invocation
-    this.remoteApi = Comlink.wrap(this.worker);
-    this.startInterval();
+      // Wrap the worker with Comlink to enable direct method invocation
+      this.remoteApi = Comlink.wrap(this.worker);
+      this.startInterval();
+    }
   }
 
   setDispatch(dispatch: Dispatch<Action>) {
@@ -47,13 +51,18 @@ export default class ZkClient {
 
   startInterval() {
     this.intervalId = window.setInterval(async () => {
+      if (!this.compiled) {
+        console.debug("Still compiling, skipping interval");
+
+        return;
+      }
       if (this.isProcessing) {
-        console.log("Still processing, skipping interval");
+        console.debug("Still processing, skipping interval");
 
         return;
       }
       if (this.moveCache.length === 0) {
-        console.log("No moves to process, skipping interval");
+        console.debug("No moves to process, skipping interval");
 
         return;
       }
@@ -86,12 +95,17 @@ export default class ZkClient {
         },
       });
       this.isProcessing = false;
-    }, 10000);
+    }, 500);
   }
 
   async initZKProof(zkBoard: GameBoardWithSeed) {
     console.log("Initializing ZK proof", zkBoard);
     this.isProcessing = true;
+
+    while (!this.compiled) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+
     printBoard(zkBoard.getBoard());
     const boardNums = zkBoard
       .getBoard()
@@ -103,12 +117,14 @@ export default class ZkClient {
       seedNums,
     );
 
-    this.dispatch({
-      type: "SEND_PROOF",
-      payload: {
-        proof: proofJSON,
-      },
-    });
+    if (this.dispatch) {
+      this.dispatch({
+        type: "SEND_PROOF",
+        payload: {
+          proof: proofJSON,
+        },
+      });
+    }
 
     this.isProcessing = false;
 

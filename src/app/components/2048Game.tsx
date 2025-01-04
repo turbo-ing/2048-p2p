@@ -4,9 +4,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { Board, Direction, Grid, GRID_SIZE, MergeEvent } from "@/reducer/2048";
 import ScoreBoard from "@/app/components/2048ScoreBoard";
 import { Player, ResultModal } from "@/app/components/ResultModal";
+import { WaitingModal } from "@/app/components/WaitingModal";
 import useArrowKeyPress from "@/app/hooks/useArrowKeyPress";
 import useSwipe from "@/app/hooks/useSwipe";
-import { gridsAreEqual } from "@/utils/helper";
+import { gridsAreEqual, getGameState, hasValidMoves } from "@/utils/helper";
 import { Tile } from "./Tile";
 import { MergePreview } from "./MergePreview";
 import { BASE_ANIMATION_SPEED } from "../../../tailwind.config";
@@ -15,76 +16,30 @@ import { BASE_ANIMATION_SPEED } from "../../../tailwind.config";
 const NUM_CELLS = 4;
 const DEFAULT_GAP = 10;
 
-/**
- * Checks if the grid contains a tile with value 2048.
- */
-function hasWon(grid: Grid): boolean {
-  return grid.some((row) => row.some((tile) => tile?.value === 2048));
-}
-
-/**
- * Checks if there are valid moves left:
- *  - If any cell is empty.
- *  - If adjacent cells (horizontal or vertical) share the same value.
- */
-function hasValidMoves(grid: Grid): boolean {
-  // Check for empty spaces
-  for (const row of grid) {
-    for (const tile of row) {
-      if (!tile) return true;
-    }
-  }
-
-  // Check for adjacent equal tiles horizontally or vertically
-  for (let i = 0; i < GRID_SIZE; i++) {
-    for (let j = 0; j < GRID_SIZE - 1; j++) {
-      const current = grid[i][j];
-      const right = grid[i][j + 1];
-      const down = grid[j + 1]?.[i];
-      const below = grid[j]?.[i];
-
-      if (
-        (current && right && current.value === right.value) ||
-        (below && down && below.value === down.value)
-      ) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-/**
- * Quick helper to get the current state of the game:
- *  - "WON" if grid has a 2048 tile
- *  - "LOST" if no valid moves
- *  - "RUNNING" otherwise
- */
-function getGameState(grid: Grid): "WON" | "LOST" | "RUNNING" {
-  if (hasWon(grid)) return "WON";
-  if (!hasValidMoves(grid)) return "LOST";
-  return "RUNNING";
-}
-
 interface Game2048Props {
   board: Board;
   score: number;
   player: string;
+  trueid: string;
   rankingData: Player[];
   className?: string;
   dispatchDirection: (dir: Direction) => void;
+  leave: () => void;
   width: number;
   height: number;
+  isFinished: { [playerId: string]: boolean };
 }
 
 const Game2048: React.FC<Game2048Props> = ({
   board,
   score,
   player,
+  trueid,
   rankingData,
   className,
   dispatchDirection,
+  leave,
+  isFinished,
 }) => {
   const { grid, merges } = board;
 
@@ -93,12 +48,28 @@ const Game2048: React.FC<Game2048Props> = ({
 
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
+  const [allFinished, setAllFinished] = useState(false);
 
   const boardRef = useRef<HTMLDivElement>(null);
   const [cellSize, setCellSize] = useState<number>(0);
   const [gap, setGap] = useState(DEFAULT_GAP);
 
   const [mergeTiles, setMergeTiles] = useState<MergeEvent[]>([]);
+
+  useEffect(() => {
+    /**
+     * Check if other players have finished their games.
+     */
+    let allFin = true;
+    for (let f in isFinished) {
+      if (isFinished[f] == false) {
+        allFin = false;
+      }
+    }
+    if (allFin && !allFinished) {
+      setAllFinished(true);
+    }
+  });
 
   /**
    * Observe board resize and recalculate `cellSize`.
@@ -224,8 +195,14 @@ const Game2048: React.FC<Game2048Props> = ({
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4">
       {/* Result Modal */}
-      {(gameOver || gameWon) && (
-        <ResultModal isWinner={gameWon} open={true} rankingData={rankingData} />
+      {(gameOver || gameWon) && allFinished && (
+        <ResultModal
+          leave={leave}
+          player={trueid}
+          isWinner={gameWon}
+          open={true}
+          rankingData={rankingData}
+        />
       )}
 
       {/* Scoreboard */}
@@ -238,41 +215,65 @@ const Game2048: React.FC<Game2048Props> = ({
         ref={boardRef}
         className="relative w-full aspect-square bg-boardBackground rounded-md"
       >
-        {/* Grid background blocks */}
-        <div
-          className="absolute inset-0 grid"
-          style={{
-            gridTemplateColumns: `repeat(${NUM_CELLS}, 1fr)`,
-            gridTemplateRows: `repeat(${NUM_CELLS}, 1fr)`,
-            gap: `${gap}px`,
-            pointerEvents: "none",
-          }}
-        >
-          {Array.from({ length: NUM_CELLS * NUM_CELLS }, (_, i) => (
-            <div key={i} className="bg-[#cdc1b4] rounded-md w-full h-full" />
-          ))}
-        </div>
+        {/* Waiting Modal */}
+        {(gameOver || gameWon) && !allFinished && player == trueid && (
+          <WaitingModal
+            player={player}
+            isWinner={gameWon}
+            open={!hasValidMoves(grid)}
+            rankingData={rankingData}
+          />
+        )}
+        {((!(gameOver || gameWon) && !allFinished) ||
+          (gameOver && !allFinished && player != trueid)) && (
+          <div className="relative w-full aspect-square bg-boardBackground rounded-md">
+            {/* Grid background blocks */}
+            <div
+              className="absolute inset-0 grid"
+              style={{
+                gridTemplateColumns: `repeat(${NUM_CELLS}, 1fr)`,
+                gridTemplateRows: `repeat(${NUM_CELLS}, 1fr)`,
+                gap: `${gap}px`,
+                pointerEvents: "none",
+              }}
+            >
+              {Array.from({ length: NUM_CELLS * NUM_CELLS }, (_, i) => (
+                <div
+                  key={i}
+                  className="bg-[#cdc1b4] rounded-md w-full h-full"
+                />
+              ))}
+            </div>
 
-        {/* Actual tiles + merge preview */}
-        <div className="absolute top-0 left-0 w-full h-full">
-          {currentGrid.map((row) =>
-            row.map((tile) => {
-              if (!tile) return null;
-              return (
-                <Tile key={tile.id} tile={tile} cellSize={cellSize} gap={gap} />
-              );
-            }),
-          )}
-          <MergePreview merges={mergeTiles} cellSize={cellSize} gap={gap} />
-        </div>
+            {/* Actual tiles + merge preview */}
+            <div className="absolute top-0 left-0 w-full h-full">
+              {currentGrid.map((row) =>
+                row.map((tile) => {
+                  if (!tile) return null;
+                  return (
+                    <Tile
+                      key={tile.id}
+                      tile={tile}
+                      cellSize={cellSize}
+                      gap={gap}
+                    />
+                  );
+                }),
+              )}
+              <MergePreview merges={mergeTiles} cellSize={cellSize} gap={gap} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Player info */}
-      <div className="border-b border-white pb-3 mt-6 w-full">
-        <p className={`text-center text-white ${className}`}>
-          Player: {player}
-        </p>
-      </div>
+      {rankingData.length > 1 && (
+        <div className="border-b border-white pb-3 mt-6 w-full">
+          <p className={`text-center text-white ${className}`}>
+            Player: {player}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

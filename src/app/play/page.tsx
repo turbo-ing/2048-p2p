@@ -21,7 +21,6 @@ export default function Game2048Page() {
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
   const [ranking, setRanking] = useState<Player[]>([]);
-  const isInitialized = useRef(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
@@ -57,6 +56,14 @@ export default function Game2048Page() {
     }
   };
 
+  const leave = () => {
+    dispatch({
+      type: "LEAVE",
+    });
+    location.reload;
+    //router.push("/");
+  };
+
   useDisableScroll(isMobile);
 
   useEffect(() => {
@@ -68,45 +75,12 @@ export default function Game2048Page() {
     }));
 
     setRanking(sortedPlayers);
-
-    const calculateProof = async () => {
-      if (!zkClient) return;
-
-      const remotePeerId = state.actionPeerId;
-      const dir = state.actionDirection;
-
-      console.log("remotePeerId", remotePeerId);
-      console.log("dir", dir);
-
-      if (!remotePeerId || remotePeerId != peerId) return;
-
-      // init first proof for each player if not exists
-      if (!isInitialized.current) {
-        if (!state.zkBoard[remotePeerId]) return;
-        isInitialized.current = true;
-        zkClient
-          .initZKProof(state.zkBoard[remotePeerId])
-          .then(() => {
-            // isInitialized.current = false;
-            console.log(`Initialized proof for ${remotePeerId}`);
-          })
-          .catch((err) => {
-            console.error(`Error initializing proof for ${remotePeerId}`, err);
-          });
-      }
-
-      // add move to cache and generate proof if enough moves to batch
-      if (!dir) return;
-      zkClient.addMove(state.zkBoard[remotePeerId], dir).catch(console.error);
-    };
-
-    calculateProof().catch(console.error);
   }, [state]);
 
   useEffect(() => {
     if (!connected) return;
     zkClient?.setDispatch(dispatch);
-  }, [connected]);
+  }, [connected, dispatch, zkClient]);
 
   if (!state || state.playersCount < 1) return router.push("/");
 
@@ -139,11 +113,14 @@ export default function Game2048Page() {
                           key={peerId}
                           className="text-base"
                           dispatchDirection={dispatchDirection}
+                          leave={leave}
                           board={state.board[peerId!]}
                           height={80}
                           player={state.players[peerId!]}
+                          trueid={state.players[peerId!]}
                           rankingData={ranking}
                           score={state.score[peerId!]}
+                          isFinished={state.isFinished}
                           width={80}
                         />
                       </div>
@@ -162,11 +139,14 @@ export default function Game2048Page() {
                                     key={player}
                                     className="text-sm"
                                     dispatchDirection={dispatchDirection}
+                                    leave={leave}
                                     board={state.board[player]}
                                     height={40}
                                     player={state.players[player]}
+                                    trueid={state.players[peerId!]}
                                     rankingData={ranking}
                                     score={state.score[player]}
+                                    isFinished={state.isFinished}
                                     width={40}
                                   />
                                 </div>

@@ -6,6 +6,7 @@ import Modal from "./Modal";
 
 import { generateRoomCode, initBoardWithSeed, use2048 } from "@/reducer/2048";
 import ZkClient from "@/workers/zkClient";
+import { assignMyPeerId, zkClient } from "@/workers/zkQueue";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -18,8 +19,7 @@ export const PlayNow = ({
   setSelectedMode,
   selectedMode,
 }: PlayNowProps) => {
-  const [state, dispatch, connected, room, setRoom, zkClient, setZkClient] =
-    use2048();
+  const [state, dispatch, connected, room, setRoom] = use2048();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
 
@@ -32,6 +32,11 @@ export const PlayNow = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
+
+  const compileZKProgram = async (zkClient: ZkClient) => {
+    const result = await zkClient?.compileZKProgram();
+    console.log("Verification Key", result?.verificationKey);
+  };
 
   const onClose = () => {
     setIsShowModal(false);
@@ -65,8 +70,6 @@ export const PlayNow = ({
 
   const playSoloMode = async () => {
     setIsLoading(true);
-    const result = await zkClient?.compileZKProgram();
-    console.log("Verification Key", result?.verificationKey);
     setRoom("solomode-" + generateRoomCode());
     setNumOfPlayers(1);
   };
@@ -101,8 +104,15 @@ export const PlayNow = ({
   }, [state]);
 
   useEffect(() => {
-    setZkClient(new ZkClient());
-  }, []);
+    if (turboEdge) {
+      assignMyPeerId(turboEdge.node.peerId.toString());
+    }
+  }, [turboEdge]);
+
+  useEffect(() => {
+    if (!connected) return;
+    zkClient?.setDispatch(dispatch);
+  }, [connected, dispatch, zkClient]);
 
   return (
     <>

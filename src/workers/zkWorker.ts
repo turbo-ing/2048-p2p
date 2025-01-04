@@ -1,3 +1,5 @@
+"use client";
+
 import * as Comlink from "comlink";
 import { Field, Proof } from "o1js";
 

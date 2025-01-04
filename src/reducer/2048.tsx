@@ -19,7 +19,8 @@ import {
   printBoard,
 } from "@/lib/game2048ZKLogic";
 import { DirectionMap, MoveType } from "@/utils/constants";
-import { gridsAreEqual } from "@/utils/helper";
+import { queueMove, zkClient } from "@/workers/zkQueue";
+import { gridsAreEqual, getGameState } from "@/utils/helper";
 
 export type Direction = "up" | "down" | "left" | "right";
 
@@ -46,6 +47,7 @@ export type Game2048State = {
   score: { [playerId: string]: number };
   playerId: string[];
   players: { [playerId: string]: string };
+  isFinished: { [playerId: string]: boolean };
   playersCount: number;
   totalPlayers: number;
   actionPeerId?: string;
@@ -403,6 +405,8 @@ const game2048Reducer = (
   state: Game2048State,
   action: Action,
 ): Game2048State => {
+  if (!action.peerId) return state;
+
   switch (action.type) {
     case "MOVE":
       console.log("Payload on MOVE", action);
@@ -410,6 +414,7 @@ const game2048Reducer = (
       const newBoards = { ...state.board };
       const newScores = { ...state.score };
       const newZkBoards = { ...state.zkBoard };
+      const newFin = { ...state.isFinished };
 
       for (let boardKey in state.board) {
         if (boardKey !== action.peerId) {
@@ -417,9 +422,12 @@ const game2048Reducer = (
         }
 
         const dir = Field.from(DirectionMap[action.payload] ?? 0);
-        const oldZkBoard = state.zkBoard[boardKey].board;
+        const oldZkBoard = new GameBoard(
+          state.zkBoard[boardKey].board.cells.map(Field),
+        );
+        // Ensure GameBoard type
         let currentZkBoard = oldZkBoard;
-        let currentZkSeed = state.zkBoard[boardKey].seed;
+        let currentZkSeed = Field.from(state.zkBoard[boardKey].seed);
         console.log("currentZkSeed old", currentZkSeed);
         const newZkBoard = applyOneMoveCircuit(currentZkBoard, dir);
         const equalBool = newZkBoard.hash().equals(currentZkBoard.hash()).not();
@@ -488,6 +496,13 @@ const game2048Reducer = (
           seed: currentZkSeed,
         });
         newScores[boardKey] = state.score[boardKey] + score;
+
+        let gameState = getGameState(newBoards[boardKey].grid);
+        if (gameState != "RUNNING") {
+          newFin[boardKey] = true;
+        }
+
+        queueMove(action.peerId, newZkBoards[boardKey], action.payload);
       }
 
       return {
@@ -495,12 +510,20 @@ const game2048Reducer = (
         board: { ...newBoards },
         zkBoard: { ...newZkBoards },
         score: { ...newScores },
+        isFinished: { ...newFin },
         actionPeerId: action.peerId,
         actionDirection: action.payload,
       };
     case "JOIN":
       console.log("Payload on JOIN", action.payload);
-      printBoard(action.payload.zkBoard.board);
+
+      const payloadBoard = new GameBoardWithSeed({
+        board: new GameBoard(action.payload.zkBoard.board.cells.map(Field)),
+        seed: Field.from(action.payload.zkBoard.seed),
+      });
+
+      printBoard(payloadBoard.board);
+
       const newState = state;
       let newNumPlayers = action.payload.numPlayers;
 
@@ -516,7 +539,7 @@ const game2048Reducer = (
         newState.players[action.peerId!] = action.payload.name;
         newState.playerId.push(action.peerId!);
       }
-      newState.zkBoard[action.peerId!] = action.payload.zkBoard;
+      newState.zkBoard[action.peerId!] = payloadBoard;
       newState.board[action.peerId!] = {
         grid: action.payload.grid,
         merges: [],
@@ -524,18 +547,34 @@ const game2048Reducer = (
       newState.score[action.peerId!] = 0;
       newState.actionPeerId = action.peerId;
 
+      newState.isFinished[action.peerId!] = false;
+
+      queueMove(action.peerId!, payloadBoard, "init");
+
       return { ...newState };
 
     case "LEAVE":
-      error("Not implemented yet");
+      //error("Not implemented yet");
+      console.log("Player " + action.peerId! + " is leaving the game.");
+      console.log(state);
+      const leaveState = state;
+      leaveState.playersCount -= 1;
+      //leaveState.totalPlayers -= 1;
+      delete leaveState.board[action.peerId!];
+      delete leaveState.score[action.peerId!];
+      delete leaveState.players[action.peerId!];
+      delete leaveState.isFinished[action.peerId!];
+      delete leaveState.playerId[leaveState.playerId.indexOf(action.peerId!)];
+      console.log(leaveState);
+      return leaveState;
 
-      return state;
     case "SEND_PROOF":
       console.log(
         `Payload received: ${JSON.stringify(action.payload)} from ${action.peerId}`,
       );
 
       return state;
+
     default:
       return state;
   }
@@ -549,8 +588,7 @@ const Game2048Context = createContext<
       boolean,
       string,
       Dispatch<SetStateAction<string>>,
-      ZkClient | null,
-      Dispatch<SetStateAction<ZkClient | null>>,
+      ZkClient,
     ]
   | null
 >(null);
@@ -566,8 +604,8 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     playerId: [],
     playersCount: 0,
     totalPlayers: 0,
+    isFinished: {},
   };
-  const [zkClient, setZkClient] = useState<ZkClient | null>(null);
   const [room, setRoom] = useState("");
 
   const [state, dispatch, connected] = useEdgeReducerV0(
@@ -580,7 +618,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <Game2048Context.Provider
-      value={[state, dispatch, connected, room, setRoom, zkClient, setZkClient]}
+      value={[state, dispatch, connected, room, setRoom, zkClient]}
     >
       {children}
     </Game2048Context.Provider>

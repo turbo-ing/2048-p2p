@@ -5,6 +5,7 @@ import {
   applyOneMoveCircuit,
   Direction,
   GameBoardWithSeed,
+  MAX_MOVES,
 } from "./game2048ZKLogic";
 
 export const Game2048ZKProgram = ZkProgram({
@@ -39,7 +40,7 @@ export const Game2048ZKProgram = ZkProgram({
 
         Provable.log("verifyTransition - directions", directions);
 
-        for (let i = 0; i < directions.value.length; i++) {
+        for (let i = 0; i < MAX_MOVES; i++) {
           Provable.log("verifyTransition - currentBoard", currentBoard);
           Provable.log("verifyTransition - currentSeed", currentSeed);
           Provable.log("verifyTransition - directions", directions.value[i]);
