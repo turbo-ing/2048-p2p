@@ -20,6 +20,7 @@ import {
 } from "@/lib/game2048ZKLogic";
 import { DirectionMap, MoveType } from "@/utils/constants";
 import { gridsAreEqual } from "@/utils/helper";
+import { queueMove, zkClient } from "@/workers/zkQueue";
 
 export type Direction = "up" | "down" | "left" | "right";
 
@@ -403,6 +404,8 @@ const game2048Reducer = (
   state: Game2048State,
   action: Action,
 ): Game2048State => {
+  if (!action.peerId) return state;
+
   switch (action.type) {
     case "MOVE":
       console.log("Payload on MOVE", action);
@@ -491,6 +494,8 @@ const game2048Reducer = (
           seed: currentZkSeed,
         });
         newScores[boardKey] = state.score[boardKey] + score;
+
+        queueMove(action.peerId, newZkBoards[boardKey], action.payload);
       }
 
       return {
@@ -534,6 +539,8 @@ const game2048Reducer = (
       newState.score[action.peerId!] = 0;
       newState.actionPeerId = action.peerId;
 
+      queueMove(action.peerId!, payloadBoard, "init");
+
       return { ...newState };
 
     case "LEAVE":
@@ -559,8 +566,7 @@ const Game2048Context = createContext<
       boolean,
       string,
       Dispatch<SetStateAction<string>>,
-      ZkClient | null,
-      Dispatch<SetStateAction<ZkClient | null>>,
+      ZkClient,
     ]
   | null
 >(null);
@@ -577,7 +583,6 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     playersCount: 0,
     totalPlayers: 0,
   };
-  const [zkClient, setZkClient] = useState<ZkClient | null>(null);
   const [room, setRoom] = useState("");
 
   const [state, dispatch, connected] = useEdgeReducerV0(
@@ -590,7 +595,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <Game2048Context.Provider
-      value={[state, dispatch, connected, room, setRoom, zkClient, setZkClient]}
+      value={[state, dispatch, connected, room, setRoom, zkClient]}
     >
       {children}
     </Game2048Context.Provider>

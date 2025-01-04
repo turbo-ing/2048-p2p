@@ -21,7 +21,6 @@ export default function Game2048Page() {
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
   const [ranking, setRanking] = useState<Player[]>([]);
-  const isInitialized = useRef(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
@@ -68,39 +67,6 @@ export default function Game2048Page() {
     }));
 
     setRanking(sortedPlayers);
-
-    const calculateProof = async () => {
-      if (!zkClient) return;
-
-      const remotePeerId = state.actionPeerId;
-      const dir = state.actionDirection;
-
-      console.log("remotePeerId", remotePeerId);
-      console.log("dir", dir);
-
-      if (!remotePeerId || remotePeerId != peerId) return;
-
-      // init first proof for each player if not exists
-      if (!isInitialized.current) {
-        if (!state.zkBoard[remotePeerId]) return;
-        isInitialized.current = true;
-        zkClient
-          .initZKProof(state.zkBoard[remotePeerId])
-          .then(() => {
-            // isInitialized.current = false;
-            console.log(`Initialized proof for ${remotePeerId}`);
-          })
-          .catch((err) => {
-            console.error(`Error initializing proof for ${remotePeerId}`, err);
-          });
-      }
-
-      // add move to cache and generate proof if enough moves to batch
-      if (!dir) return;
-      zkClient.addMove(state.zkBoard[remotePeerId], dir).catch(console.error);
-    };
-
-    calculateProof().catch(console.error);
   }, [state]);
 
   useEffect(() => {

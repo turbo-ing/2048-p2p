@@ -1,6 +1,6 @@
 import { Bool, Field, Poseidon, Provable, Struct, UInt64 } from "o1js";
 
-export const MAX_MOVES = 10;
+export const MAX_MOVES = 20;
 /* -------------------------------------------------------------------------- */
 /*                                  GameBoard                                  */
 

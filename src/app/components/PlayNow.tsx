@@ -6,6 +6,7 @@ import Modal from "./Modal";
 
 import { generateRoomCode, initBoardWithSeed, use2048 } from "@/reducer/2048";
 import ZkClient from "@/workers/zkClient";
+import { assignMyPeerId } from "@/workers/zkQueue";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -18,8 +19,7 @@ export const PlayNow = ({
   setSelectedMode,
   selectedMode,
 }: PlayNowProps) => {
-  const [state, dispatch, connected, room, setRoom, zkClient, setZkClient] =
-    use2048();
+  const [state, dispatch, connected, room, setRoom] = use2048();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
 
@@ -104,12 +104,10 @@ export const PlayNow = ({
   }, [state]);
 
   useEffect(() => {
-    const zkClient = new ZkClient();
-
-    // Lazily compile zk program on the PlayNow page
-    compileZKProgram(zkClient);
-    setZkClient(zkClient);
-  }, []);
+    if (turboEdge) {
+      assignMyPeerId(turboEdge.node.peerId.toString());
+    }
+  }, [turboEdge]);
 
   return (
     <>
