@@ -1,161 +1,277 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-
-import { Direction, Grid, GRID_SIZE, Tile } from "@/reducer/2048";
+import React, { useEffect, useRef, useState } from "react";
+import { Board, Direction, Grid, GRID_SIZE, MergeEvent } from "@/reducer/2048";
 import ScoreBoard from "@/app/components/2048ScoreBoard";
 import { Player, ResultModal } from "@/app/components/ResultModal";
 import useArrowKeyPress from "@/app/hooks/useArrowKeyPress";
 import useSwipe from "@/app/hooks/useSwipe";
+import { gridsAreEqual } from "@/utils/helper";
+import { Tile } from "./Tile";
+import { MergePreview } from "./MergePreview";
+import { BASE_ANIMATION_SPEED } from "../../../tailwind.config";
 
-// Helper function to get background and text color based on tile value
-const getTileStyle = (tile: Tile | null) => {
-  if (tile === null) {
-    return { backgroundColor: "#cdc1b4", color: "#776e65" }; // Empty tile
-  }
-  switch (tile.value) {
-    case 2:
-      return { backgroundColor: "#eee4da", color: "#776e65" };
-    case 4:
-      return { backgroundColor: "#ede0c8", color: "#776e65" };
-    case 8:
-      return { backgroundColor: "#f2b179", color: "#f9f6f2" };
-    case 16:
-      return { backgroundColor: "#f59563", color: "#f9f6f2" };
-    case 32:
-      return { backgroundColor: "#f67c5f", color: "#f9f6f2" };
-    case 64:
-      return { backgroundColor: "#f65e3b", color: "#f9f6f2" };
-    case 128:
-      return { backgroundColor: "#edcf72", color: "#f9f6f2" };
-    case 256:
-      return { backgroundColor: "#edcc61", color: "#f9f6f2" };
-    case 512:
-      return { backgroundColor: "#edc850", color: "#f9f6f2" };
-    case 1024:
-      return { backgroundColor: "#edc53f", color: "#f9f6f2" };
-    case 2048:
-      return { backgroundColor: "#edc22e", color: "#f9f6f2" };
-    default:
-      return { backgroundColor: "#3c3a32", color: "#f9f6f2" }; // For values above 2048
-  }
-};
+// --- Constants ---
+const NUM_CELLS = 4;
+const DEFAULT_GAP = 10;
 
-const hasWon = (grid: Grid): boolean => {
-  for (let row of grid) {
-    for (let tile of row) {
-      if (tile && tile.value === 2048) {
-        return true;
-      }
+/**
+ * Checks if the grid contains a tile with value 2048.
+ */
+function hasWon(grid: Grid): boolean {
+  return grid.some((row) => row.some((tile) => tile?.value === 2048));
+}
+
+/**
+ * Checks if there are valid moves left:
+ *  - If any cell is empty.
+ *  - If adjacent cells (horizontal or vertical) share the same value.
+ */
+function hasValidMoves(grid: Grid): boolean {
+  // Check for empty spaces
+  for (const row of grid) {
+    for (const tile of row) {
+      if (!tile) return true;
     }
   }
 
-  return false;
-};
-
-// **New helper function** to check if there are any valid moves left
-const hasValidMoves = (grid: Grid): boolean => {
-  // Check if there's any empty tile
-  for (let row of grid) {
-    for (let tile of row) {
-      if (tile === null) {
-        return true;
-      }
-    }
-  }
-
-  // Check if adjacent tiles have the same value (horizontal and vertical)
+  // Check for adjacent equal tiles horizontally or vertically
   for (let i = 0; i < GRID_SIZE; i++) {
     for (let j = 0; j < GRID_SIZE - 1; j++) {
+      const current = grid[i][j];
+      const right = grid[i][j + 1];
+      const down = grid[j + 1]?.[i];
+      const below = grid[j]?.[i];
+
       if (
-        (grid[i][j] && grid[i][j + 1] && grid[i][j]! === grid[i][j + 1]!) || // Horizontal
-        (grid[j][i] && grid[j + 1][i] && grid[j][i]! === grid[j + 1][i]!) // Vertical
+        (current && right && current.value === right.value) ||
+        (below && down && below.value === down.value)
       ) {
         return true;
       }
     }
   }
 
-  return false; // No valid moves left
-};
+  return false;
+}
 
-// Refactored Game2048 component
+/**
+ * Quick helper to get the current state of the game:
+ *  - "WON" if grid has a 2048 tile
+ *  - "LOST" if no valid moves
+ *  - "RUNNING" otherwise
+ */
+function getGameState(grid: Grid): "WON" | "LOST" | "RUNNING" {
+  if (hasWon(grid)) return "WON";
+  if (!hasValidMoves(grid)) return "LOST";
+  return "RUNNING";
+}
+
 interface Game2048Props {
-  grid: Grid; // Initial state passed as a prop
-  score: number; // Score passed as a prop
+  board: Board;
+  score: number;
   player: string;
   rankingData: Player[];
-  className?: string; // Optional className prop
-  dispatchDirection: (dir: Direction) => void; // Dispatch function to handle direction
+  className?: string;
+  dispatchDirection: (dir: Direction) => void;
+  width: number;
+  height: number;
 }
 
 const Game2048: React.FC<Game2048Props> = ({
-  grid,
+  board,
   score,
   player,
   rankingData,
   className,
   dispatchDirection,
 }) => {
-  const [gameOver, setGameOver] = useState<boolean>(false); // Track if the game is over
-  const [gameWon, setGameWon] = useState<boolean>(false); // Track if the player won
+  const { grid, merges } = board;
 
+  const [currentGrid, setCurrentGrid] = useState<Grid>(grid);
+  const previousGridRef = useRef<Grid | null>(null);
+
+  const [gameOver, setGameOver] = useState(false);
+  const [gameWon, setGameWon] = useState(false);
+
+  const boardRef = useRef<HTMLDivElement>(null);
+  const [cellSize, setCellSize] = useState<number>(0);
+  const [gap, setGap] = useState(DEFAULT_GAP);
+
+  const [mergeTiles, setMergeTiles] = useState<MergeEvent[]>([]);
+
+  /**
+   * Observe board resize and recalculate `cellSize`.
+   */
   useEffect(() => {
-    if (grid && grid.length > 0) {
-      // Check if the player has won
-      if (hasWon(grid)) {
-        setGameWon(true);
-      }
-      // Check if there are no valid moves left (game over)
-      else if (!hasValidMoves(grid)) {
-        setGameOver(true);
-      }
-    }
-  }, [grid]);
+    if (!boardRef.current) return;
 
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const width = entry.contentRect.width;
+        const totalGaps = NUM_CELLS - 1;
+        const newGap = gap; // Replace with any dynamic logic for gap if desired
+        const newCellSize = (width - totalGaps * newGap) / NUM_CELLS;
+        setCellSize(newCellSize);
+      }
+    });
+
+    observer.observe(boardRef.current);
+    return () => observer.disconnect();
+  }, [gap]);
+
+  /**
+   * Updates the grid with prevX/prevY data for animations.
+   */
+  const updateGrid = (newGrid: Grid) => {
+    const previousGrid = previousGridRef.current;
+
+    // If the new grid is the same as the previous grid, do nothing.
+    if (previousGrid && gridsAreEqual(newGrid, previousGrid)) return;
+
+    const updatedGrid = newGrid.map((row, y) =>
+      row.map((tile, x) => {
+        if (!tile) return null;
+
+        let prevX = x;
+        let prevY = y;
+        let isMoved = false;
+
+        // Find the tile's previous position (if any)
+        if (previousGrid) {
+          let foundPrevTile = false;
+          for (let py = 0; py < GRID_SIZE; py++) {
+            for (let px = 0; px < GRID_SIZE; px++) {
+              const prevTile = previousGrid[py][px];
+              if (prevTile && prevTile.id === tile.id) {
+                prevX = px;
+                prevY = py;
+                foundPrevTile = true;
+                if (prevX !== x || prevY !== y) {
+                  isMoved = true;
+                }
+                break;
+              }
+            }
+            if (foundPrevTile) break;
+          }
+        }
+
+        return {
+          ...tile,
+          prevX,
+          prevY,
+          x,
+          y,
+          isMoving: isMoved,
+        };
+      }),
+    );
+
+    previousGridRef.current = newGrid;
+    setCurrentGrid(updatedGrid);
+  };
+
+  /**
+   * Schedule merges for animation, then clear them.
+   */
+  const handleMerges = (mergeEvents: MergeEvent[]) => {
+    if (mergeEvents.length > 0) {
+      setMergeTiles(mergeEvents);
+      // Remove them after the base animation delay
+      setTimeout(() => {
+        setMergeTiles([]);
+      }, BASE_ANIMATION_SPEED * 1000);
+    }
+  };
+
+  /**
+   * Main effect to handle:
+   *  - Checking game state (win/lose).
+   *  - Animating merges (if any).
+   *  - Updating grid positions.
+   */
+  useEffect(() => {
+    // No grid means nothing to do
+    if (!grid || grid.length === 0) return;
+
+    // Check if game is won or lost
+    const state = getGameState(grid);
+    if (state === "WON") {
+      setGameWon(true);
+      return;
+    }
+    if (state === "LOST") {
+      setGameOver(true);
+      return;
+    }
+
+    // If merges exist, animate them
+    if (merges && merges.length > 0) {
+      handleMerges(merges);
+    }
+
+    // Update tile positions for animation
+    updateGrid(grid);
+  }, [grid, merges]);
+
+  // Hook to control the board with arrow keys
   useArrowKeyPress(dispatchDirection);
+
+  // Hook to control the board with swipes
   useSwipe(dispatchDirection);
 
-  const baseStyles = "text-center mt-6 text-white";
-
   return (
-    <div>
-      {gameOver && (
-        <ResultModal isWinner={false} open={true} rankingData={rankingData} />
+    <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4">
+      {/* Result Modal */}
+      {(gameOver || gameWon) && (
+        <ResultModal isWinner={gameWon} open={true} rankingData={rankingData} />
       )}
-      {gameWon && (
-        <ResultModal isWinner={true} open={true} rankingData={rankingData} />
-      )}
-      <div className="flex justify-center mb-6">
+
+      {/* Scoreboard */}
+      <div className="flex justify-center mb-6 w-full">
         <ScoreBoard title="Score" total={score} />
       </div>
-      <div className="grid grid-cols-4 gap-2.5">
-        {grid &&
-          grid.length > 0 &&
-          grid.map((row, rowIndex) => (
-            <React.Fragment key={rowIndex}>
-              {row.map((tile, colIndex) => {
-                const { backgroundColor, color } = getTileStyle(tile);
-                const isMerged = tile && tile.isMerging;
-                const isNew = tile && tile.isNew;
 
-                return (
-                  <div
-                    key={`${rowIndex}-${colIndex}`}
-                    className={`pt-[100%] relative bg-[#cdc1b4] flex items-center justify-center rounded-md transition-transform duration-300 ${isNew ? "animate-newTileAppear" : ""} ${isMerged ? "animate-mergeTile" : ""}`}
-                    style={{ backgroundColor, color }}
-                  >
-                    <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                      {tile ? tile.value : ""}
-                    </span>
-                  </div>
-                );
-              })}
-            </React.Fragment>
+      {/* Board */}
+      <div
+        ref={boardRef}
+        className="relative w-full aspect-square bg-boardBackground rounded-md"
+      >
+        {/* Grid background blocks */}
+        <div
+          className="absolute inset-0 grid"
+          style={{
+            gridTemplateColumns: `repeat(${NUM_CELLS}, 1fr)`,
+            gridTemplateRows: `repeat(${NUM_CELLS}, 1fr)`,
+            gap: `${gap}px`,
+            pointerEvents: "none",
+          }}
+        >
+          {Array.from({ length: NUM_CELLS * NUM_CELLS }, (_, i) => (
+            <div key={i} className="bg-[#cdc1b4] rounded-md w-full h-full" />
           ))}
+        </div>
+
+        {/* Actual tiles + merge preview */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          {currentGrid.map((row) =>
+            row.map((tile) => {
+              if (!tile) return null;
+              return (
+                <Tile key={tile.id} tile={tile} cellSize={cellSize} gap={gap} />
+              );
+            }),
+          )}
+          <MergePreview merges={mergeTiles} cellSize={cellSize} gap={gap} />
+        </div>
       </div>
-      <div className="border-b-1 border-white pb-3">
-        <p className={`${baseStyles} ${className}`}>Player: {player}</p>
+
+      {/* Player info */}
+      <div className="border-b border-white pb-3 mt-6 w-full">
+        <p className={`text-center text-white ${className}`}>
+          Player: {player}
+        </p>
       </div>
     </div>
   );

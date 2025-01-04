@@ -44,6 +44,7 @@ const nextConfig = {
     unoptimized: true,
   },
   output: "export",
+  reactStrictMode: false,
 };
 
 export default nextConfig;
