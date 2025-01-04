@@ -72,7 +72,7 @@ export default function Game2048Page() {
   useEffect(() => {
     if (!connected) return;
     zkClient?.setDispatch(dispatch);
-  }, [connected]);
+  }, [connected, dispatch, zkClient]);
 
   if (!state || state.playersCount < 1) return router.push("/");
 

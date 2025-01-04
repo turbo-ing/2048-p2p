@@ -6,7 +6,7 @@ import Modal from "./Modal";
 
 import { generateRoomCode, initBoardWithSeed, use2048 } from "@/reducer/2048";
 import ZkClient from "@/workers/zkClient";
-import { assignMyPeerId } from "@/workers/zkQueue";
+import { assignMyPeerId, zkClient } from "@/workers/zkQueue";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -108,6 +108,11 @@ export const PlayNow = ({
       assignMyPeerId(turboEdge.node.peerId.toString());
     }
   }, [turboEdge]);
+
+  useEffect(() => {
+    if (!connected) return;
+    zkClient?.setDispatch(dispatch);
+  }, [connected, dispatch, zkClient]);
 
   return (
     <>

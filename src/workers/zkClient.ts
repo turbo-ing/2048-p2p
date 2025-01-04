@@ -50,17 +50,17 @@ export default class ZkClient {
   startInterval() {
     this.intervalId = window.setInterval(async () => {
       if (!this.compiled) {
-        console.log("Still compiling, skipping interval");
+        console.debug("Still compiling, skipping interval");
 
         return;
       }
       if (this.isProcessing) {
-        console.log("Still processing, skipping interval");
+        console.debug("Still processing, skipping interval");
 
         return;
       }
       if (this.moveCache.length === 0) {
-        console.log("No moves to process, skipping interval");
+        console.debug("No moves to process, skipping interval");
 
         return;
       }
@@ -93,7 +93,7 @@ export default class ZkClient {
         },
       });
       this.isProcessing = false;
-    }, 10000);
+    }, 500);
   }
 
   async initZKProof(zkBoard: GameBoardWithSeed) {
@@ -115,12 +115,14 @@ export default class ZkClient {
       seedNums,
     );
 
-    this.dispatch({
-      type: "SEND_PROOF",
-      payload: {
-        proof: proofJSON,
-      },
-    });
+    if (this.dispatch) {
+      this.dispatch({
+        type: "SEND_PROOF",
+        payload: {
+          proof: proofJSON,
+        },
+      });
+    }
 
     this.isProcessing = false;
 
