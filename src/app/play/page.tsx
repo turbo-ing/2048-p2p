@@ -55,6 +55,14 @@ export default function Game2048Page() {
     }
   };
 
+  const leave = () => {
+    dispatch({
+      type: "LEAVE",
+    });
+    location.reload;
+    //router.push("/");
+  };
+
   useDisableScroll(isMobile);
 
   useEffect(() => {
@@ -99,11 +107,14 @@ export default function Game2048Page() {
                           key={peerId}
                           className="text-base"
                           dispatchDirection={dispatchDirection}
+                          leave={leave}
                           board={state.board[peerId!]}
                           height={80}
                           player={state.players[peerId!]}
+                          trueid={state.players[peerId!]}
                           rankingData={ranking}
                           score={state.score[peerId!]}
+                          isFinished={state.isFinished}
                           width={80}
                         />
                       </div>
@@ -122,11 +133,14 @@ export default function Game2048Page() {
                                     key={player}
                                     className="text-sm"
                                     dispatchDirection={dispatchDirection}
+                                    leave={leave}
                                     board={state.board[player]}
                                     height={40}
                                     player={state.players[player]}
+                                    trueid={state.players[peerId!]}
                                     rankingData={ranking}
                                     score={state.score[player]}
+                                    isFinished={state.isFinished}
                                     width={40}
                                   />
                                 </div>
