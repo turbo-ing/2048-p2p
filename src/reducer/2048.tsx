@@ -19,8 +19,8 @@ import {
   printBoard,
 } from "@/lib/game2048ZKLogic";
 import { DirectionMap, MoveType } from "@/utils/constants";
-import { gridsAreEqual } from "@/utils/helper";
 import { queueMove, zkClient } from "@/workers/zkQueue";
+import { gridsAreEqual, getGameState } from "@/utils/helper";
 
 export type Direction = "up" | "down" | "left" | "right";
 
@@ -47,6 +47,7 @@ export type Game2048State = {
   score: { [playerId: string]: number };
   playerId: string[];
   players: { [playerId: string]: string };
+  isFinished: { [playerId: string]: boolean };
   playersCount: number;
   totalPlayers: number;
   actionPeerId?: string;
@@ -413,6 +414,7 @@ const game2048Reducer = (
       const newBoards = { ...state.board };
       const newScores = { ...state.score };
       const newZkBoards = { ...state.zkBoard };
+      const newFin = { ...state.isFinished };
 
       for (let boardKey in state.board) {
         if (boardKey !== action.peerId) {
@@ -495,6 +497,11 @@ const game2048Reducer = (
         });
         newScores[boardKey] = state.score[boardKey] + score;
 
+        let gameState = getGameState(newBoards[boardKey].grid);
+        if (gameState != "RUNNING") {
+          newFin[boardKey] = true;
+        }
+
         queueMove(action.peerId, newZkBoards[boardKey], action.payload);
       }
 
@@ -503,6 +510,7 @@ const game2048Reducer = (
         board: { ...newBoards },
         zkBoard: { ...newZkBoards },
         score: { ...newScores },
+        isFinished: { ...newFin },
         actionPeerId: action.peerId,
         actionDirection: action.payload,
       };
@@ -539,20 +547,34 @@ const game2048Reducer = (
       newState.score[action.peerId!] = 0;
       newState.actionPeerId = action.peerId;
 
+      newState.isFinished[action.peerId!] = false;
+
       queueMove(action.peerId!, payloadBoard, "init");
 
       return { ...newState };
 
     case "LEAVE":
-      error("Not implemented yet");
+      //error("Not implemented yet");
+      console.log("Player " + action.peerId! + " is leaving the game.");
+      console.log(state);
+      const leaveState = state;
+      leaveState.playersCount -= 1;
+      //leaveState.totalPlayers -= 1;
+      delete leaveState.board[action.peerId!];
+      delete leaveState.score[action.peerId!];
+      delete leaveState.players[action.peerId!];
+      delete leaveState.isFinished[action.peerId!];
+      delete leaveState.playerId[leaveState.playerId.indexOf(action.peerId!)];
+      console.log(leaveState);
+      return leaveState;
 
-      return state;
     case "SEND_PROOF":
       console.log(
         `Payload received: ${JSON.stringify(action.payload)} from ${action.peerId}`,
       );
 
       return state;
+
     default:
       return state;
   }
@@ -582,6 +604,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     playerId: [],
     playersCount: 0,
     totalPlayers: 0,
+    isFinished: {},
   };
   const [room, setRoom] = useState("");
 
