@@ -13,7 +13,6 @@ import { Player } from "@/app/components/ResultModal";
 import useIsMobile from "@/app/hooks/useIsMobile";
 import { useDisableScroll } from "@/app/hooks/useSwipe";
 import { MoveType } from "@/utils/constants";
-import { empty } from "o1js/dist/node/bindings/mina-transaction/gen/transaction-bigint";
 
 export default function Game2048Page() {
   const router = useRouter();
@@ -58,12 +57,25 @@ export default function Game2048Page() {
     }
   };
 
+  const downloadProof = () => {
+    const dataStr =
+      "data:application/json;charset=utf-8," +
+      encodeURIComponent(state.compiledProof);
+    const download = document.createElement("a");
+    download.setAttribute("href", dataStr);
+    download.setAttribute("download", "ZK_Proof" + ".json");
+    document.body.appendChild(download);
+    download.click();
+    download.remove();
+  };
+
   const leave = () => {
+    console.log("Leaving");
     dispatch({
       type: "LEAVE",
     });
-    location.reload;
-    //router.push("/");
+    window.location.href = "/";
+    //router.replace("/");
   };
 
   const updateLenQueue = () => {
@@ -126,9 +138,8 @@ export default function Game2048Page() {
                   <div className="w-full flex lg:flex-row flex-col justify-center lg:-mx-5">
                     <div className="lg:w-1/2 mx-auto size-full ">
                       <div className="max-w-[365px] mx-auto text-3xl w-[365px] ">
-                        <p key={lenQueue}>LenQueue: {lenQueue}</p>
-                        <p>zkClient: {zkClient.moveCache.length}</p>
                         <Game2048
+                          downloadProof={downloadProof}
                           key={peerId}
                           className="text-base"
                           dispatchDirection={dispatchDirection}
@@ -155,8 +166,8 @@ export default function Game2048Page() {
                                   key={`${player}-id`}
                                   className="w-1/2 px-2.5 text-xl"
                                 >
-                                  <p key={lenQueue}>LenQueue: {lenQueue}</p>
                                   <Game2048
+                                    downloadProof={downloadProof}
                                     lenQueue={lenQueue}
                                     key={player}
                                     className="text-sm"

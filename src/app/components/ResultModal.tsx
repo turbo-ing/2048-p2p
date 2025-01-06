@@ -12,6 +12,7 @@ export interface Player {
 }
 
 interface ResultModalProps {
+  downloadProof: () => void;
   lenQueue: number;
   leave: () => void;
   player: String;
@@ -22,6 +23,7 @@ interface ResultModalProps {
 }
 
 export const ResultModal = ({
+  downloadProof,
   lenQueue,
   leave,
   player,
@@ -32,18 +34,11 @@ export const ResultModal = ({
 }: ResultModalProps) => {
   const router = useRouter();
   const [ranking, _setRanking] = useState<Player[]>(rankingData);
-  const [queueSize, _setQueueSize] = useState<number>(0);
   const playerCount = ranking.length;
-
-  useEffect(() => {
-    if (queueSize !== lenQueue) {
-      _setQueueSize(lenQueue);
-    }
-  });
 
   return (
     <Modal show={open}>
-      {queueSize === 0 && (
+      {lenQueue === 0 && (
         <div>
           <div className="relative flex justify-center items-center">
             <img
@@ -97,18 +92,27 @@ export const ResultModal = ({
               <div>Home</div>
             </button>
             <button
+              className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-2/3"
+              onClick={() => downloadProof()} //downloadProof()}
+            >
+              <div>Download ZK Proof</div>
+            </button>
+            <button
               className="rounded-full py-2.5 px-4 bg-[#F23939] text-white text-base font-semibold gap-1.5 flex items-center justify-center w-full"
               onClick={() => {
                 router.push("/");
               }}
             >
               <img alt="" src="/svg/repeat.svg" />
-              <div>Rematch</div>
+              <div>
+                {playerCount < 1 && "Play again"}
+                {playerCount > 1 && "Rematch"}
+              </div>
             </button>
           </div>
         </div>
       )}
-      {queueSize !== 0 && (
+      {lenQueue !== 0 && (
         <div>
           <div className="relative flex justify-center items-center">
             <img alt="" src={"/svg/circle-plus.svg"} />

@@ -50,6 +50,7 @@ export type Game2048State = {
   isFinished: { [playerId: string]: boolean };
   playersCount: number;
   totalPlayers: number;
+  compiledProof: string;
   actionPeerId?: string;
   actionDirection?: MoveType;
 };
@@ -578,11 +579,14 @@ const game2048Reducer = (
       return leaveState;
 
     case "SEND_PROOF":
+      let receivedProof = JSON.stringify(action.payload);
       console.log(
-        `Payload received: ${JSON.stringify(action.payload)} from ${action.peerId}`,
+        `Payload received: ${receivedProof} from ${action.peerId}`,
+        //We then need to store this JSON proof somehow. Where to store it?
       );
-
-      return state;
+      const proofState = state;
+      proofState.compiledProof = receivedProof;
+      return proofState;
 
     case "UPDATE":
       return state;
@@ -616,6 +620,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     playerId: [],
     playersCount: 0,
     totalPlayers: 0,
+    compiledProof: "",
     isFinished: {},
   };
   const [room, setRoom] = useState("");

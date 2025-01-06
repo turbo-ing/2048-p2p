@@ -17,6 +17,7 @@ const NUM_CELLS = 4;
 const DEFAULT_GAP = 10;
 
 interface Game2048Props {
+  downloadProof: () => void;
   lenQueue: number;
   board: Board;
   score: number;
@@ -32,6 +33,7 @@ interface Game2048Props {
 }
 
 const Game2048: React.FC<Game2048Props> = ({
+  downloadProof,
   lenQueue,
   board,
   score,
@@ -199,6 +201,7 @@ const Game2048: React.FC<Game2048Props> = ({
       {/* Result Modal */}
       {(gameOver || gameWon) && allFinished && (
         <ResultModal
+          downloadProof={downloadProof}
           leave={leave}
           player={trueid}
           isWinner={gameWon}
@@ -277,6 +280,13 @@ const Game2048: React.FC<Game2048Props> = ({
           </p>
         </div>
       )}
+      {/* surrender button */}
+      <button
+        className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-1/3"
+        onClick={() => leave()}
+      >
+        Surrender
+      </button>
     </div>
   );
 };
