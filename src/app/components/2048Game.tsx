@@ -17,6 +17,7 @@ const NUM_CELLS = 4;
 const DEFAULT_GAP = 10;
 
 interface Game2048Props {
+  lenQueue: number;
   board: Board;
   score: number;
   player: string;
@@ -31,6 +32,7 @@ interface Game2048Props {
 }
 
 const Game2048: React.FC<Game2048Props> = ({
+  lenQueue,
   board,
   score,
   player,
@@ -202,6 +204,7 @@ const Game2048: React.FC<Game2048Props> = ({
           isWinner={gameWon}
           open={true}
           rankingData={rankingData}
+          lenQueue={lenQueue}
         />
       )}
 

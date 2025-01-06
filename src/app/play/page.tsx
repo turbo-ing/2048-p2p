@@ -13,6 +13,7 @@ import { Player } from "@/app/components/ResultModal";
 import useIsMobile from "@/app/hooks/useIsMobile";
 import { useDisableScroll } from "@/app/hooks/useSwipe";
 import { MoveType } from "@/utils/constants";
+import { empty } from "o1js/dist/node/bindings/mina-transaction/gen/transaction-bigint";
 
 export default function Game2048Page() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function Game2048Page() {
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
   const [ranking, setRanking] = useState<Player[]>([]);
+  const [lenQueue, setLenQueue] = useState<number>(0);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
@@ -64,7 +66,22 @@ export default function Game2048Page() {
     //router.push("/");
   };
 
+  const updateLenQueue = () => {
+    dispatch({
+      type: "UPDATE",
+    });
+  };
+
   useDisableScroll(isMobile);
+
+  //State updater to pass emptyQueue bool to ending modal
+  setInterval(() => {
+    console.log("updating lenqueue");
+    let len = zkClient.moveCache.length;
+    if (len !== lenQueue) {
+      setLenQueue(len);
+    }
+  }, 1000);
 
   useEffect(() => {
     const sortedScores = Object.entries(state.score) // Convert to array of [playerId, score]
@@ -109,6 +126,8 @@ export default function Game2048Page() {
                   <div className="w-full flex lg:flex-row flex-col justify-center lg:-mx-5">
                     <div className="lg:w-1/2 mx-auto size-full ">
                       <div className="max-w-[365px] mx-auto text-3xl w-[365px] ">
+                        <p key={lenQueue}>LenQueue: {lenQueue}</p>
+                        <p>zkClient: {zkClient.moveCache.length}</p>
                         <Game2048
                           key={peerId}
                           className="text-base"
@@ -122,6 +141,7 @@ export default function Game2048Page() {
                           score={state.score[peerId!]}
                           isFinished={state.isFinished}
                           width={80}
+                          lenQueue={lenQueue}
                         />
                       </div>
                     </div>
@@ -135,7 +155,9 @@ export default function Game2048Page() {
                                   key={`${player}-id`}
                                   className="w-1/2 px-2.5 text-xl"
                                 >
+                                  <p key={lenQueue}>LenQueue: {lenQueue}</p>
                                   <Game2048
+                                    lenQueue={lenQueue}
                                     key={player}
                                     className="text-sm"
                                     dispatchDirection={dispatchDirection}

@@ -84,8 +84,17 @@ interface SendProofAction extends EdgeAction<Game2048State> {
   };
 }
 
+interface UpdateAction extends EdgeAction<Game2048State> {
+  type: "UPDATE";
+}
+
 // Action Types
-export type Action = MoveAction | JoinAction | LeaveAction | SendProofAction;
+export type Action =
+  | MoveAction
+  | JoinAction
+  | LeaveAction
+  | SendProofAction
+  | UpdateAction;
 
 const error = (message: string) => {
   console.error(message);
@@ -573,6 +582,9 @@ const game2048Reducer = (
         `Payload received: ${JSON.stringify(action.payload)} from ${action.peerId}`,
       );
 
+      return state;
+
+    case "UPDATE":
       return state;
 
     default:
