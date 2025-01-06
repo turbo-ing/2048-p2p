@@ -22,6 +22,7 @@ export default function Game2048Page() {
   const peerId = turboEdge?.node.peerId.toString();
   const [ranking, setRanking] = useState<Player[]>([]);
   const [lenQueue, setLenQueue] = useState<number>(0);
+  const [triggered, setTriggered] = useState<boolean>(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
@@ -88,14 +89,19 @@ export default function Game2048Page() {
 
   useDisableScroll(isMobile);
 
-  //State updater to pass emptyQueue bool to ending modal
-  setInterval(() => {
-    console.log("updating lenqueue");
-    let len = zkClient.moveCache.length;
-    if (len !== lenQueue) {
-      setLenQueue(len);
+  //State updater
+  useEffect(() => {
+    if (!triggered) {
+      setInterval(() => {
+        console.log("updating lenqueue");
+        let len = zkClient.moveCache.length;
+        if (len !== -1) {
+          setLenQueue(len);
+        }
+      }, 1000);
+      setTriggered(true);
     }
-  }, 1000);
+  });
 
   useEffect(() => {
     const sortedScores = Object.entries(state.score) // Convert to array of [playerId, score]
@@ -140,6 +146,8 @@ export default function Game2048Page() {
                   <div className="w-full flex lg:flex-row flex-col justify-center lg:-mx-5">
                     <div className="lg:w-1/2 mx-auto size-full ">
                       <div className="max-w-[365px] mx-auto text-3xl w-[365px] ">
+                        <p>zk: {zkClient.moveCache.length}</p>
+                        <p>lq: {lenQueue}</p>
                         <Game2048
                           downloadProof={downloadProof}
                           key={peerId}
@@ -154,7 +162,7 @@ export default function Game2048Page() {
                           score={state.score[peerId!]}
                           isFinished={state.isFinished}
                           width={80}
-                          lenQueue={lenQueue}
+                          lenQueue={zkClient.moveCache.length}
                         />
                       </div>
                     </div>
@@ -170,7 +178,7 @@ export default function Game2048Page() {
                                 >
                                   <Game2048
                                     downloadProof={downloadProof}
-                                    lenQueue={lenQueue}
+                                    lenQueue={zkClient.moveCache.length}
                                     key={player}
                                     className="text-sm"
                                     dispatchDirection={dispatchDirection}
