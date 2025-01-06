@@ -58,9 +58,11 @@ export default function Game2048Page() {
   };
 
   const downloadProof = () => {
+    console.log(state.compiledProof);
+    let json = JSON.parse(state.compiledProof);
+
     const dataStr =
-      "data:application/json;charset=utf-8," +
-      encodeURIComponent(state.compiledProof);
+      "data:application/json;charset=utf-8," + encodeURIComponent(json.proof);
     const download = document.createElement("a");
     download.setAttribute("href", dataStr);
     download.setAttribute("download", "ZK_Proof" + ".json");

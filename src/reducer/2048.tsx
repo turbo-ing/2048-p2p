@@ -580,10 +580,7 @@ const game2048Reducer = (
 
     case "SEND_PROOF":
       let receivedProof = JSON.stringify(action.payload);
-      console.log(
-        `Payload received: ${receivedProof} from ${action.peerId}`,
-        //We then need to store this JSON proof somehow. Where to store it?
-      );
+      console.log(`Payload received: ${receivedProof} from ${action.peerId}`);
       const proofState = state;
       proofState.compiledProof = receivedProof;
       return proofState;
