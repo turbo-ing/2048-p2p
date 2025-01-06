@@ -92,20 +92,20 @@ export const ResultModal = ({
               <div>Home</div>
             </button>
             <button
-              className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-2/3"
-              onClick={() => downloadProof()} //downloadProof()}
+              className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-full"
+              onClick={() => downloadProof()}
             >
               <div>Download ZK Proof</div>
             </button>
             <button
-              className="rounded-full py-2.5 px-4 bg-[#F23939] text-white text-base font-semibold gap-1.5 flex items-center justify-center w-full"
+              className="rounded-full py-2.5 px-4 bg-[#F23939] text-white text-base font-semibold gap-1.5 flex items-center justify-center w-2/3"
               onClick={() => {
                 router.push("/");
               }}
             >
               <img alt="" src="/svg/repeat.svg" />
               <div>
-                {playerCount < 1 && "Play again"}
+                {playerCount < 2 && "Play again"}
                 {playerCount > 1 && "Rematch"}
               </div>
             </button>
