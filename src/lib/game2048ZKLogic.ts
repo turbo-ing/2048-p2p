@@ -548,11 +548,17 @@ export function addRandomTile(
       new UInt64(isZeroes[i].value),
     );
   }
+  const zeroEmptyTileIdx = emptyTilesIndex[15].equals(new UInt64(0));
+  const minEmptyTileIdx = Provable.if(
+    zeroEmptyTileIdx,
+    new UInt64(1),
+    emptyTilesIndex[15],
+  );
 
   const nextSeed = Poseidon.hash([seed, ...board.cells]);
   const randIndexRaw = nextSeed.toBits().slice(0, 4);
   const randIndex = new UInt64(Field.fromBits(randIndexRaw).value)
-    .mod(emptyTilesIndex[15])
+    .mod(minEmptyTileIdx)
     .add(1);
 
   for (let i = 0; i < 16; i++) {
