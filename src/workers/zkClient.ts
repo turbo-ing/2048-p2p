@@ -110,7 +110,7 @@ export default class ZkClient {
     const boardNums = zkBoard
       .getBoard()
       .cells.map((cell) => Number(cell.toBigInt()));
-    const seedNums = Number(zkBoard.getSeed().toBigInt());
+    const seedNums = zkBoard.getSeed().toBigInt();
 
     const [proof, proofJSON] = await this.remoteApi.initZKProof(
       boardNums,

@@ -24,12 +24,12 @@ export const zkWorkerAPI = {
 
   async initZKProof(
     boardNums: Number[],
-    seedNum: Number,
+    seedNum: bigint,
   ): Promise<[Proof<GameBoardWithSeed, void>, string]> {
     console.log("[Worker] Initializing ZK proof", boardNums, seedNum);
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
     const zkBoard = new GameBoard(boardFields);
-    const seed = Field(seedNum.valueOf());
+    const seed = Field(seedNum);
 
     printBoard(zkBoard);
 
