@@ -34,6 +34,7 @@ interface Game2048Props {
   height: number;
   isFinished: { [playerId: string]: boolean };
   surrendered: { [playerId: string]: boolean };
+  frontSurrendered: { [name: string]: boolean };
   allSurrendered: boolean;
   totalPlayers: number;
 }
@@ -55,6 +56,7 @@ const Game2048: React.FC<Game2048Props> = ({
   isFinished,
   surrendered,
   allSurrendered,
+  frontSurrendered,
   totalPlayers,
 }) => {
   const { grid, merges } = board;
@@ -214,6 +216,7 @@ const Game2048: React.FC<Game2048Props> = ({
       {(((gameOver || gameWon) && allFinished) || allSurrendered) && (
         //(gameOver || gameWon) && allFinished && (
         //if the games over and all finished, or if all opponents have surrendered
+
         <ResultModal
           remProcessing={remProcessing}
           rematch={rematch}
@@ -221,6 +224,7 @@ const Game2048: React.FC<Game2048Props> = ({
           downloadProof={downloadProof}
           surrendered={surrendered}
           allSurrendered={allSurrendered}
+          frontSurrendered={frontSurrendered}
           leave={leave}
           player={trueid}
           isWinner={gameWon}

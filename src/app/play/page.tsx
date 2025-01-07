@@ -24,6 +24,9 @@ export default function Game2048Page() {
   const [lenQueue, setLenQueue] = useState<number>(0);
   const [triggered, setTriggered] = useState<boolean>(false);
   const [allSurrendered, setAllSurrendered] = useState<boolean>(false);
+  const [frontSurrendered, setFrontSurrendered] = useState<{
+    [name: string]: boolean;
+  }>({});
   const [rem, setRem] = useState<number>(0);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -96,20 +99,37 @@ export default function Game2048Page() {
   useEffect(() => {
     // only trigger once
     if (!triggered) {
+      //also just initialise surrenderedfront too, why not
       setInterval(() => {
-        console.log("updating lenqueue");
+        //console.log("updating frontsurrendered");
+        let f2 = frontSurrendered;
+        for (var key in state.surrendered) {
+          let name = state.players[key];
+          let value = state.surrendered[key];
+          f2[name] = value;
+        }
+        setFrontSurrendered({ ...f2 });
+
+        //console.log("updating lenqueue");
         let len = zkClient.moveCache.length;
         setLenQueue(len);
 
         let surr = state.surrendered;
-        console.log("surr:");
-        console.log(surr);
+        //console.log("surr:");
+        //console.log(surr);
         let allSurr = 0;
+
         //check if everyone else has surrendered
         for (var key in surr) {
           //count surrenders
           if (state.players[key] !== peerId && surr[key]) {
             allSurr++;
+            /*console.log(
+              "detected surrender from player " +
+                state.players[key] +
+                " id: " +
+                key,
+            );*/
           }
         }
         if (allSurr === state.playersCount - 1 && state.totalPlayers > 1) {
@@ -195,6 +215,7 @@ export default function Game2048Page() {
                           isFinished={state.isFinished}
                           surrendered={state.surrendered}
                           allSurrendered={allSurrendered}
+                          frontSurrendered={frontSurrendered}
                           totalPlayers={state.totalPlayers}
                           width={80}
                           lenQueue={zkClient.moveCache.length}
@@ -230,6 +251,7 @@ export default function Game2048Page() {
                                     isFinished={state.isFinished}
                                     surrendered={state.surrendered}
                                     allSurrendered={allSurrendered}
+                                    frontSurrendered={frontSurrendered}
                                     totalPlayers={state.totalPlayers}
                                     width={40}
                                   />

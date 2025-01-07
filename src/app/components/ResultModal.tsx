@@ -16,11 +16,12 @@ interface ResultModalProps {
   rem: number;
   remProcessing: boolean;
   surrendered: { [playerId: string]: boolean };
+  frontSurrendered: { [name: string]: boolean };
   allSurrendered: boolean;
   downloadProof: () => void;
   lenQueue: number;
   leave: () => void;
-  player: String;
+  player: string;
   isWinner: boolean;
   open: boolean;
   totalPlayers: number;
@@ -34,6 +35,7 @@ export const ResultModal = ({
   remProcessing,
   surrendered,
   allSurrendered,
+  frontSurrendered,
   downloadProof,
   lenQueue,
   leave,
@@ -53,7 +55,7 @@ export const ResultModal = ({
     if (wantsRematch && lenQueue === 0 && !remProcessing) {
       setWantsRematch(false);
       rematch();
-    }
+    } else console.log("frontSurendered" + frontSurrendered[player]);
   });
 
   return (
@@ -91,8 +93,10 @@ export const ResultModal = ({
                         className="flex justify-between relative px-5 mb-2 last:mb-0"
                       >
                         <p>{player.name}</p>
-                        {!surrendered[player.name!] && <p>{player.score}</p>}
-                        {surrendered[player.name!] && <p>Surrendered!</p>}
+                        {!frontSurrendered[player.name] && (
+                          <p>{player.score}</p>
+                        )}
+                        {frontSurrendered[player.name] && <p>Surrendered!</p>}
                       </li>
                     ))}
                   {totalPlayers < 2 && "Score: " + ranking[0].score}

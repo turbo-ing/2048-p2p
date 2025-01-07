@@ -560,7 +560,7 @@ const game2048Reducer = (
       newState.actionPeerId = action.peerId;
 
       newState.isFinished[action.peerId!] = false;
-      newState.surrendered[newState.players[action.peerId!]] = false;
+      newState.surrendered[action.peerId!] = false;
       newState.rematch[action.peerId!] = false;
 
       queueMove(action.peerId!, payloadBoard, "init");
