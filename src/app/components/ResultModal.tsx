@@ -12,17 +12,22 @@ export interface Player {
 }
 
 interface ResultModalProps {
+  surrendered: { [playerId: string]: boolean };
+  allSurrendered: boolean;
   downloadProof: () => void;
   lenQueue: number;
   leave: () => void;
   player: String;
   isWinner: boolean;
   open: boolean;
+  totalPlayers: number;
   rankingData: Player[];
   onClose?: () => void;
 }
 
 export const ResultModal = ({
+  surrendered,
+  allSurrendered,
   downloadProof,
   lenQueue,
   leave,
@@ -31,11 +36,11 @@ export const ResultModal = ({
   onClose,
   isWinner,
   rankingData,
+  totalPlayers,
 }: ResultModalProps) => {
   const router = useRouter();
   const [ranking, _setRanking] = useState<Player[]>(rankingData);
   const [download, setDownload] = useState<boolean>(false);
-  const playerCount = ranking.length;
 
   return (
     <div>
@@ -50,36 +55,41 @@ export const ResultModal = ({
             </div>
             <div className="py-6 text-center">
               <div className="text-[#F5F5F6] font-semibold text-3xl">
-                {playerCount > 1 &&
+                {totalPlayers > 1 &&
+                  !allSurrendered &&
                   (player == ranking[0].name
                     ? "You've won the match!"
                     : "You've been beaten!")}
-                {playerCount < 2 && (isWinner ? "You win!" : "Game over!")}
+                {totalPlayers > 1 &&
+                  allSurrendered &&
+                  "All opponents surrendered!"}
+                {totalPlayers < 2 && (isWinner ? "You win!" : "Game over!")}
               </div>
               <div className="text-xl my-4">
                 <p className="text-center text-2xl mb-2 font-bold">
-                  {playerCount > 1 && "Ranking"}
+                  {totalPlayers > 1 && "Ranking"}
                 </p>
                 <ul className="counter-list">
-                  {playerCount > 1 &&
+                  {totalPlayers > 1 &&
                     ranking.map((player) => (
                       <li
                         key={player.name}
                         className="flex justify-between relative px-5 mb-2 last:mb-0"
                       >
                         <p>{player.name}</p>
-                        <p>{player.score}</p>
+                        {!surrendered[player.name!] && <p>{player.score}</p>}
+                        {surrendered[player.name!] && <p>Surrendered!</p>}
                       </li>
                     ))}
-                  {playerCount < 2 && "Score: " + ranking[0].score}
+                  {totalPlayers < 2 && "Score: " + ranking[0].score}
                 </ul>
               </div>
               <div className="mt-3 text-[#94969C] font-medium text-base">
-                {playerCount > 1 &&
+                {totalPlayers > 1 &&
                   (player == ranking[0].name
                     ? "Congratulations! Your strategy and skill have prevailed. Well played!"
                     : "Good effort! Learn from this match and come back stronger. Better luck next time!")}
-                {playerCount < 2 &&
+                {totalPlayers < 2 &&
                   (isWinner
                     ? "You're officially a 2048 master!"
                     : "Better luck next time!")}
@@ -107,8 +117,8 @@ export const ResultModal = ({
               >
                 <img alt="" src="/svg/repeat.svg" />
                 <div>
-                  {playerCount < 2 && "Play again"}
-                  {playerCount > 1 && "Rematch"}
+                  {totalPlayers < 2 && "Play again"}
+                  {totalPlayers > 1 && "Rematch"}
                 </div>
               </button>
             </div>
@@ -159,10 +169,10 @@ export const ResultModal = ({
               </div>
               <div className="text-xl my-4">
                 <p className="text-center text-2xl mb-2 font-bold">
-                  {playerCount > 1 && "Ranking"}
+                  {totalPlayers > 1 && "Ranking"}
                 </p>
                 <ul className="counter-list">
-                  {playerCount > 1 &&
+                  {totalPlayers > 1 &&
                     ranking.map((player) => (
                       <li
                         key={player.name}
@@ -172,7 +182,7 @@ export const ResultModal = ({
                         <p>{player.score}</p>
                       </li>
                     ))}
-                  {playerCount < 2 && "Score: " + ranking[0].score}
+                  {totalPlayers < 2 && "Score: " + ranking[0].score}
                 </ul>
               </div>
             </div>

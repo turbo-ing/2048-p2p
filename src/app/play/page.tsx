@@ -23,6 +23,7 @@ export default function Game2048Page() {
   const [ranking, setRanking] = useState<Player[]>([]);
   const [lenQueue, setLenQueue] = useState<number>(0);
   const [triggered, setTriggered] = useState<boolean>(false);
+  const [allSurrendered, setAllSurrendered] = useState<boolean>(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
@@ -89,14 +90,28 @@ export default function Game2048Page() {
 
   useDisableScroll(isMobile);
 
-  //State updater
+  //State updater for move cache display
   useEffect(() => {
+    // only trigger once
     if (!triggered) {
       setInterval(() => {
         console.log("updating lenqueue");
         let len = zkClient.moveCache.length;
-        if (len !== -1) {
-          setLenQueue(len);
+        setLenQueue(len);
+
+        let surr = state.surrendered;
+        console.log("surr:");
+        console.log(surr);
+        let allSurr = 0;
+        //check if everyone else has surrendered
+        for (var key in surr) {
+          //count surrenders
+          if (state.players[key] !== peerId && surr[key]) {
+            allSurr++;
+          }
+        }
+        if (allSurr === state.playersCount - 1 && state.totalPlayers > 1) {
+          setAllSurrendered(true);
         }
       }, 1000);
       setTriggered(true);
@@ -161,6 +176,9 @@ export default function Game2048Page() {
                           rankingData={ranking}
                           score={state.score[peerId!]}
                           isFinished={state.isFinished}
+                          surrendered={state.surrendered}
+                          allSurrendered={allSurrendered}
+                          totalPlayers={state.totalPlayers}
                           width={80}
                           lenQueue={zkClient.moveCache.length}
                         />
@@ -190,6 +208,9 @@ export default function Game2048Page() {
                                     rankingData={ranking}
                                     score={state.score[player]}
                                     isFinished={state.isFinished}
+                                    surrendered={state.surrendered}
+                                    allSurrendered={allSurrendered}
+                                    totalPlayers={state.totalPlayers}
                                     width={40}
                                   />
                                 </div>

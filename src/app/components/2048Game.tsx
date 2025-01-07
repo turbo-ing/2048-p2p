@@ -30,6 +30,9 @@ interface Game2048Props {
   width: number;
   height: number;
   isFinished: { [playerId: string]: boolean };
+  surrendered: { [playerId: string]: boolean };
+  allSurrendered: boolean;
+  totalPlayers: number;
 }
 
 const Game2048: React.FC<Game2048Props> = ({
@@ -44,6 +47,9 @@ const Game2048: React.FC<Game2048Props> = ({
   dispatchDirection,
   leave,
   isFinished,
+  surrendered,
+  allSurrendered,
+  totalPlayers,
 }) => {
   const { grid, merges } = board;
 
@@ -199,15 +205,20 @@ const Game2048: React.FC<Game2048Props> = ({
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4">
       {/* Result Modal */}
-      {(gameOver || gameWon) && allFinished && (
+      {(((gameOver || gameWon) && allFinished) || allSurrendered) && (
+        //(gameOver || gameWon) && allFinished && (
+        //if the games over and all finished, or if all opponents have surrendered
         <ResultModal
           downloadProof={downloadProof}
+          surrendered={surrendered}
+          allSurrendered={allSurrendered}
           leave={leave}
           player={trueid}
           isWinner={gameWon}
           open={true}
           rankingData={rankingData}
           lenQueue={lenQueue}
+          totalPlayers={totalPlayers}
         />
       )}
 
@@ -222,16 +233,19 @@ const Game2048: React.FC<Game2048Props> = ({
         className="relative w-full aspect-square bg-boardBackground rounded-md"
       >
         {/* Waiting Modal */}
-        {(gameOver || gameWon) && !allFinished && player == trueid && (
-          <WaitingModal
-            player={player}
-            isWinner={gameWon}
-            open={!hasValidMoves(grid)}
-            rankingData={rankingData}
-          />
-        )}
+        {(gameOver || gameWon) &&
+          !allFinished &&
+          !allSurrendered &&
+          player == trueid && (
+            <WaitingModal
+              player={player}
+              isWinner={gameWon}
+              open={!hasValidMoves(grid)}
+              rankingData={rankingData}
+            />
+          )}
         {((!(gameOver || gameWon) && !allFinished) ||
-          (gameOver && !allFinished && player != trueid)) && (
+          (gameOver && !allFinished && player !== trueid)) && (
           <div className="relative w-full aspect-square bg-boardBackground rounded-md">
             {/* Grid background blocks */}
             <div
@@ -281,12 +295,14 @@ const Game2048: React.FC<Game2048Props> = ({
         </div>
       )}
       {/* surrender button */}
-      <button
-        className="rounded-full mt-5 py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-1/3"
-        onClick={() => leave()}
-      >
-        Surrender
-      </button>
+      {player === trueid && (
+        <button
+          className="rounded-full mt-5 py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-1/3"
+          onClick={() => leave()}
+        >
+          Surrender
+        </button>
+      )}
     </div>
   );
 };

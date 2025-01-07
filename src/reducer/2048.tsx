@@ -48,6 +48,7 @@ export type Game2048State = {
   playerId: string[];
   players: { [playerId: string]: string };
   isFinished: { [playerId: string]: boolean };
+  surrendered: { [playerId: string]: boolean };
   playersCount: number;
   totalPlayers: number;
   compiledProof: string;
@@ -558,6 +559,7 @@ const game2048Reducer = (
       newState.actionPeerId = action.peerId;
 
       newState.isFinished[action.peerId!] = false;
+      newState.surrendered[newState.players[action.peerId!]] = false;
 
       queueMove(action.peerId!, payloadBoard, "init");
 
@@ -571,12 +573,17 @@ const game2048Reducer = (
       leaveState.playersCount -= 1;
       //leaveState.totalPlayers -= 1;
       delete leaveState.board[action.peerId!];
-      delete leaveState.score[action.peerId!];
-      delete leaveState.players[action.peerId!];
-      delete leaveState.isFinished[action.peerId!];
-      delete leaveState.playerId[leaveState.playerId.indexOf(action.peerId!)];
+      leaveState.score[action.peerId!] = 0;
+      //delete leaveState.players[action.peerId!];
+      //delete leaveState.playerId[leaveState.playerId.indexOf(action.peerId!)];
+
+      //Player left before finishing. They surrendered.
+      if (!leaveState.isFinished[action.peerId!]) {
+        leaveState.surrendered[action.peerId!] = true;
+        leaveState.isFinished[action.peerId!] = true;
+      }
       console.log(leaveState);
-      return leaveState;
+      return { ...leaveState };
 
     case "SEND_PROOF":
       let receivedProof = JSON.stringify(action.payload);
@@ -619,6 +626,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     totalPlayers: 0,
     compiledProof: "",
     isFinished: {},
+    surrendered: {},
   };
   const [room, setRoom] = useState("");
 
