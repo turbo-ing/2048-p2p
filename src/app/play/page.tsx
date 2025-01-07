@@ -24,6 +24,7 @@ export default function Game2048Page() {
   const [lenQueue, setLenQueue] = useState<number>(0);
   const [triggered, setTriggered] = useState<boolean>(false);
   const [allSurrendered, setAllSurrendered] = useState<boolean>(false);
+  const [rem, setRem] = useState<number>(0);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
@@ -82,9 +83,10 @@ export default function Game2048Page() {
     //router.replace("/");
   };
 
-  const updateLenQueue = () => {
+  const rematch = () => {
+    console.log("Voting for rematch");
     dispatch({
-      type: "UPDATE",
+      type: "REMATCH",
     });
   };
 
@@ -116,6 +118,18 @@ export default function Game2048Page() {
       }, 1000);
       setTriggered(true);
     }
+  });
+
+  //handle rem for rematch
+  useEffect(() => {
+    let counter = 0;
+    let allTrue = true;
+    for (let i in state.rematch) {
+      if (!state.rematch[i]) allTrue = false;
+      else counter++;
+    }
+    if (allTrue) router.push("/");
+    else setRem(counter);
   });
 
   useEffect(() => {
@@ -164,6 +178,8 @@ export default function Game2048Page() {
                         <p>zk: {zkClient.moveCache.length}</p>
                         <p>lq: {lenQueue}</p>
                         <Game2048
+                          rematch={rematch}
+                          rem={rem}
                           downloadProof={downloadProof}
                           key={peerId}
                           className="text-base"
@@ -195,6 +211,8 @@ export default function Game2048Page() {
                                   className="w-1/2 px-2.5 text-xl"
                                 >
                                   <Game2048
+                                    rematch={rematch}
+                                    rem={rem}
                                     downloadProof={downloadProof}
                                     lenQueue={zkClient.moveCache.length}
                                     key={player}

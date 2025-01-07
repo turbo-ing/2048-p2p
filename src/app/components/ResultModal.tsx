@@ -12,6 +12,8 @@ export interface Player {
 }
 
 interface ResultModalProps {
+  rematch: () => void;
+  rem: number;
   surrendered: { [playerId: string]: boolean };
   allSurrendered: boolean;
   downloadProof: () => void;
@@ -26,6 +28,8 @@ interface ResultModalProps {
 }
 
 export const ResultModal = ({
+  rematch,
+  rem,
   surrendered,
   allSurrendered,
   downloadProof,
@@ -112,13 +116,14 @@ export const ResultModal = ({
               <button
                 className="rounded-full py-2.5 px-4 bg-[#F23939] text-white text-base font-semibold gap-1.5 flex items-center justify-center w-2/3"
                 onClick={() => {
-                  router.push("/");
+                  rematch(); //router.push("/");
                 }}
               >
                 <img alt="" src="/svg/repeat.svg" />
                 <div>
                   {totalPlayers < 2 && "Play again"}
-                  {totalPlayers > 1 && "Rematch"}
+                  {totalPlayers > 1 &&
+                    "Rematch (" + rem + "/" + totalPlayers + ")"}
                 </div>
               </button>
             </div>

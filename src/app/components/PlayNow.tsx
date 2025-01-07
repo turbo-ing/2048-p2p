@@ -208,8 +208,8 @@ export const PlayNow = ({
                 Invite a Friend
               </p>
               <p className="mt-1 text-sm text-[#94969C]">
-                Your can invite 3 friends to a private battle or join an
-                existing game room.
+                You can invite 3 friends to a private battle or join an existing
+                game room.
               </p>
             </div>
             <div className="mt-8 space-y-4">

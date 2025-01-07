@@ -54,6 +54,7 @@ export type Game2048State = {
   compiledProof: string;
   actionPeerId?: string;
   actionDirection?: MoveType;
+  rematch: { [playerId: string]: boolean };
 };
 
 // Constants for grid size and initial tiles
@@ -87,7 +88,7 @@ interface SendProofAction extends EdgeAction<Game2048State> {
 }
 
 interface UpdateAction extends EdgeAction<Game2048State> {
-  type: "UPDATE";
+  type: "REMATCH";
 }
 
 // Action Types
@@ -560,6 +561,7 @@ const game2048Reducer = (
 
       newState.isFinished[action.peerId!] = false;
       newState.surrendered[newState.players[action.peerId!]] = false;
+      newState.rematch[action.peerId!] = false;
 
       queueMove(action.peerId!, payloadBoard, "init");
 
@@ -592,8 +594,16 @@ const game2048Reducer = (
       proofState.compiledProof = receivedProof;
       return proofState;
 
-    case "UPDATE":
-      return state;
+    case "REMATCH":
+      let rematchState = state;
+
+      if (rematchState.rematch[action.peerId!]) {
+        rematchState.rematch[action.peerId!] = false;
+      } else {
+        rematchState.rematch[action.peerId!] = true;
+      }
+
+      return { ...rematchState };
 
     default:
       return state;
@@ -627,6 +637,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     compiledProof: "",
     isFinished: {},
     surrendered: {},
+    rematch: {},
   };
   const [room, setRoom] = useState("");
 
