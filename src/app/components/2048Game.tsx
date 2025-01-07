@@ -306,7 +306,7 @@ const Game2048: React.FC<Game2048Props> = ({
           className="rounded-full mt-5 py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-1/3"
           onClick={() => leave()}
         >
-          Surrender
+          {totalPlayers > 1 && "Surrender"} {totalPlayers < 2 && "Leave"}
         </button>
       )}
     </div>
