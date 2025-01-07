@@ -180,6 +180,7 @@ export default function Game2048Page() {
                         <Game2048
                           rematch={rematch}
                           rem={rem}
+                          remProcessing={zkClient.isProcessing}
                           downloadProof={downloadProof}
                           key={peerId}
                           className="text-base"
@@ -213,6 +214,7 @@ export default function Game2048Page() {
                                   <Game2048
                                     rematch={rematch}
                                     rem={rem}
+                                    remProcessing={zkClient.isProcessing}
                                     downloadProof={downloadProof}
                                     lenQueue={zkClient.moveCache.length}
                                     key={player}

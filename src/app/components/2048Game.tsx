@@ -19,6 +19,7 @@ const DEFAULT_GAP = 10;
 interface Game2048Props {
   rematch: () => void;
   rem: number;
+  remProcessing: boolean;
   downloadProof: () => void;
   lenQueue: number;
   board: Board;
@@ -40,6 +41,7 @@ interface Game2048Props {
 const Game2048: React.FC<Game2048Props> = ({
   rematch,
   rem,
+  remProcessing,
   downloadProof,
   lenQueue,
   board,
@@ -213,6 +215,7 @@ const Game2048: React.FC<Game2048Props> = ({
         //(gameOver || gameWon) && allFinished && (
         //if the games over and all finished, or if all opponents have surrendered
         <ResultModal
+          remProcessing={remProcessing}
           rematch={rematch}
           rem={rem}
           downloadProof={downloadProof}

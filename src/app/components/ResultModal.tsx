@@ -14,6 +14,7 @@ export interface Player {
 interface ResultModalProps {
   rematch: () => void;
   rem: number;
+  remProcessing: boolean;
   surrendered: { [playerId: string]: boolean };
   allSurrendered: boolean;
   downloadProof: () => void;
@@ -30,6 +31,7 @@ interface ResultModalProps {
 export const ResultModal = ({
   rematch,
   rem,
+  remProcessing,
   surrendered,
   allSurrendered,
   downloadProof,
@@ -48,9 +50,9 @@ export const ResultModal = ({
   const [wantsRematch, setWantsRematch] = useState<boolean>(false);
 
   useEffect(() => {
-    if (wantsRematch && lenQueue === 0) {
-      rematch();
+    if (wantsRematch && lenQueue === 0 && !remProcessing) {
       setWantsRematch(false);
+      rematch();
     }
   });
 
@@ -140,7 +142,7 @@ export const ResultModal = ({
             </div>
           </div>
         )}
-        {ZKModal && lenQueue === 0 && (
+        {ZKModal && lenQueue === 0 && !remProcessing && (
           <div>
             <div className="relative flex justify-center items-center">
               <img alt="" src={"/svg/circle-plus.svg"} />
@@ -166,7 +168,7 @@ export const ResultModal = ({
             </div>
           </div>
         )}
-        {ZKModal && lenQueue !== 0 && (
+        {ZKModal && (lenQueue !== 0 || remProcessing) && (
           <div>
             <div className="relative flex justify-center items-center">
               <img alt="" src={"/svg/circle-plus.svg"} />
