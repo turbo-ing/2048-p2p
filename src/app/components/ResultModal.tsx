@@ -44,12 +44,20 @@ export const ResultModal = ({
 }: ResultModalProps) => {
   const router = useRouter();
   const [ranking, _setRanking] = useState<Player[]>(rankingData);
-  const [download, setDownload] = useState<boolean>(false);
+  const [ZKModal, setZKModal] = useState<boolean>(false);
+  const [wantsRematch, setWantsRematch] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (wantsRematch && lenQueue === 0) {
+      rematch();
+      setWantsRematch(false);
+    }
+  });
 
   return (
     <div>
       <Modal show={open}>
-        {!download && (
+        {!ZKModal && (
           <div>
             <div className="relative flex justify-center items-center">
               <img
@@ -109,14 +117,17 @@ export const ResultModal = ({
               </button>
               <button
                 className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-full"
-                onClick={() => setDownload(true)} //downloadProof()
+                onClick={() => setZKModal(true)} //downloadProof()
               >
                 <div>Download ZK Proof</div>
               </button>
               <button
                 className="rounded-full py-2.5 px-4 bg-[#F23939] text-white text-base font-semibold gap-1.5 flex items-center justify-center w-2/3"
                 onClick={() => {
-                  rematch(); //router.push("/");
+                  if (lenQueue !== 0) {
+                    setZKModal(true);
+                    setWantsRematch(true);
+                  } else rematch(); //router.push("/");
                 }}
               >
                 <img alt="" src="/svg/repeat.svg" />
@@ -129,7 +140,7 @@ export const ResultModal = ({
             </div>
           </div>
         )}
-        {download && lenQueue === 0 && (
+        {ZKModal && lenQueue === 0 && (
           <div>
             <div className="relative flex justify-center items-center">
               <img alt="" src={"/svg/circle-plus.svg"} />
@@ -147,7 +158,7 @@ export const ResultModal = ({
                 </button>
                 <button
                   className="rounded-full m-5 py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-2/5"
-                  onClick={() => setDownload(false)} //downloadProof()
+                  onClick={() => setZKModal(false)} //downloadProof()
                 >
                   <div>Back to Results</div>
                 </button>
@@ -155,7 +166,7 @@ export const ResultModal = ({
             </div>
           </div>
         )}
-        {download && lenQueue !== 0 && (
+        {ZKModal && lenQueue !== 0 && (
           <div>
             <div className="relative flex justify-center items-center">
               <img alt="" src={"/svg/circle-plus.svg"} />
@@ -167,7 +178,7 @@ export const ResultModal = ({
               <div className="relative flex justify-center items-center">
                 <button
                   className="rounded-full mt-4 py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center"
-                  onClick={() => setDownload(false)} //downloadProof()
+                  onClick={() => setZKModal(false)} //downloadProof()
                 >
                   <div>Back to Results</div>
                 </button>
