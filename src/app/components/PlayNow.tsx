@@ -98,6 +98,16 @@ export const PlayNow = ({
     if (state.totalPlayers > 0) {
       if (state.totalPlayers === state.playersCount) {
         setIsShowModal(false);
+
+        if (gameTimesInput > 0) {
+          dispatch({
+            type: "TIMER",
+            payload: {
+              time: gameTimesInput,
+              ended: false,
+            },
+          });
+        }
         router.push("/play");
       }
     }

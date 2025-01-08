@@ -33,10 +33,13 @@ interface Game2048Props {
   width: number;
   height: number;
   isFinished: { [playerId: string]: boolean };
+  allFinished: boolean;
+  setAllFinished: (bool: boolean) => void;
   surrendered: { [playerId: string]: boolean };
   frontSurrendered: { [name: string]: boolean };
   allSurrendered: boolean;
   totalPlayers: number;
+  clock: number;
 }
 
 const Game2048: React.FC<Game2048Props> = ({
@@ -54,10 +57,13 @@ const Game2048: React.FC<Game2048Props> = ({
   dispatchDirection,
   leave,
   isFinished,
+  allFinished,
+  setAllFinished,
   surrendered,
   allSurrendered,
   frontSurrendered,
   totalPlayers,
+  clock,
 }) => {
   const { grid, merges } = board;
 
@@ -66,28 +72,12 @@ const Game2048: React.FC<Game2048Props> = ({
 
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
-  const [allFinished, setAllFinished] = useState(false);
 
   const boardRef = useRef<HTMLDivElement>(null);
   const [cellSize, setCellSize] = useState<number>(0);
   const [gap, setGap] = useState(DEFAULT_GAP);
 
   const [mergeTiles, setMergeTiles] = useState<MergeEvent[]>([]);
-
-  useEffect(() => {
-    /**
-     * Check if other players have finished their games.
-     */
-    let allFin = true;
-    for (let f in isFinished) {
-      if (isFinished[f] == false) {
-        allFin = false;
-      }
-    }
-    if (allFin && !allFinished) {
-      setAllFinished(true);
-    }
-  });
 
   /**
    * Observe board resize and recalculate `cellSize`.
@@ -213,7 +203,9 @@ const Game2048: React.FC<Game2048Props> = ({
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4">
       {/* Result Modal */}
-      {(((gameOver || gameWon) && allFinished) || allSurrendered) && (
+      {(((gameOver || gameWon) && allFinished) ||
+        allSurrendered ||
+        allFinished) && (
         //(gameOver || gameWon) && allFinished && (
         //if the games over and all finished, or if all opponents have surrendered
 
@@ -237,7 +229,8 @@ const Game2048: React.FC<Game2048Props> = ({
 
       {/* Scoreboard */}
       <div className="flex justify-center mb-6 w-full">
-        <ScoreBoard title="Score" total={score} />
+        <ScoreBoard title="Score:" total={score} />
+        <ScoreBoard title="Time left:" total={clock} />
       </div>
 
       {/* Board */}

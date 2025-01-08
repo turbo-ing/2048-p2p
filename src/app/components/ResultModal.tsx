@@ -55,7 +55,7 @@ export const ResultModal = ({
     if (wantsRematch && lenQueue === 0 && !remProcessing) {
       setWantsRematch(false);
       rematch();
-    } else console.log("frontSurendered" + frontSurrendered[player]);
+    }
   });
 
   return (

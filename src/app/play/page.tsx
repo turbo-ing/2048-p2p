@@ -28,6 +28,9 @@ export default function Game2048Page() {
     [name: string]: boolean;
   }>({});
   const [rem, setRem] = useState<number>(0);
+  const [counter, setCounter] = useState<number>(0);
+  var timeCounter: number = 0;
+  const [allFinished, setAllFinished] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
@@ -95,10 +98,48 @@ export default function Game2048Page() {
 
   useDisableScroll(isMobile);
 
+  useEffect(() => {
+    /**
+     * Check if other players have finished their games.
+     */
+    let allFin = true;
+    for (let f in state.isFinished) {
+      if (state.isFinished[f] == false) {
+        allFin = false;
+      }
+    }
+    if (allFin && !allFinished) {
+      setAllFinished(true);
+    }
+  });
+
   //State updater for move cache display
   useEffect(() => {
     // only trigger once
     if (!triggered) {
+      //initialise timer
+      //timeCounter = 0;
+      //set the timer
+      if (state.timer > 0) {
+        setInterval(() => {
+          if (timeCounter !== state.timer) {
+            setCounter((counter) => counter + 1);
+            timeCounter += 1;
+            //console.log(state.timer - timeCounter);
+          }
+          if (timeCounter === state.timer && !allFinished) {
+            //when timer ends we broadcast it but if everyones not done
+            dispatch({
+              type: "TIMER",
+              payload: {
+                time: state.timer,
+                ended: true,
+              },
+            });
+          }
+        }, 1000);
+      }
+
       //also just initialise surrenderedfront too, why not
       setInterval(() => {
         //console.log("updating frontsurrendered");
@@ -148,8 +189,12 @@ export default function Game2048Page() {
       if (!state.rematch[i]) allTrue = false;
       else counter++;
     }
-    if (allTrue) router.push("/");
-    else setRem(counter);
+    if (allTrue) {
+      setCounter(0);
+      setAllFinished(false);
+      timeCounter = 0;
+      router.push("/");
+    } else setRem(counter);
   });
 
   useEffect(() => {
@@ -213,12 +258,15 @@ export default function Game2048Page() {
                           rankingData={ranking}
                           score={state.score[peerId!]}
                           isFinished={state.isFinished}
+                          allFinished={allFinished}
+                          setAllFinished={setAllFinished}
                           surrendered={state.surrendered}
                           allSurrendered={allSurrendered}
                           frontSurrendered={frontSurrendered}
                           totalPlayers={state.totalPlayers}
                           width={80}
                           lenQueue={zkClient.moveCache.length}
+                          clock={state.timer - counter}
                         />
                       </div>
                     </div>
@@ -249,11 +297,14 @@ export default function Game2048Page() {
                                     rankingData={ranking}
                                     score={state.score[player]}
                                     isFinished={state.isFinished}
+                                    allFinished={allFinished}
+                                    setAllFinished={setAllFinished}
                                     surrendered={state.surrendered}
                                     allSurrendered={allSurrendered}
                                     frontSurrendered={frontSurrendered}
                                     totalPlayers={state.totalPlayers}
                                     width={40}
+                                    clock={state.timer - counter}
                                   />
                                 </div>
                               ),
