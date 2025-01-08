@@ -30,6 +30,7 @@ export const PlayNow = ({
   const [numOfPlayers, setNumOfPlayers] = useState(0);
   const [roomIdInput, setRoomIdInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sentTimer, setSentTimer] = useState(false);
 
   const router = useRouter();
 
@@ -99,7 +100,8 @@ export const PlayNow = ({
       if (state.totalPlayers === state.playersCount) {
         setIsShowModal(false);
 
-        if (gameTimesInput > 0) {
+        if (gameTimesInput > 0 && !sentTimer) {
+          setSentTimer(true);
           dispatch({
             type: "TIMER",
             payload: {
@@ -107,8 +109,8 @@ export const PlayNow = ({
               ended: false,
             },
           });
-        }
-        router.push("/play");
+          router.push("/play");
+        } else router.push("/play");
       }
     }
   }, [state]);

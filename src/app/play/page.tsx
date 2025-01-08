@@ -31,6 +31,8 @@ export default function Game2048Page() {
   const [counter, setCounter] = useState<number>(0);
   var timeCounter: number = 0;
   const [allFinished, setAllFinished] = useState(false);
+  const [reset, setReset] = useState<boolean>(false);
+  const [timerTriggered, setTimerTriggered] = useState<boolean>(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ name: themeName, value: themeValue }] = useTheme("dark");
@@ -113,6 +115,28 @@ export default function Game2048Page() {
     }
   });
 
+  useEffect(() => {
+    /*console.log("outside condition scope");
+    console.log("Counter " + counter);
+    console.log("Time counter " + timeCounter);
+    console.log("State timer " + state.timer);
+    console.log("isFinished for me " + state.isFinished[peerId!]);
+    console.log("allfinished " + allFinished);
+    console.log("timertriggered " + timerTriggered);*/
+    if (counter === state.timer && !allFinished && !timerTriggered) {
+      //when timer ends we broadcast it but if everyones not done
+      console.log("Timer triggered");
+      dispatch({
+        type: "TIMER",
+        payload: {
+          time: state.timer,
+          ended: true,
+        },
+      });
+      setTimerTriggered(true);
+    }
+  });
+
   //State updater for move cache display
   useEffect(() => {
     // only trigger once
@@ -126,16 +150,6 @@ export default function Game2048Page() {
             setCounter((counter) => counter + 1);
             timeCounter += 1;
             //console.log(state.timer - timeCounter);
-          }
-          if (timeCounter === state.timer && !allFinished) {
-            //when timer ends we broadcast it but if everyones not done
-            dispatch({
-              type: "TIMER",
-              payload: {
-                time: state.timer,
-                ended: true,
-              },
-            });
           }
         }, 1000);
       }
@@ -193,6 +207,13 @@ export default function Game2048Page() {
       setCounter(0);
       setAllFinished(false);
       timeCounter = 0;
+      //only call it once
+      if (!reset) {
+        dispatch({
+          type: "RESET",
+        });
+        setReset(true);
+      }
       router.push("/");
     } else setRem(counter);
   });

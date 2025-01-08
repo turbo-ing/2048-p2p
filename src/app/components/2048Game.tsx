@@ -205,7 +205,8 @@ const Game2048: React.FC<Game2048Props> = ({
       {/* Result Modal */}
       {(((gameOver || gameWon) && allFinished) ||
         allSurrendered ||
-        allFinished) && (
+        (clock === 0 && allFinished)) && (
+        //|| allFinished
         //(gameOver || gameWon) && allFinished && (
         //if the games over and all finished, or if all opponents have surrendered
 
@@ -251,7 +252,8 @@ const Game2048: React.FC<Game2048Props> = ({
             />
           )}
         {((!(gameOver || gameWon) && !allFinished) ||
-          (gameOver && !allFinished && player !== trueid)) && (
+          (gameOver && !allFinished && player !== trueid) ||
+          clock !== 0) && (
           <div className="relative w-full aspect-square bg-boardBackground rounded-md">
             {/* Grid background blocks */}
             <div

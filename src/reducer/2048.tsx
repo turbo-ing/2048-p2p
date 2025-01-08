@@ -100,6 +100,10 @@ interface TimerAction extends EdgeAction<Game2048State> {
   };
 }
 
+interface ResetAction extends EdgeAction<Game2048State> {
+  type: "RESET";
+}
+
 // Action Types
 export type Action =
   | MoveAction
@@ -107,7 +111,8 @@ export type Action =
   | LeaveAction
   | SendProofAction
   | RematchAction
-  | TimerAction;
+  | TimerAction
+  | ResetAction;
 
 const error = (message: string) => {
   console.error(message);
@@ -631,11 +636,20 @@ const game2048Reducer = (
         for (var p in timerState.playerId) {
           timerState.isFinished[timerState.playerId[p]] = true;
         }
+        console.log("set state to true");
         //no, clock starting!
       } else {
         timerState.timer = action.payload.time;
       }
       return { ...timerState };
+
+    case "RESET":
+      let resetState = state;
+      for (var p in resetState.playerId) {
+        resetState.isFinished[resetState.playerId[p]] = false;
+      }
+      console.log("reset states!");
+      return { ...resetState };
 
     default:
       return state;
