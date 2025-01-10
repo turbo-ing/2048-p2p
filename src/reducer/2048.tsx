@@ -48,10 +48,14 @@ export type Game2048State = {
   playerId: string[];
   players: { [playerId: string]: string };
   isFinished: { [playerId: string]: boolean };
+  surrendered: { [playerId: string]: boolean };
   playersCount: number;
   totalPlayers: number;
+  compiledProof: string;
   actionPeerId?: string;
   actionDirection?: MoveType;
+  rematch: { [playerId: string]: boolean };
+  timer: number;
 };
 
 // Constants for grid size and initial tiles
@@ -84,8 +88,31 @@ interface SendProofAction extends EdgeAction<Game2048State> {
   };
 }
 
+interface RematchAction extends EdgeAction<Game2048State> {
+  type: "REMATCH";
+}
+
+interface TimerAction extends EdgeAction<Game2048State> {
+  type: "TIMER";
+  payload: {
+    time: number;
+    ended: boolean;
+  };
+}
+
+interface ResetAction extends EdgeAction<Game2048State> {
+  type: "RESET";
+}
+
 // Action Types
-export type Action = MoveAction | JoinAction | LeaveAction | SendProofAction;
+export type Action =
+  | MoveAction
+  | JoinAction
+  | LeaveAction
+  | SendProofAction
+  | RematchAction
+  | TimerAction
+  | ResetAction;
 
 const error = (message: string) => {
   console.error(message);
@@ -409,111 +436,116 @@ const game2048Reducer = (
 
   switch (action.type) {
     case "MOVE":
-      console.log("Payload on MOVE", action);
-      console.log("State on MOVE", state);
-      const newBoards = { ...state.board };
-      const newScores = { ...state.score };
-      const newZkBoards = { ...state.zkBoard };
-      const newFin = { ...state.isFinished };
+      if (!state.isFinished[action.peerId]) {
+        console.log("Payload on MOVE", action);
+        console.log("State on MOVE", state);
+        const newBoards = { ...state.board };
+        const newScores = { ...state.score };
+        const newZkBoards = { ...state.zkBoard };
+        const newFin = { ...state.isFinished };
 
-      for (let boardKey in state.board) {
-        if (boardKey !== action.peerId) {
-          continue;
-        }
-
-        const dir = Field.from(DirectionMap[action.payload] ?? 0);
-        const oldZkBoard = new GameBoard(
-          state.zkBoard[boardKey].board.cells.map(Field),
-        );
-        // Ensure GameBoard type
-        let currentZkBoard = oldZkBoard;
-        let currentZkSeed = Field.from(state.zkBoard[boardKey].seed);
-        console.log("currentZkSeed old", currentZkSeed);
-        const newZkBoard = applyOneMoveCircuit(currentZkBoard, dir);
-        const equalBool = newZkBoard.hash().equals(currentZkBoard.hash()).not();
-
-        if (!equalBool.toBoolean()) {
-          console.log("------No change state with this move");
-
-          return state;
-        }
-
-        currentZkBoard = newZkBoard;
-        [currentZkBoard, currentZkSeed] = addRandomTile(
-          currentZkBoard,
-          currentZkSeed,
-          equalBool,
-        );
-        console.log("Old ZK Board");
-        printBoard(oldZkBoard);
-        console.log("New ZK Board");
-        printBoard(newZkBoard);
-        console.log("Current ZK Board");
-        printBoard(currentZkBoard);
-        console.log("Current ZK Seed 2", currentZkSeed);
-        let idxNew = -1;
-
-        for (let i = 0; i < newZkBoard.cells.length; i++) {
-          if (
-            currentZkBoard.cells[i]
-              .equals(newZkBoard.cells[i])
-              .not()
-              .toBoolean()
-          ) {
-            idxNew = i;
-            break;
+        for (let boardKey in state.board) {
+          if (boardKey !== action.peerId) {
+            continue;
           }
+
+          const dir = Field.from(DirectionMap[action.payload] ?? 0);
+          const oldZkBoard = new GameBoard(
+            state.zkBoard[boardKey].board.cells.map(Field),
+          );
+          // Ensure GameBoard type
+          let currentZkBoard = oldZkBoard;
+          let currentZkSeed = Field.from(state.zkBoard[boardKey].seed);
+          console.log("currentZkSeed old", currentZkSeed);
+          const newZkBoard = applyOneMoveCircuit(currentZkBoard, dir);
+          const equalBool = newZkBoard
+            .hash()
+            .equals(currentZkBoard.hash())
+            .not();
+
+          if (!equalBool.toBoolean()) {
+            console.log("------No change state with this move");
+
+            return state;
+          }
+
+          currentZkBoard = newZkBoard;
+          [currentZkBoard, currentZkSeed] = addRandomTile(
+            currentZkBoard,
+            currentZkSeed,
+            equalBool,
+          );
+          console.log("Old ZK Board");
+          printBoard(oldZkBoard);
+          console.log("New ZK Board");
+          printBoard(newZkBoard);
+          console.log("Current ZK Board");
+          printBoard(currentZkBoard);
+          console.log("Current ZK Seed 2", currentZkSeed);
+          let idxNew = -1;
+
+          for (let i = 0; i < newZkBoard.cells.length; i++) {
+            if (
+              currentZkBoard.cells[i]
+                .equals(newZkBoard.cells[i])
+                .not()
+                .toBoolean()
+            ) {
+              idxNew = i;
+              break;
+            }
+          }
+
+          const { newGrid, score, merges } = moveGrid(
+            state.board[boardKey].grid,
+            action.payload,
+          );
+
+          console.log("New Board");
+          console.log(newGrid);
+
+          if (idxNew != -1) {
+            const i = Math.floor(idxNew / GRID_SIZE);
+            const j = idxNew % GRID_SIZE;
+
+            newGrid[i][j] = {
+              value: 2,
+              isNew: true,
+              isMerging: false,
+              id: crypto.randomUUID(),
+              prevY: i,
+              prevX: j,
+              y: i,
+              x: j,
+            };
+          }
+
+          newBoards[boardKey].grid = newGrid;
+          newBoards[boardKey].merges = merges;
+          newZkBoards[boardKey] = new GameBoardWithSeed({
+            board: currentZkBoard,
+            seed: currentZkSeed,
+          });
+          newScores[boardKey] = state.score[boardKey] + score;
+
+          let gameState = getGameState(newBoards[boardKey].grid);
+          if (gameState != "RUNNING") {
+            newFin[boardKey] = true;
+          }
+
+          queueMove(action.peerId, newZkBoards[boardKey], action.payload);
         }
 
-        const { newGrid, score, merges } = moveGrid(
-          state.board[boardKey].grid,
-          action.payload,
-        );
-
-        console.log("New Board");
-        console.log(newGrid);
-
-        if (idxNew != -1) {
-          const i = Math.floor(idxNew / GRID_SIZE);
-          const j = idxNew % GRID_SIZE;
-
-          newGrid[i][j] = {
-            value: 2,
-            isNew: true,
-            isMerging: false,
-            id: crypto.randomUUID(),
-            prevY: i,
-            prevX: j,
-            y: i,
-            x: j,
-          };
-        }
-
-        newBoards[boardKey].grid = newGrid;
-        newBoards[boardKey].merges = merges;
-        newZkBoards[boardKey] = new GameBoardWithSeed({
-          board: currentZkBoard,
-          seed: currentZkSeed,
-        });
-        newScores[boardKey] = state.score[boardKey] + score;
-
-        let gameState = getGameState(newBoards[boardKey].grid);
-        if (gameState != "RUNNING") {
-          newFin[boardKey] = true;
-        }
-
-        queueMove(action.peerId, newZkBoards[boardKey], action.payload);
-      }
-
-      return {
-        ...state,
-        board: { ...newBoards },
-        zkBoard: { ...newZkBoards },
-        score: { ...newScores },
-        isFinished: { ...newFin },
-        actionPeerId: action.peerId,
-        actionDirection: action.payload,
-      };
+        return {
+          ...state,
+          board: { ...newBoards },
+          zkBoard: { ...newZkBoards },
+          score: { ...newScores },
+          isFinished: { ...newFin },
+          actionPeerId: action.peerId,
+          actionDirection: action.payload,
+        };
+      } else return { ...state };
     case "JOIN":
       console.log("Payload on JOIN", action.payload);
 
@@ -548,6 +580,8 @@ const game2048Reducer = (
       newState.actionPeerId = action.peerId;
 
       newState.isFinished[action.peerId!] = false;
+      newState.surrendered[action.peerId!] = false;
+      newState.rematch[action.peerId!] = false;
 
       queueMove(action.peerId!, payloadBoard, "init");
 
@@ -561,19 +595,61 @@ const game2048Reducer = (
       leaveState.playersCount -= 1;
       //leaveState.totalPlayers -= 1;
       delete leaveState.board[action.peerId!];
-      delete leaveState.score[action.peerId!];
-      delete leaveState.players[action.peerId!];
-      delete leaveState.isFinished[action.peerId!];
-      delete leaveState.playerId[leaveState.playerId.indexOf(action.peerId!)];
+      leaveState.score[action.peerId!] = 0;
+      //delete leaveState.players[action.peerId!];
+      //delete leaveState.playerId[leaveState.playerId.indexOf(action.peerId!)];
+
+      //Player left before finishing. They surrendered.
+      if (!leaveState.isFinished[action.peerId!]) {
+        leaveState.surrendered[action.peerId!] = true;
+        leaveState.isFinished[action.peerId!] = true;
+      }
+
+      //TODO: add code to check for all but 1 surrendered and set their allfinished to true if so.
+
       console.log(leaveState);
-      return leaveState;
+      return { ...leaveState };
 
     case "SEND_PROOF":
-      console.log(
-        `Payload received: ${JSON.stringify(action.payload)} from ${action.peerId}`,
-      );
+      let receivedProof = JSON.stringify(action.payload);
+      console.log(`Payload received: ${receivedProof} from ${action.peerId}`);
+      const proofState = state;
+      proofState.compiledProof = receivedProof;
+      return { ...proofState };
 
-      return state;
+    case "REMATCH":
+      let rematchState = state;
+
+      if (rematchState.rematch[action.peerId!]) {
+        rematchState.rematch[action.peerId!] = false;
+      } else {
+        rematchState.rematch[action.peerId!] = true;
+      }
+
+      return { ...rematchState };
+
+    case "TIMER":
+      let timerState = state;
+      //clock finished?
+      if (action.payload.ended) {
+        //if ended, we do this idempotent function
+        for (var p in timerState.playerId) {
+          timerState.isFinished[timerState.playerId[p]] = true;
+        }
+        console.log("set state to true");
+        //no, clock starting!
+      } else {
+        timerState.timer = action.payload.time;
+      }
+      return { ...timerState };
+
+    case "RESET":
+      let resetState = state;
+      for (var p in resetState.playerId) {
+        resetState.isFinished[resetState.playerId[p]] = false;
+      }
+      console.log("reset states!");
+      return { ...resetState };
 
     default:
       return state;
@@ -604,7 +680,11 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     playerId: [],
     playersCount: 0,
     totalPlayers: 0,
+    compiledProof: "",
     isFinished: {},
+    surrendered: {},
+    rematch: {},
+    timer: 0,
   };
   const [room, setRoom] = useState("");
 

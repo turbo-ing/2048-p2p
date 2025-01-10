@@ -30,6 +30,7 @@ export const PlayNow = ({
   const [numOfPlayers, setNumOfPlayers] = useState(0);
   const [roomIdInput, setRoomIdInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sentTimer, setSentTimer] = useState(false);
 
   const router = useRouter();
 
@@ -98,7 +99,18 @@ export const PlayNow = ({
     if (state.totalPlayers > 0) {
       if (state.totalPlayers === state.playersCount) {
         setIsShowModal(false);
-        router.push("/play");
+
+        if (gameTimesInput > 0 && !sentTimer) {
+          setSentTimer(true);
+          dispatch({
+            type: "TIMER",
+            payload: {
+              time: gameTimesInput,
+              ended: false,
+            },
+          });
+          router.push("/play");
+        } else router.push("/play");
       }
     }
   }, [state]);
@@ -208,8 +220,8 @@ export const PlayNow = ({
                 Invite a Friend
               </p>
               <p className="mt-1 text-sm text-[#94969C]">
-                Your can invite 3 friends to a private battle or join an
-                existing game room.
+                You can invite 3 friends to a private battle or join an existing
+                game room.
               </p>
             </div>
             <div className="mt-8 space-y-4">

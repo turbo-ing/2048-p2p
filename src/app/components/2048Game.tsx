@@ -17,6 +17,11 @@ const NUM_CELLS = 4;
 const DEFAULT_GAP = 10;
 
 interface Game2048Props {
+  rematch: () => void;
+  rem: number;
+  remProcessing: boolean;
+  downloadProof: () => void;
+  lenQueue: number;
   board: Board;
   score: number;
   player: string;
@@ -28,9 +33,21 @@ interface Game2048Props {
   width: number;
   height: number;
   isFinished: { [playerId: string]: boolean };
+  allFinished: boolean;
+  setAllFinished: (bool: boolean) => void;
+  surrendered: { [playerId: string]: boolean };
+  frontSurrendered: { [name: string]: boolean };
+  allSurrendered: boolean;
+  totalPlayers: number;
+  clock: number;
 }
 
 const Game2048: React.FC<Game2048Props> = ({
+  rematch,
+  rem,
+  remProcessing,
+  downloadProof,
+  lenQueue,
   board,
   score,
   player,
@@ -40,6 +57,13 @@ const Game2048: React.FC<Game2048Props> = ({
   dispatchDirection,
   leave,
   isFinished,
+  allFinished,
+  setAllFinished,
+  surrendered,
+  allSurrendered,
+  frontSurrendered,
+  totalPlayers,
+  clock,
 }) => {
   const { grid, merges } = board;
 
@@ -48,28 +72,12 @@ const Game2048: React.FC<Game2048Props> = ({
 
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
-  const [allFinished, setAllFinished] = useState(false);
 
   const boardRef = useRef<HTMLDivElement>(null);
   const [cellSize, setCellSize] = useState<number>(0);
   const [gap, setGap] = useState(DEFAULT_GAP);
 
   const [mergeTiles, setMergeTiles] = useState<MergeEvent[]>([]);
-
-  useEffect(() => {
-    /**
-     * Check if other players have finished their games.
-     */
-    let allFin = true;
-    for (let f in isFinished) {
-      if (isFinished[f] == false) {
-        allFin = false;
-      }
-    }
-    if (allFin && !allFinished) {
-      setAllFinished(true);
-    }
-  });
 
   /**
    * Observe board resize and recalculate `cellSize`.
@@ -195,19 +203,35 @@ const Game2048: React.FC<Game2048Props> = ({
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4">
       {/* Result Modal */}
-      {(gameOver || gameWon) && allFinished && (
+      {(((gameOver || gameWon) && allFinished) ||
+        allSurrendered ||
+        (clock === 0 && allFinished)) && (
+        //|| allFinished
+        //(gameOver || gameWon) && allFinished && (
+        //if the games over and all finished, or if all opponents have surrendered
+
         <ResultModal
+          remProcessing={remProcessing}
+          rematch={rematch}
+          rem={rem}
+          downloadProof={downloadProof}
+          surrendered={surrendered}
+          allSurrendered={allSurrendered}
+          frontSurrendered={frontSurrendered}
           leave={leave}
           player={trueid}
           isWinner={gameWon}
           open={true}
           rankingData={rankingData}
+          lenQueue={lenQueue}
+          totalPlayers={totalPlayers}
         />
       )}
 
       {/* Scoreboard */}
       <div className="flex justify-center mb-6 w-full">
-        <ScoreBoard title="Score" total={score} />
+        <ScoreBoard title="Score:" total={score} />
+        <ScoreBoard title="Time left:" total={clock} />
       </div>
 
       {/* Board */}
@@ -216,16 +240,20 @@ const Game2048: React.FC<Game2048Props> = ({
         className="relative w-full aspect-square bg-boardBackground rounded-md"
       >
         {/* Waiting Modal */}
-        {(gameOver || gameWon) && !allFinished && player == trueid && (
-          <WaitingModal
-            player={player}
-            isWinner={gameWon}
-            open={!hasValidMoves(grid)}
-            rankingData={rankingData}
-          />
-        )}
+        {(gameOver || gameWon) &&
+          !allFinished &&
+          !allSurrendered &&
+          player == trueid && (
+            <WaitingModal
+              player={player}
+              isWinner={gameWon}
+              open={!hasValidMoves(grid)}
+              rankingData={rankingData}
+            />
+          )}
         {((!(gameOver || gameWon) && !allFinished) ||
-          (gameOver && !allFinished && player != trueid)) && (
+          (gameOver && !allFinished && player !== trueid) ||
+          clock !== 0) && (
           <div className="relative w-full aspect-square bg-boardBackground rounded-md">
             {/* Grid background blocks */}
             <div
@@ -273,6 +301,15 @@ const Game2048: React.FC<Game2048Props> = ({
             Player: {player}
           </p>
         </div>
+      )}
+      {/* surrender button */}
+      {player === trueid && (
+        <button
+          className="rounded-full mt-5 py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-1/3"
+          onClick={() => leave()}
+        >
+          {totalPlayers > 1 && "Surrender"} {totalPlayers < 2 && "Leave"}
+        </button>
       )}
     </div>
   );
