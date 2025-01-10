@@ -123,7 +123,12 @@ export default function Game2048Page() {
     console.log("isFinished for me " + state.isFinished[peerId!]);
     console.log("allfinished " + allFinished);
     console.log("timertriggered " + timerTriggered);*/
-    if (counter === state.timer && !allFinished && !timerTriggered) {
+    if (
+      state.timer > 0 &&
+      counter === state.timer &&
+      !allFinished &&
+      !timerTriggered
+    ) {
       //when timer ends we broadcast it but if everyones not done
       console.log("Timer triggered");
       dispatch({
@@ -264,6 +269,7 @@ export default function Game2048Page() {
                         <p>zk: {zkClient.moveCache.length}</p>
                         <p>lq: {lenQueue}</p>
                         <Game2048
+                          timer={state.timer}
                           rematch={rematch}
                           rem={rem}
                           remProcessing={zkClient.isProcessing}
@@ -302,6 +308,7 @@ export default function Game2048Page() {
                                   className="w-1/2 px-2.5 text-xl"
                                 >
                                   <Game2048
+                                    timer={state.timer}
                                     rematch={rematch}
                                     rem={rem}
                                     remProcessing={zkClient.isProcessing}

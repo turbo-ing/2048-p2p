@@ -184,7 +184,12 @@ export const ResultModal = ({
               <div className="relative flex justify-center items-center">
                 <button
                   className="rounded-full mt-4 py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center"
-                  onClick={() => setZKModal(false)} //downloadProof()
+                  onClick={() => {
+                    if (wantsRematch === true) {
+                      setWantsRematch(false);
+                    }
+                    setZKModal(false);
+                  }} //downloadProof()
                 >
                   <div>Back to Results</div>
                 </button>
