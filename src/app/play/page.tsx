@@ -266,8 +266,8 @@ export default function Game2048Page() {
                   <div className="w-full flex lg:flex-row flex-col justify-center lg:-mx-5">
                     <div className="lg:w-1/2 mx-auto size-full ">
                       <div className="max-w-[365px] mx-auto text-3xl w-[365px] ">
-                        <p>zk: {zkClient.moveCache.length}</p>
-                        <p>lq: {lenQueue}</p>
+                        {/*<p>zk: {zkClient.moveCache.length}</p>*/}
+                        {/*<p>lq: {lenQueue}</p>*/}
                         <Game2048
                           timer={state.timer}
                           rematch={rematch}
