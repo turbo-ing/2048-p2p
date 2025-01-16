@@ -1,6 +1,7 @@
-import { Bool, Field, Poseidon, Provable, Struct, UInt64 } from "o1js";
+import { Bool, Field, Poseidon, Provable, Struct, UInt64, Proof } from "o1js";
 
 export const MAX_MOVES2 = 11;
+export const MAX_PARALLEL = 4;
 /* -------------------------------------------------------------------------- */
 /*                                  GameBoard                                  */
 
@@ -106,6 +107,24 @@ export class Direction extends Struct({
   value: Provable.Array(Field, MAX_MOVES2),
 }) {
   constructor(value: Field[]) {
+    super({ value });
+  }
+}
+
+//Board array type
+export class BoardArray extends Struct({
+  value: Provable.Array(GameBoardWithSeed, 2),
+}) {
+  constructor(value: GameBoardWithSeed[]) {
+    super({ value });
+  }
+}
+
+//Proof array type
+export class ProofArray extends Struct({
+  value: Provable.Array(Proof, MAX_PARALLEL),
+}) {
+  constructor(value: Proof<GameBoardWithSeed, void>[]) {
     super({ value });
   }
 }
