@@ -8,6 +8,8 @@ import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import ZkClient from "@/workers/zkClient";
 import { assignMyPeerId, zkClient } from "@/workers/zkQueue";
 import { useRouter } from "next/navigation";
+import SinglePlayer from "./icon/Singleplayer";
+import Versus from "./icon/Versus";
 
 export const useJoinRoom = () => {
   const [waitingToJoin, setWaitingToJoin] = useState(false);
@@ -136,13 +138,9 @@ export default function HomePage() {
             <div className="flex sm:flex-row flex-col w-full space-y-2 sm:space-y-0">
               <Button onClick={handleSingleplayer}>
                 <div className="text-left flex flex-row items-center hover:text-text">
-                  <img
-                    alt=""
-                    className="w-8 h-8 mr-2"
-                    src="/svg/2048-play.svg"
-                  />
+                  <SinglePlayer size={28} />
                   <div>
-                    <div className="text-[clamp(1rem, 2.5vw, 2rem)] ">
+                    <div className="ml-2 text-[clamp(1rem, 2.5vw, 2rem)] ">
                       Singleplayer
                     </div>
                   </div>
@@ -150,13 +148,7 @@ export default function HomePage() {
               </Button>
               <Button onClick={handleVersus}>
                 <div className="flex flex-row items-center hover:text-text">
-                  <span>
-                    <img
-                      alt=""
-                      className="w-8 h-8 mr-2"
-                      src="/svg/2048-invite.svg"
-                    />
-                  </span>
+                  <Versus size={28} />
                   <div className="text-left">
                     <div className="text-[clamp(1rem, 2.5vw, 2rem)]">
                       Versus
