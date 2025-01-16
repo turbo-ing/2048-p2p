@@ -5,17 +5,17 @@ interface HomeProps {
 export const Home = ({ activeIndex, goToSlide }: HomeProps) => {
   return (
     <div
-      className={`absolute inset-0 w-full h-full flex items-center justify-center text-white text-4xl transition-opacity duration-1000 ${
+      className={`absolute inset-0 w-full h-full flex items-center justify-center text-4xl transition-opacity duration-1000 bg-background ${
         activeIndex === 0 ? "opacity-100 z-20" : "opacity-0 z-10"
       }`}
     >
-      <img
+      {/* <img
         alt=""
         className="w-full h-full absolute left-0"
         src="/img/2048_home_bg.png"
-      />
-      <div className="z-50 max-w-5xl mx-auto">
-        <div className=" text-white text-5xl lg:text-6xl text-center font-semibold">
+      /> */}
+      <div className="z-50 max-w-5xl mx-auto text-text">
+        <div className="text-5xl lg:text-6xl text-center font-semibold">
           <p>
             The Ultimate Decentralized,
             <br />

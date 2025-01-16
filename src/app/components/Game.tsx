@@ -1,24 +1,19 @@
-"use client";
+// Accidental wrongly implemented 2048Game, should be implentation of 2048Game into responsive Container in play/page.tsx
 
 import React, { useEffect, useRef, useState } from "react";
-import { Board, Direction, Grid, GRID_SIZE, MergeEvent } from "@/reducer/2048";
+import ResponsiveContainer from "./ResponsiveContainer";
 import ScoreBoard from "@/app/components/2048ScoreBoard";
-import { Player, ResultModal } from "@/app/components/ResultModal";
-import { WaitingModal } from "@/app/components/WaitingModal";
-import useArrowKeyPress from "@/app/hooks/useArrowKeyPress";
-import useSwipe from "@/app/hooks/useSwipe";
-import { gridsAreEqual, getGameState, hasValidMoves } from "@/utils/helper";
-import { Tile } from "./Tile";
-import { MergePreview } from "./MergePreview";
+import { Board, Direction, Grid, GRID_SIZE, MergeEvent } from "@/reducer/2048";
+import { getGameState, gridsAreEqual, hasValidMoves } from "@/utils/helper";
+import { Player, ResultModal } from "./ResultModal";
+import { WaitingModal } from "./WaitingModal";
 import { BASE_ANIMATION_SPEED } from "../../../tailwind.config";
+import useArrowKeyPress from "../hooks/useArrowKeyPress";
+import useSwipe from "../hooks/useSwipe";
 import { GridBoard } from "./GridBoard";
 import Button from "./Button";
 
-// --- Constants ---
-const NUM_CELLS = 4;
-const DEFAULT_GAP = 8;
-
-interface Game2048Props {
+interface GameProps {
   timer: number;
   rematch: () => void;
   rem: number;
@@ -45,7 +40,7 @@ interface Game2048Props {
   clock: number;
 }
 
-const Game2048: React.FC<Game2048Props> = ({
+const Game: React.FC<GameProps> = ({
   timer,
   rematch,
   rem,
@@ -76,6 +71,9 @@ const Game2048: React.FC<Game2048Props> = ({
 
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
+
+  const boardRef = useRef<HTMLDivElement>(null);
+  const [cellSize, setCellSize] = useState<number>(0);
 
   const [mergeTiles, setMergeTiles] = useState<MergeEvent[]>([]);
 
@@ -181,8 +179,21 @@ const Game2048: React.FC<Game2048Props> = ({
   useSwipe(dispatchDirection);
 
   return (
-    <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4">
-      {/* Result Modal */}
+    <>
+      {/* Dont know "\_,() '-' ),_/"  */}
+      {(gameOver || gameWon) &&
+        !allFinished &&
+        !allSurrendered &&
+        player == trueid && (
+          <WaitingModal
+            player={player}
+            isWinner={gameWon}
+            open={!hasValidMoves(grid)}
+            rankingData={rankingData}
+          />
+        )}
+
+      {/* End of game results modal */}
       {(((gameOver || gameWon) && allFinished) ||
         allSurrendered ||
         (clock === 0 && timer !== 0 && allFinished)) && (
@@ -207,55 +218,58 @@ const Game2048: React.FC<Game2048Props> = ({
           totalPlayers={totalPlayers}
         />
       )}
-
-      {/* Scoreboard */}
-      <div className="flex justify-center mb-6 w-full">
-        <ScoreBoard title="SCORE" total={score} />
-        {timer !== 0 && <ScoreBoard title="Time left:" total={clock} />}
-      </div>
-
-      {/* Board */}
-      <div className="relative w-full aspect-square bg-board">
-        {/* Waiting Modal */}
-        {(gameOver || gameWon) &&
-          !allFinished &&
-          !allSurrendered &&
-          player == trueid && (
-            <WaitingModal
-              player={player}
-              isWinner={gameWon}
-              open={!hasValidMoves(grid)}
-              rankingData={rankingData}
-            />
-          )}
-        {((!(gameOver || gameWon) && !allFinished) ||
-          (gameOver && !allFinished && player !== trueid) ||
-          (clock !== 0 && timer !== 0) ||
-          timer === 0) && (
+      <ResponsiveContainer
+        /**
+         * Header (top):
+         * Place scoreboard here
+         */
+        top={
+          <div className="flex justify-center mb-6 w-full">
+            <ScoreBoard title="SCORE" total={score} />
+            {timer !== 0 && <ScoreBoard title="Time left:" total={clock} />}
+          </div>
+        }
+        /**
+         * Main (middle):
+         * 2048 game here (with scoreboard hidden).
+         */
+        middle={
           <>
-            <GridBoard grid={currentGrid} merges={mergeTiles} />
+            {((!(gameOver || gameWon) && !allFinished) ||
+              (gameOver && !allFinished && player !== trueid) ||
+              (clock !== 0 && timer !== 0) ||
+              timer === 0) && (
+              <GridBoard grid={currentGrid} merges={mergeTiles} />
+            )}
           </>
-        )}
-      </div>
-
-      {/* Player info */}
-      {rankingData.length > 1 && (
-        <div className="border-b border-white pb-3 mt-6 w-full">
-          <p className={`text-center text-white ${className}`}>
-            Player: {player}
-          </p>
-        </div>
-      )}
-      {/* surrender button */}
-      {player === trueid && (
-        <Button className="mt-6 text-base" onClick={() => leave()}>
-          <p>
-            {totalPlayers > 1 && "Surrender"} {totalPlayers < 2 && "Leave"}
-          </p>
-        </Button>
-      )}
-    </div>
+        }
+        /**
+         * Footer (bottom):
+         */
+        bottom={
+          <>
+            {/* Player info */}
+            {rankingData.length > 1 && (
+              <div className="border-b border-white pb-3 mt-6 w-full">
+                <p className={`text-center text-white ${className}`}>
+                  Player: {player}
+                </p>
+              </div>
+            )}
+            {/* surrender button */}
+            {player === trueid && (
+              <Button onClick={() => leave()}>
+                <p className="">
+                  {totalPlayers > 1 && "Surrender"}{" "}
+                  {totalPlayers < 2 && "Leave"}
+                </p>
+              </Button>
+            )}
+          </>
+        }
+      />
+    </>
   );
 };
 
-export default Game2048;
+export default Game;

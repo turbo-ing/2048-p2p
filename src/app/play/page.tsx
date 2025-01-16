@@ -1,11 +1,10 @@
 "use client";
 
 import { ThemeProvider } from "styled-components";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { useRouter } from "next/navigation";
 
-import { Navbar } from "@/app/components/Navbar";
 import useTheme from "@/app/hooks/useTheme";
 import Game2048 from "@/app/components/2048Game";
 import { use2048 } from "@/reducer/2048";
@@ -35,7 +34,7 @@ export default function Game2048Page() {
   const [timerTriggered, setTimerTriggered] = useState<boolean>(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [{ name: themeName, value: themeValue }] = useTheme("dark");
+  // const [{ name: themeName, value: themeValue }] = useTheme("dark");
 
   const dispatchDirection = async (dir: MoveType) => {
     switch (dir) {
@@ -83,7 +82,7 @@ export default function Game2048Page() {
   };
 
   const leave = () => {
-    console.log("Leaving");
+    // console.log("Leaving");
     dispatch({
       type: "LEAVE",
     });
@@ -92,7 +91,7 @@ export default function Game2048Page() {
   };
 
   const rematch = () => {
-    console.log("Voting for rematch");
+    // console.log("Voting for rematch");
     dispatch({
       type: "REMATCH",
     });
@@ -130,7 +129,7 @@ export default function Game2048Page() {
       !timerTriggered
     ) {
       //when timer ends we broadcast it but if everyones not done
-      console.log("Timer triggered");
+      // console.log("Timer triggered");
       dispatch({
         type: "TIMER",
         payload: {
@@ -243,123 +242,116 @@ export default function Game2048Page() {
 
   return (
     <div className="flex">
-      <ThemeProvider theme={themeValue}>
-        <Navbar
+      {/* <ThemeProvider theme={themeValue}> */}
+      {/* <Navbar
           isDark={true}
           isShowButton={true}
           onClick={() => (window.location.href = "/")}
-        />
-        <main className="mt-20 w-full h-full text-white text-4xl transition-opacity duration-1000">
-          <div
-            className="h-full"
-            style={{
-              backgroundImage: "url('/img/2048_home_bg.png')",
-              backgroundSize: "cover",
-              backgroundRepeat: "no-repeat",
-            }}
-          >
-            <div className="max-w-7xl mx-auto lg:px-8">
-              {!state || state.playersCount < 1 ? (
-                <div className="items-center">Loading</div>
-              ) : (
-                <div className="flex items-center min-h-[calc(100vh-80px)] max-w-[960px] mx-auto">
-                  <div className="w-full flex lg:flex-row flex-col justify-center lg:-mx-5">
-                    <div className="lg:w-1/2 mx-auto size-full ">
-                      <div className="max-w-[365px] mx-auto text-3xl w-[365px] ">
-                        {/*<p>zk: {zkClient.moveCache.length}</p>*/}
-                        {/*<p>lq: {lenQueue}</p>*/}
-                        <Game2048
-                          timer={state.timer}
-                          rematch={rematch}
-                          rem={rem}
-                          remProcessing={zkClient.isProcessing}
-                          downloadProof={downloadProof}
-                          key={peerId}
-                          className="text-base"
-                          dispatchDirection={dispatchDirection}
-                          leave={leave}
-                          board={state.board[peerId!]}
-                          height={80}
-                          player={state.players[peerId!]}
-                          trueid={state.players[peerId!]}
-                          rankingData={ranking}
-                          score={state.score[peerId!]}
-                          isFinished={state.isFinished}
-                          allFinished={allFinished}
-                          setAllFinished={setAllFinished}
-                          surrendered={state.surrendered}
-                          allSurrendered={allSurrendered}
-                          frontSurrendered={frontSurrendered}
-                          totalPlayers={state.totalPlayers}
-                          width={80}
-                          lenQueue={zkClient.moveCache.length}
-                          clock={state.timer - counter}
-                        />
+        /> */}
+      <main className="w-full h-full text-white text-4xl transition-opacity duration-1000">
+        <div className="h-full">
+          <div className="max-w-7xl mx-auto lg:px-8">
+            {!state || state.playersCount < 1 ? (
+              <div className="items-center">Loading</div>
+            ) : (
+              <div className="flex items-center min-h-[100vh] max-w-[960px] mx-auto">
+                <div className="w-full flex lg:flex-row flex-col justify-center lg:-mx-5">
+                  <div className="lg:w-1/2 mx-auto size-full ">
+                    <div className="max-w-[365px] mx-auto text-3xl w-[365px] ">
+                      {/*<p>zk: {zkClient.moveCache.length}</p>*/}
+                      {/*<p>lq: {lenQueue}</p>*/}
+                      <Game2048
+                        timer={state.timer}
+                        rematch={rematch}
+                        rem={rem}
+                        remProcessing={zkClient.isProcessing}
+                        downloadProof={downloadProof}
+                        key={peerId}
+                        className="text-base"
+                        dispatchDirection={dispatchDirection}
+                        leave={leave}
+                        board={state.board[peerId!]}
+                        height={80}
+                        player={state.players[peerId!]}
+                        trueid={state.players[peerId!]}
+                        rankingData={ranking}
+                        score={state.score[peerId!]}
+                        isFinished={state.isFinished}
+                        allFinished={allFinished}
+                        setAllFinished={setAllFinished}
+                        surrendered={state.surrendered}
+                        allSurrendered={allSurrendered}
+                        frontSurrendered={frontSurrendered}
+                        totalPlayers={state.totalPlayers}
+                        width={80}
+                        lenQueue={zkClient.moveCache.length}
+                        clock={state.timer - counter}
+                      />
+                    </div>
+                  </div>
+                  {state.playersCount > 1 && (
+                    <div className="relative flex flex-row flex-wrap lg:w-1/2 w-full px-5 lg:-mx-2.5 gap-y-2 lg:before:bg-white lg:before:content-[''] lg:before:absolute lg:before:left-0 lg:before:top-[10%] lg:before:bottom-[10%] lg:before:w-[1px]">
+                      {!isMobile &&
+                        state.playerId.map(
+                          (player) =>
+                            player !== peerId && (
+                              <div
+                                key={`${player}-id`}
+                                className="w-1/2 px-2.5 text-xl"
+                              >
+                                <Game2048
+                                  timer={state.timer}
+                                  rematch={rematch}
+                                  rem={rem}
+                                  remProcessing={zkClient.isProcessing}
+                                  downloadProof={downloadProof}
+                                  lenQueue={zkClient.moveCache.length}
+                                  key={player}
+                                  className="text-sm"
+                                  dispatchDirection={dispatchDirection}
+                                  leave={leave}
+                                  board={state.board[player]}
+                                  height={40}
+                                  player={state.players[player]}
+                                  trueid={state.players[peerId!]}
+                                  rankingData={ranking}
+                                  score={state.score[player]}
+                                  isFinished={state.isFinished}
+                                  allFinished={allFinished}
+                                  setAllFinished={setAllFinished}
+                                  surrendered={state.surrendered}
+                                  allSurrendered={allSurrendered}
+                                  frontSurrendered={frontSurrendered}
+                                  totalPlayers={state.totalPlayers}
+                                  width={40}
+                                  clock={state.timer - counter}
+                                />
+                              </div>
+                            ),
+                        )}
+                      <div className="lg:w-1/2 px-2.5 lg:text-xl w-full text-base">
+                        <p className="text-center text-2xl mb-2">Ranking</p>
+                        <ul className="counter-list">
+                          {ranking.map((player) => (
+                            <li
+                              key={player.name}
+                              className="flex justify-between relative px-5 mb-2 last:mb-0"
+                            >
+                              <p>{player.name}</p>
+                              <p>{player.score}</p>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
-                    {state.playersCount > 1 && (
-                      <div className="relative flex flex-row flex-wrap lg:w-1/2 w-full px-5 lg:-mx-2.5 gap-y-2 lg:before:bg-white lg:before:content-[''] lg:before:absolute lg:before:left-0 lg:before:top-[10%] lg:before:bottom-[10%] lg:before:w-[1px]">
-                        {!isMobile &&
-                          state.playerId.map(
-                            (player) =>
-                              player !== peerId && (
-                                <div
-                                  key={`${player}-id`}
-                                  className="w-1/2 px-2.5 text-xl"
-                                >
-                                  <Game2048
-                                    timer={state.timer}
-                                    rematch={rematch}
-                                    rem={rem}
-                                    remProcessing={zkClient.isProcessing}
-                                    downloadProof={downloadProof}
-                                    lenQueue={zkClient.moveCache.length}
-                                    key={player}
-                                    className="text-sm"
-                                    dispatchDirection={dispatchDirection}
-                                    leave={leave}
-                                    board={state.board[player]}
-                                    height={40}
-                                    player={state.players[player]}
-                                    trueid={state.players[peerId!]}
-                                    rankingData={ranking}
-                                    score={state.score[player]}
-                                    isFinished={state.isFinished}
-                                    allFinished={allFinished}
-                                    setAllFinished={setAllFinished}
-                                    surrendered={state.surrendered}
-                                    allSurrendered={allSurrendered}
-                                    frontSurrendered={frontSurrendered}
-                                    totalPlayers={state.totalPlayers}
-                                    width={40}
-                                    clock={state.timer - counter}
-                                  />
-                                </div>
-                              ),
-                          )}
-                        <div className="lg:w-1/2 px-2.5 lg:text-xl w-full text-base">
-                          <p className="text-center text-2xl mb-2">Ranking</p>
-                          <ul className="counter-list">
-                            {ranking.map((player) => (
-                              <li
-                                key={player.name}
-                                className="flex justify-between relative px-5 mb-2 last:mb-0"
-                              >
-                                <p>{player.name}</p>
-                                <p>{player.score}</p>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
-        </main>
-      </ThemeProvider>
+        </div>
+      </main>
+      {/* </ThemeProvider> */}
     </div>
   );
 }

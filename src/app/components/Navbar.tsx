@@ -30,7 +30,7 @@ export const Navbar = ({
 
   return (
     <div className="absolute z-50 w-full bg-black">
-      <div className="flex justify-between h-20 max-w-7xl mx-auto items-center lg:px-8 px-4">
+      <div className="flex justify-between h-16 max-w-7xl mx-auto items-center lg:px-8 px-4">
         <div className="flex gap-10 items-center">
           <Link href="/" onClick={onClick}>
             <img

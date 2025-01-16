@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 
 import { nextui } from "@nextui-org/theme";
 
-export const BASE_ANIMATION_SPEED = 0.25;
+export const BASE_ANIMATION_SPEED = 0.1;
 
 const config: Config = {
   content: [
@@ -13,10 +13,12 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      colors: {
+        background: "#FAF8F0",
+        cell: "#BDAC98",
+        text: "#756452",
+        "muted-text": "hsl(32, 18%, 70%)",
+        "bg-dark": "#988C7C",
       },
       keyframes: {
         fadeOut: {

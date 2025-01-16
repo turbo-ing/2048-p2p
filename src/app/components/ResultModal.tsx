@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 import Modal from "./Modal";
-import { use2048 } from "@/reducer/2048";
 
 export interface Player {
   name: string;

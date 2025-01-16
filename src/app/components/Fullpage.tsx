@@ -15,18 +15,18 @@ const FullPageSlides = () => {
 
   return (
     <div className="relative w-screen h-screen">
-      <Navbar
+      {/* <Navbar
         isDark={true}
         onClick={() => {
           goToSlide(0);
         }}
-      />
-      <Home activeIndex={activeIndex} goToSlide={goToSlide} />
+      /> */}
+      {/* <Home activeIndex={activeIndex} goToSlide={goToSlide} /> */}
       <PlayNow
-        activeIndex={activeIndex}
-        goToSlide={goToSlide}
-        selectedMode={selectedMode}
-        setSelectedMode={setSelectedMode}
+      // activeIndex={activeIndex}
+      // goToSlide={goToSlide}
+      // selectedMode={selectedMode}
+      // setSelectedMode={setSelectedMode}
       />
     </div>
   );
