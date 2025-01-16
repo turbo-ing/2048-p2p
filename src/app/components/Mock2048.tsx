@@ -138,7 +138,6 @@ export default function Mock2048() {
 
       // If truly no moves, reset. Otherwise do nothing yet.
       if (!canMove) {
-        alert("Game over! Starting new game.");
         setGrid(getEmptyGrid());
         setTimeout(() => addRandomTiles(2), 0);
       }
