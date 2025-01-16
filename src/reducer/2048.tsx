@@ -10,16 +10,16 @@ import {
 } from "react";
 import { Bool, Field, UInt64 } from "o1js";
 
-import ZkClient from "@/workers/zkClient";
+import ZkClient2 from "../workers2/zkClient2";
 import {
   addRandomTile,
   applyOneMoveCircuit,
   GameBoard,
   GameBoardWithSeed,
   printBoard,
-} from "@/lib/game2048ZKLogic";
+} from "@/lib2/game2048ZKLogic2";
 import { DirectionMap, MoveType } from "@/utils/constants";
-import { queueMove, zkClient } from "@/workers/zkQueue";
+import { queueMove, zkClient2 } from "../workers2/zkQueue2";
 import { gridsAreEqual, getGameState } from "@/utils/helper";
 
 export type Direction = "up" | "down" | "left" | "right";
@@ -664,7 +664,7 @@ const Game2048Context = createContext<
       boolean,
       string,
       Dispatch<SetStateAction<string>>,
-      ZkClient,
+      ZkClient2,
     ]
   | null
 >(null);
@@ -698,7 +698,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <Game2048Context.Provider
-      value={[state, dispatch, connected, room, setRoom, zkClient]}
+      value={[state, dispatch, connected, room, setRoom, zkClient2]}
     >
       {children}
     </Game2048Context.Provider>

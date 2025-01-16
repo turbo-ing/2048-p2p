@@ -5,8 +5,8 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Modal from "./Modal";
 
 import { generateRoomCode, initBoardWithSeed, use2048 } from "@/reducer/2048";
-import ZkClient from "@/workers/zkClient";
-import { assignMyPeerId, zkClient } from "@/workers/zkQueue";
+import ZkClient2 from "../../workers2/zkClient2";
+import { assignMyPeerId, zkClient2 } from "../../workers2/zkQueue2";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -34,8 +34,8 @@ export const PlayNow = ({
 
   const router = useRouter();
 
-  const compileZKProgram = async (zkClient: ZkClient) => {
-    const result = await zkClient?.compileZKProgram();
+  const compileZKProgram = async (zkClient2: ZkClient2) => {
+    const result = await zkClient2?.compileZKProgram();
     console.log("Verification Key", result?.verificationKey);
   };
 
@@ -123,8 +123,8 @@ export const PlayNow = ({
 
   useEffect(() => {
     if (!connected) return;
-    zkClient?.setDispatch(dispatch);
-  }, [connected, dispatch, zkClient]);
+    zkClient2?.setDispatch(dispatch);
+  }, [connected, dispatch, zkClient2]);
 
   return (
     <>
