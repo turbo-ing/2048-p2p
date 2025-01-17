@@ -250,10 +250,8 @@ const Game: React.FC<GameProps> = ({
           <>
             {/* Player info */}
             {rankingData.length > 1 && (
-              <div className="border-b border-white pb-3 mt-6 w-full">
-                <p className={`text-center text-white ${className}`}>
-                  Player: {player}
-                </p>
+              <div className="border-b border-text pb-3 mt-6 w-full">
+                <p className={`text-center ${className}`}>Player: {player}</p>
               </div>
             )}
             {/* surrender button */}

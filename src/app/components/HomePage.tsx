@@ -60,17 +60,27 @@ export default function HomePage() {
 
   const router = useRouter();
 
-  // Needed?
+  // If you're compiling a ZK program on startup, you'd do that here.
   const compileZKProgram = async (zkClient: ZkClient) => {
     const result = await zkClient?.compileZKProgram();
     console.log("Verification Key", result?.verificationKey);
   };
 
   useEffect(() => {
-    if (state.totalPlayers > 0 && state.totalPlayers === state.playersCount) {
+    // We only consider players "ready" if:
+    // 1) There's at least 1 player (totalPlayers > 0)
+    // 2) The actual number of players who joined matches totalPlayers
+    // 3) We are connected to TurboEdge (turboEdge?.connected === true)
+    // 4) We are connected to the 2048 game (the `connected` flag from use2048 === true)
+    const allPlayersReady =
+      state.totalPlayers > 0 && state.totalPlayers === state.playersCount;
+
+    if (allPlayersReady && turboEdge?.connected && connected) {
+      setIsLoading(true);
       setModalOpen(false);
 
-      if (gameTimerInput > 0 && !sentTimer) {
+      // If time is set and we haven't sent it yet, dispatch it
+      if (gameTimerInput && gameTimerInput > 0 && !sentTimer) {
         setSentTimer(true);
         dispatch({
           type: "TIMER",
@@ -79,20 +89,36 @@ export default function HomePage() {
             ended: false,
           },
         });
-        router.push("/play");
-      } else router.push("/play");
-    }
-  }, [state, dispatch, gameTimerInput, router, sentTimer]);
+      }
 
+      // Now that everything is ready, redirect to /play
+      router.push("/play");
+    } else {
+      setIsLoading(false);
+    }
+  }, [
+    state.totalPlayers,
+    state.playersCount,
+    turboEdge?.connected,
+    connected,
+    gameTimerInput,
+    sentTimer,
+    dispatch,
+    router,
+  ]);
+
+  // Assign the peer ID once we have a turboEdge instance
   useEffect(() => {
     if (turboEdge) {
       assignMyPeerId(turboEdge.node.peerId.toString());
     }
   }, [turboEdge]);
 
+  // Set the reducer's dispatch into the ZK client once connected
   useEffect(() => {
-    if (!connected) return;
-    zkClient?.setDispatch(dispatch);
+    if (connected) {
+      zkClient?.setDispatch(dispatch);
+    }
   }, [connected, dispatch]);
 
   const [isModalOpen, setModalOpen] = useState(false);
@@ -108,14 +134,35 @@ export default function HomePage() {
 
   return (
     <>
+      {isLoading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-white border-opacity-75" />
+            <div className="flex items-center mt-4">
+              {!connected && "Connecting to Turbo"}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!turboEdge?.connected && (
+        <div className="fixed bottom-0 left-0 w-full bg-black text-white flex justify-center p-2 z-50">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-3 w-3 border-t-2"></div>
+            <span className="text-sm">Connecting to TurboEdge...</span>
+          </div>
+        </div>
+      )}
+
       <MultiplayerModal
         isOpen={isModalOpen}
         onClose={() => setModalOpen(false)}
         join={join}
       />
+
       <ResponsiveContainer
         top={
-          <div className="size-full flex items-center justify-center  md:items-end">
+          <div className="size-full flex items-center justify-center md:items-end">
             <h1 className="flex-none text-8xl font-bold text-center px-2 mt-2 md:text-9xl md:pb-8">
               Turbo
               <br />
@@ -129,7 +176,7 @@ export default function HomePage() {
           </div>
         }
         bottom={
-          <div className=" flex items-center justify-center flex-col px-6">
+          <div className="flex items-center justify-center flex-col px-6">
             <div className="mb-4 text-center py-3">
               Challenge yourself in single-player mode with zero-knowledge proof
               high scores, or take on the competition in Versus Mode on the
@@ -140,7 +187,7 @@ export default function HomePage() {
                 <div className="text-left flex flex-row items-center hover:text-text">
                   <SinglePlayer size={28} />
                   <div>
-                    <div className="ml-2 text-[clamp(1rem, 2.5vw, 2rem)] ">
+                    <div className="ml-2 text-[clamp(1rem, 2.5vw, 2rem)]">
                       Singleplayer
                     </div>
                   </div>

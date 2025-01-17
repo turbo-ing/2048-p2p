@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 import Modal from "./Modal";
+import Button from "./Button";
 
 export interface Player {
   name: string;
@@ -57,164 +58,166 @@ export const ResultModal = ({
     }
   }, [wantsRematch, lenQueue, remProcessing, rematch]);
 
+  const headingText = () => {
+    if (totalPlayers > 1 && !allSurrendered) {
+      return player === ranking[0].name
+        ? "You've won the match!"
+        : "You've been beaten!";
+    }
+    if (totalPlayers > 1 && allSurrendered) {
+      return "All opponents surrendered!";
+    }
+    return isWinner ? "You win!" : "Game over!";
+  };
+
+  const subText = () => {
+    if (totalPlayers > 1) {
+      return player === ranking[0].name
+        ? "Congratulations! Your strategy and skill have prevailed. Well played!"
+        : "Good effort! Learn from this match and come back stronger. Better luck next time!";
+    }
+    return isWinner
+      ? "You're officially a 2048 master!"
+      : "Better luck next time!";
+  };
+
   return (
-    <div>
-      <Modal show={open}>
+    <Modal show={open}>
+      {/* Container for entire modal content */}
+      <div className="p-4 sm:p-6 md:p-8 ">
+        {/* If the ZK Proof modal is not shown */}
         {!ZKModal && (
           <div>
-            <div className="relative flex justify-center items-center">
-              <img
-                alt=""
-                src={isWinner ? "/svg/2048-winner.svg" : "/svg/2048-loser.svg"}
-              />
+            <div className="mb-6">
+              {/* Header */}
+              <h2 className="font-semibold text-2xl md:text-4xl text-center">
+                {headingText()}
+              </h2>
+              {/* Optional subheading */}
+              <p className="mt-3 text-center text-sm md:text-base">
+                {subText()}
+              </p>
             </div>
-            <div className="py-6 text-center">
-              <div className="text-[#F5F5F6] font-semibold text-3xl">
-                {totalPlayers > 1 &&
-                  !allSurrendered &&
-                  (player == ranking[0].name
-                    ? "You've won the match!"
-                    : "You've been beaten!")}
-                {totalPlayers > 1 &&
-                  allSurrendered &&
-                  "All opponents surrendered!"}
-                {totalPlayers < 2 && (isWinner ? "You win!" : "Game over!")}
-              </div>
-              <div className="text-xl my-4">
-                <p className="text-center text-2xl mb-2 font-bold">
-                  {totalPlayers > 1 && "Ranking"}
-                </p>
-                <ul className="counter-list">
-                  {totalPlayers > 1 &&
-                    ranking.map((player) => (
+
+            {/* Ranking / Scores */}
+            <div className="text-center mt-3">
+              {totalPlayers > 1 && (
+                <>
+                  <p className="text-center text-2xl mb-2 font-bold">Ranking</p>
+                  <ul className="counter-list">
+                    {ranking.map((p) => (
                       <li
-                        key={player.name}
+                        key={p.name}
                         className="flex justify-between relative px-5 mb-2 last:mb-0"
                       >
-                        <p>{player.name}</p>
-                        {!frontSurrendered[player.name] && (
-                          <p>{player.score}</p>
-                        )}
-                        {frontSurrendered[player.name] && <p>Surrendered!</p>}
+                        <p>{p.name}</p>
+                        {!frontSurrendered[p.name] && <p>{p.score}</p>}
+                        {frontSurrendered[p.name] && <p>Surrendered!</p>}
                       </li>
                     ))}
-                  {totalPlayers < 2 && "Score: " + ranking[0].score}
-                </ul>
-              </div>
-              <div className="mt-3 text-[#94969C] font-medium text-base">
-                {totalPlayers > 1 &&
-                  (player == ranking[0].name
-                    ? "Congratulations! Your strategy and skill have prevailed. Well played!"
-                    : "Good effort! Learn from this match and come back stronger. Better luck next time!")}
-                {totalPlayers < 2 &&
-                  (isWinner
-                    ? "You're officially a 2048 master!"
-                    : "Better luck next time!")}
-              </div>
+                  </ul>
+                </>
+              )}
+              {totalPlayers < 2 && (
+                <p className="mt-2 text-lg">Score: {ranking[0].score}</p>
+              )}
             </div>
-            <div className="mt-6 flex gap-3">
-              <button
-                className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-1/3"
-                onClick={() => leave()}
+
+            {/* Buttons at the bottom */}
+            <div className="mt-8 space-y-2 sm:space-y-0 sm:flex sm:justify-center sm:gap-4">
+              <Button onClick={leave} className="w-full sm:w-auto">
+                Home
+              </Button>
+              <Button
+                onClick={() => setZKModal(true)}
+                className="w-full sm:w-auto"
               >
-                <img alt="" src="/svg/home.svg" />
-                <div>Home</div>
-              </button>
-              <button
-                className="rounded-full py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-full"
-                onClick={() => setZKModal(true)} //downloadProof()
-              >
-                <div>Download ZK Proof</div>
-              </button>
-              <button
-                className="rounded-full py-2.5 px-4 bg-[#F23939] text-white text-base font-semibold gap-1.5 flex items-center justify-center w-2/3"
+                Download ZK Proof
+              </Button>
+              <Button
                 onClick={() => {
                   if (lenQueue !== 0) {
                     setZKModal(true);
                     setWantsRematch(true);
-                  } else rematch(); //router.push("/");
+                  } else {
+                    rematch();
+                  }
                 }}
+                className="w-full sm:w-auto"
               >
-                <img alt="" src="/svg/repeat.svg" />
-                <div>
-                  {totalPlayers < 2 && "Play again"}
-                  {totalPlayers > 1 &&
-                    "Rematch (" + rem + "/" + totalPlayers + ")"}
-                </div>
-              </button>
+                {totalPlayers < 2 && "Play Again"}
+                {totalPlayers > 1 && `Rematch (${rem}/${totalPlayers})`}
+              </Button>
             </div>
           </div>
         )}
+
+        {/* If ZK Modal is shown and queue is empty (no moves left to process) */}
         {ZKModal && lenQueue === 0 && !remProcessing && (
           <div>
-            <div className="relative flex justify-center items-center">
-              <img alt="" src={"/svg/circle-plus.svg"} />
-            </div>
-            <div className="py-6 text-center">
-              <div className="text-[#F5F5F6] font-semibold text-3xl">
-                Download ZK Proof
-              </div>
-              <div className="relative flex justify-center items-center">
-                <button
-                  className="rounded-full m-5 py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-2/5"
-                  onClick={() => downloadProof()}
-                >
-                  <div>Download Proof</div>
-                </button>
-                <button
-                  className="rounded-full m-5 py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-2/5"
-                  onClick={() => setZKModal(false)} //downloadProof()
-                >
-                  <div>Back to Results</div>
-                </button>
-              </div>
+            <h2 className="font-semibold text-2xl md:text-4xl text-center">
+              Download ZK Proof
+            </h2>
+            <p className="mt-3 text-center text-sm md:text-base">
+              Click the button below to download your ZK Proof.
+            </p>
+            <div className="flex justify-center gap-4 mt-6">
+              <Button onClick={downloadProof}>Download Proof</Button>
+              <Button onClick={() => setZKModal(false)}>Back to Results</Button>
             </div>
           </div>
         )}
+
+        {/* If ZK Modal is shown and queue is NOT empty (still processing) or rematch is processing */}
         {ZKModal && (lenQueue !== 0 || remProcessing) && (
           <div>
-            <div className="relative flex justify-center items-center">
-              <img alt="" src={"/svg/circle-plus.svg"} />
+            <div className="mb-6 text-center">
+              <h2 className="font-semibold text-2xl md:text-4xl">
+                Generating ZK Proof...
+              </h2>
+              <p className="mt-3 text-sm md:text-base">
+                Moves left to process: {lenQueue}
+              </p>
             </div>
-            <div className="py-6 text-center">
-              <div className="text-[#F5F5F6] font-semibold text-3xl">
-                Generating ZK Proof... Moves left to process: {lenQueue}
-              </div>
-              <div className="relative flex justify-center items-center">
-                <button
-                  className="rounded-full mt-4 py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center"
-                  onClick={() => {
-                    if (wantsRematch === true) {
-                      setWantsRematch(false);
-                    }
-                    setZKModal(false);
-                  }} //downloadProof()
-                >
-                  <div>Back to Results</div>
-                </button>
-              </div>
-              <div className="text-xl my-4">
-                <p className="text-center text-2xl mb-2 font-bold">
-                  {totalPlayers > 1 && "Ranking"}
-                </p>
+
+            {/* Ranking while ZK is processing */}
+            {totalPlayers > 1 && (
+              <div className="text-center mt-3">
+                <p className="text-center text-2xl mb-2 font-bold">Ranking</p>
                 <ul className="counter-list">
-                  {totalPlayers > 1 &&
-                    ranking.map((player) => (
-                      <li
-                        key={player.name}
-                        className="flex justify-between relative px-5 mb-2 last:mb-0"
-                      >
-                        <p>{player.name}</p>
-                        <p>{player.score}</p>
-                      </li>
-                    ))}
-                  {totalPlayers < 2 && "Score: " + ranking[0].score}
+                  {ranking.map((p) => (
+                    <li
+                      key={p.name}
+                      className="flex justify-between relative px-5 mb-2 last:mb-0"
+                    >
+                      <p>{p.name}</p>
+                      <p>{p.score}</p>
+                    </li>
+                  ))}
                 </ul>
               </div>
+            )}
+            {totalPlayers < 2 && (
+              <p className="text-center text-lg mt-2">
+                Score: {ranking[0].score}
+              </p>
+            )}
+
+            <div className="mt-8 flex justify-center">
+              <Button
+                onClick={() => {
+                  if (wantsRematch) {
+                    setWantsRematch(false);
+                  }
+                  setZKModal(false);
+                }}
+              >
+                Back to Results
+              </Button>
             </div>
           </div>
         )}
-      </Modal>
-    </div>
+      </div>
+    </Modal>
   );
 };

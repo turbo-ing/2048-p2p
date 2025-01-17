@@ -547,92 +547,73 @@ const game2048Reducer = (
           actionDirection: action.payload,
         };
       } else return { ...state };
-    case "JOIN":
+    case "JOIN": {
       console.log("Payload on JOIN", action.payload);
-      const { zkBoard, name, grid, numPlayers } = action.payload;
 
+      // Re-create the board from the payload
       const payloadBoard = new GameBoardWithSeed({
-        board: new GameBoard(zkBoard.board.cells.map(Field)),
-        seed: Field.from(zkBoard.seed),
+        board: new GameBoard(action.payload.zkBoard.board.cells.map(Field)),
+        seed: Field.from(action.payload.zkBoard.seed),
       });
 
       printBoard(payloadBoard.board);
 
-      const newPlayerCount = state.playerId.includes(action.peerId!)
-        ? state.playersCount
-        : state.playersCount + 1;
+      // Create new copies of every sub-object rather than mutate old ones
+      const newBoard = { ...state.board };
+      const newPlayers = { ...state.players };
+      const newPlayerId = [...state.playerId];
+      const newZkBoard = { ...state.zkBoard };
+      const newScore = { ...state.score };
+      const newIsFinished = { ...state.isFinished };
+      const newSurrendered = { ...state.surrendered };
+      const newRematch = { ...state.rematch };
 
-      // Ignore player count when joining with a room code; it only
-      // applies to room creation. If provided, set to the higher of
-      // the current total or the specified value. As no mechanism to
-      // stop players joining over the set maximum.
-      const newNumPlayers = Math.max(
-        state.totalPlayers,
-        numPlayers || 0,
-        newPlayerCount,
-      );
+      // Figure out if we're adding a brand-new player
+      // - If already in the list, don't increment player count
+      let newPlayersCount = state.playersCount;
+      if (!newPlayerId.includes(action.peerId!)) {
+        newPlayersCount += 1;
+        newPlayers[action.peerId!] = action.payload.name;
+        newPlayerId.push(action.peerId!);
+      }
 
-      const newPlayers = {
-        ...state.players,
-        ...(state.playerId.includes(action.peerId!)
-          ? {}
-          : { [action.peerId!]: name }),
+      // For totalPlayers, either take action.payload.numPlayers or keep the existing if higher
+      // (common for 2+ players game)
+      let newNumPlayers = action.payload.numPlayers ?? state.totalPlayers;
+      if (newNumPlayers < state.totalPlayers) {
+        newNumPlayers = state.totalPlayers;
+      }
+
+      // Assign the new player's board
+      newBoard[action.peerId!] = {
+        grid: action.payload.grid,
+        merges: [],
       };
+      newZkBoard[action.peerId!] = payloadBoard;
+      newScore[action.peerId!] = 0;
+      newIsFinished[action.peerId!] = false;
+      newSurrendered[action.peerId!] = false;
+      newRematch[action.peerId!] = false;
 
-      const newPlayerId = state.playerId.includes(action.peerId!)
-        ? [...state.playerId]
-        : [...state.playerId, action.peerId!];
-
-      const newZkBoard = {
-        ...state.zkBoard,
-        [action.peerId!]: payloadBoard,
-      };
-
-      const newBoard = {
-        ...state.board,
-        [action.peerId!]: {
-          grid,
-          merges: [],
-        },
-      };
-
-      const newScore = {
-        ...state.score,
-        [action.peerId!]: 0,
-      };
-
-      const newIsFinished = {
-        ...state.isFinished,
-        [action.peerId!]: false,
-      };
-
-      const newSurrendered = {
-        ...state.surrendered,
-        [action.peerId!]: false,
-      };
-
-      const newRematch = {
-        ...state.rematch,
-        [action.peerId!]: false,
-      };
-
+      // Queue the “init” move
       queueMove(action.peerId!, payloadBoard, "init");
 
+      // Now return a brand-new state object
       return {
         ...state,
-        totalPlayers: newNumPlayers,
-        playersCount: newPlayerCount,
+        board: newBoard,
+        zkBoard: newZkBoard,
         players: newPlayers,
         playerId: newPlayerId,
-        zkBoard: newZkBoard,
-        board: newBoard,
         score: newScore,
         isFinished: newIsFinished,
         surrendered: newSurrendered,
         rematch: newRematch,
+        playersCount: newPlayersCount,
+        totalPlayers: newNumPlayers,
         actionPeerId: action.peerId,
       };
-
+    }
     case "LEAVE":
       //error("Not implemented yet");
       console.log("Player " + action.peerId! + " is leaving the game.");

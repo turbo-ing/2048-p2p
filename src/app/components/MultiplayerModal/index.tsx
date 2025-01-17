@@ -40,8 +40,8 @@ export default function MultiplayerModal({
   useEffect(() => {
     if (!isOpen) {
       setNameInput("");
-      setGameTimerInput("0");
-      setNumOfPlayers("2");
+      setGameTimerInput("");
+      setNumOfPlayers("");
       setRoomIdInput("");
     }
   }, [isOpen]);

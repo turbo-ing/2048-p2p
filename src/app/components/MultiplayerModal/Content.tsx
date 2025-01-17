@@ -15,7 +15,7 @@ export const InviteContent = () => {
           room.
         </p>
       </div>
-      <div className="mt-6 space-y-2 text-white transition-all">
+      <div className="mt-6 space-y-2  transition-all">
         <Button onClick={joinRoom}>
           <img alt="" className="w-5 h-5" src="/svg/2048-join-game.svg" />
           <p className="font px-0.5">Join Room</p>

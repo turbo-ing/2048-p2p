@@ -1,11 +1,9 @@
 "use client";
 
-import { ThemeProvider } from "styled-components";
 import { useEffect, useRef, useState } from "react";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { useRouter } from "next/navigation";
 
-import useTheme from "@/app/hooks/useTheme";
 import Game2048 from "@/app/components/2048Game";
 import { use2048 } from "@/reducer/2048";
 import { Player } from "@/app/components/ResultModal";
@@ -248,7 +246,7 @@ export default function Game2048Page() {
           isShowButton={true}
           onClick={() => (window.location.href = "/")}
         /> */}
-      <main className="w-full h-full text-white text-4xl transition-opacity duration-1000">
+      <main className="w-full h-full text-4xl transition-opacity duration-1000">
         <div className="h-full">
           <div className="max-w-7xl mx-auto lg:px-8">
             {!state || state.playersCount < 1 ? (
@@ -267,7 +265,7 @@ export default function Game2048Page() {
                         remProcessing={zkClient.isProcessing}
                         downloadProof={downloadProof}
                         key={peerId}
-                        className="text-base"
+                        className=" text-medium"
                         dispatchDirection={dispatchDirection}
                         leave={leave}
                         board={state.board[peerId!]}
@@ -290,7 +288,7 @@ export default function Game2048Page() {
                     </div>
                   </div>
                   {state.playersCount > 1 && (
-                    <div className="relative flex flex-row flex-wrap lg:w-1/2 w-full px-5 lg:-mx-2.5 gap-y-2 lg:before:bg-white lg:before:content-[''] lg:before:absolute lg:before:left-0 lg:before:top-[10%] lg:before:bottom-[10%] lg:before:w-[1px]">
+                    <div className="relative flex flex-row flex-wrap lg:w-1/2 w-full px-5 lg:-mx-2.5 gap-y-2 lg:before:bg-text lg:before:content-[''] lg:before:absolute lg:before:left-0 lg:before:top-[10%] lg:before:bottom-[10%] lg:before:w-[1px] border-text">
                       {!isMobile &&
                         state.playerId.map(
                           (player) =>
@@ -307,7 +305,7 @@ export default function Game2048Page() {
                                   downloadProof={downloadProof}
                                   lenQueue={zkClient.moveCache.length}
                                   key={player}
-                                  className="text-sm"
+                                  className="text-medium"
                                   dispatchDirection={dispatchDirection}
                                   leave={leave}
                                   board={state.board[player]}
