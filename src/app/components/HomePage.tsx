@@ -37,7 +37,7 @@ export const useJoinRoom = () => {
 
       setWaitingToJoin(false); // Reset the waiting state
     }
-  }, [waitingToJoin, connected, state, room]);
+  }, [waitingToJoin, connected, state, room, name, numberOfPlayers, dispatch]);
 
   const joinRoom = (roomId: string, name: string, numberOfPlayers?: number) => {
     setRoom(roomId);
@@ -82,7 +82,7 @@ export default function HomePage() {
         router.push("/play");
       } else router.push("/play");
     }
-  }, [state]);
+  }, [state, dispatch, gameTimerInput, router, sentTimer]);
 
   useEffect(() => {
     if (turboEdge) {
@@ -93,7 +93,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!connected) return;
     zkClient?.setDispatch(dispatch);
-  }, [connected, dispatch, zkClient]);
+  }, [connected, dispatch]);
 
   const [isModalOpen, setModalOpen] = useState(false);
   const join = useJoinRoom();

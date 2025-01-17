@@ -172,7 +172,7 @@ export default function MultiplayerModal({
           placeholder={"Enter code"}
         >
           <p className="text-sm text-center mt-1">
-            Paste the game room code here to join your friend's match.
+            Paste the game room code here to join your friend&apos;s match.
           </p>
         </Input>
         <div className="mt-8 space-y-2 text-white transition-all">

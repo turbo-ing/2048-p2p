@@ -1,7 +1,7 @@
 "use client";
 
 import { ThemeProvider } from "styled-components";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { useRouter } from "next/navigation";
 
@@ -28,7 +28,7 @@ export default function Game2048Page() {
   }>({});
   const [rem, setRem] = useState<number>(0);
   const [counter, setCounter] = useState<number>(0);
-  var timeCounter: number = 0;
+  const timeCounter = useRef<number>(0);
   const [allFinished, setAllFinished] = useState(false);
   const [reset, setReset] = useState<boolean>(false);
   const [timerTriggered, setTimerTriggered] = useState<boolean>(false);
@@ -112,7 +112,7 @@ export default function Game2048Page() {
     if (allFin && !allFinished) {
       setAllFinished(true);
     }
-  });
+  }, [allFinished, state.isFinished]);
 
   useEffect(() => {
     /*console.log("outside condition scope");
@@ -139,7 +139,7 @@ export default function Game2048Page() {
       });
       setTimerTriggered(true);
     }
-  });
+  }, [state.timer, counter, allFinished, timerTriggered, dispatch]);
 
   //State updater for move cache display
   useEffect(() => {
@@ -150,9 +150,9 @@ export default function Game2048Page() {
       //set the timer
       if (state.timer > 0) {
         setInterval(() => {
-          if (timeCounter !== state.timer) {
+          if (timeCounter.current !== state.timer) {
             setCounter((counter) => counter + 1);
-            timeCounter += 1;
+            timeCounter.current += 1;
             //console.log(state.timer - timeCounter);
           }
         }, 1000);
@@ -210,7 +210,7 @@ export default function Game2048Page() {
     if (allTrue) {
       setCounter(0);
       setAllFinished(false);
-      timeCounter = 0;
+      timeCounter.current = 0;
       //only call it once
       if (!reset) {
         dispatch({
@@ -220,7 +220,7 @@ export default function Game2048Page() {
       }
       router.push("/");
     } else setRem(counter);
-  });
+  }, [state.rematch, reset, dispatch, router]);
 
   useEffect(() => {
     const sortedScores = Object.entries(state.score) // Convert to array of [playerId, score]

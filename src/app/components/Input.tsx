@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 
 type InputProps<T extends string | number> = {
   labelText: string;
@@ -34,7 +34,7 @@ const Input = <T extends string | number>({
         {labelText}
       </label>
       <input
-        key={labelText}
+        // key={labelText}
         className="border border-text bg-transparent rounded-xl shadow text-md py-2.5 px-3.5 w-full mt-1.5 placeholder-muted-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 "
         placeholder={placeholder}
         type={type}

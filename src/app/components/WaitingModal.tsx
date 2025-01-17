@@ -26,12 +26,12 @@ export const WaitingModal = ({
   rankingData,
 }: WaitingModalProps) => {
   const router = useRouter();
-  const [ranking, _setRanking] = useState<Player[]>(rankingData);
+  const [ranking, setRanking] = useState<Player[]>(rankingData);
 
   //Update ranking data displayed
   useEffect(() => {
-    _setRanking(rankingData);
-  });
+    setRanking(rankingData);
+  }, [rankingData]);
 
   return (
     <div>

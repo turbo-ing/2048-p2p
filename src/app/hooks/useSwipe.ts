@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { Direction } from "@/reducer/2048";
 
@@ -11,64 +11,58 @@ const useSwipe = (cb: (dir: Direction) => void) => {
     null,
   );
 
-  // Handle touch start event
-  const handleTouchStart = (e: TouchEvent) => {
+  const handleTouchStart = useCallback((e: TouchEvent) => {
     const touch = e.touches[0];
-
     setTouchStart({ x: touch.clientX, y: touch.clientY });
-  };
+  }, []);
 
-  // Handle touch end event
-  const handleTouchEnd = (e: TouchEvent) => {
-    if (!touchStart) return;
+  const handleTouchEnd = useCallback(
+    (e: TouchEvent) => {
+      if (!touchStart) return;
 
-    const touch = e.changedTouches[0];
-    const deltaX = touch.clientX - touchStart.x;
-    const deltaY = touch.clientY - touchStart.y;
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStart.x;
+      const deltaY = touch.clientY - touchStart.y;
 
-    // Calculate the absolute difference for both X and Y directions
-    const absX = Math.abs(deltaX);
-    const absY = Math.abs(deltaY);
+      const absX = Math.abs(deltaX);
+      const absY = Math.abs(deltaY);
 
-    // Determine if it's a valid swipe
-    if (absX > SWIPE_THRESHOLD || absY > SWIPE_THRESHOLD) {
-      // Determine swipe direction
-      if (absX > absY) {
-        if (deltaX > 0) {
-          setSwipeDirection("right");
-          cb("right");
+      if (absX > SWIPE_THRESHOLD || absY > SWIPE_THRESHOLD) {
+        if (absX > absY) {
+          if (deltaX > 0) {
+            setSwipeDirection("right");
+            cb("right");
+          } else {
+            setSwipeDirection("left");
+            cb("left");
+          }
         } else {
-          setSwipeDirection("left");
-          cb("left");
-        }
-      } else {
-        if (deltaY > 0) {
-          setSwipeDirection("down");
-          cb("down");
-        } else {
-          setSwipeDirection("up");
-          cb("up");
+          if (deltaY > 0) {
+            setSwipeDirection("down");
+            cb("down");
+          } else {
+            setSwipeDirection("up");
+            cb("up");
+          }
         }
       }
-    }
 
-    // Reset the touch start state after detecting swipe
-    setTouchStart(null);
-  };
+      setTouchStart(null);
+    },
+    [touchStart, cb],
+  );
 
   useEffect(() => {
-    // Attach touch event listeners
     window.addEventListener("touchstart", handleTouchStart);
     window.addEventListener("touchend", handleTouchEnd);
 
-    // Clean up event listeners on component unmount
     return () => {
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [touchStart]);
+  }, [handleTouchStart, handleTouchEnd]);
 
-  return swipeDirection; // Return the swipe direction
+  return swipeDirection;
 };
 
 export default useSwipe;

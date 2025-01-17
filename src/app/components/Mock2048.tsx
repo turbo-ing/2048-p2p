@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Grid,
-  getEmptyGrid,
   MergeEvent,
   GRID_SIZE,
   moveGrid,
@@ -11,20 +10,19 @@ import { GridBoard } from "./GridBoard";
 import { gridsAreEqual } from "@/utils/helper";
 import { BASE_ANIMATION_SPEED } from "../../../tailwind.config";
 
+const getEmptyGrid: Grid = [
+  [null, null, null, null],
+  [null, null, null, null],
+  [null, null, null, null],
+  [null, null, null, null],
+];
+
 export default function Mock2048() {
-  const [grid, setGrid] = useState<Grid>(getEmptyGrid());
+  const [grid, setGrid] = useState<Grid>(getEmptyGrid);
   const [merges, setMerges] = useState<MergeEvent[]>([]);
   const [start, setStart] = useState<boolean>(false);
 
   const previousGridRef = useRef<Grid | null>(null);
-
-  /**
-   * On component mount, add 2 random tiles and mark game as started.
-   */
-  useEffect(() => {
-    addRandomTiles(2);
-    setStart(true);
-  }, []);
 
   /**
    * Update the grid so that each tile knows its old position (prevX, prevY)
@@ -138,7 +136,7 @@ export default function Mock2048() {
 
       // If truly no moves, reset. Otherwise do nothing yet.
       if (!canMove) {
-        setGrid(getEmptyGrid());
+        setGrid(getEmptyGrid);
         setTimeout(() => addRandomTiles(2), 0);
       }
       return;
@@ -197,7 +195,15 @@ export default function Mock2048() {
 
     return () => clearInterval(interval);
     // Re-run if 'start' changes
-  }, [start, grid]);
+  }, [start, grid, addRandomTiles]);
+
+  /**
+   * On component mount, add 2 random tiles and mark game as started.
+   */
+  useEffect(() => {
+    addRandomTiles(2);
+    setStart(true);
+  }, []);
 
   return <GridBoard grid={grid} merges={merges} />;
 }

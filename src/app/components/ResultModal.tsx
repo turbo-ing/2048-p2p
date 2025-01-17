@@ -55,7 +55,7 @@ export const ResultModal = ({
       setWantsRematch(false);
       rematch();
     }
-  });
+  }, [wantsRematch, lenQueue, remProcessing, rematch]);
 
   return (
     <div>
