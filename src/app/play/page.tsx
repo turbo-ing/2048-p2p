@@ -171,7 +171,7 @@ export default function Game2048Page() {
         setFrontSurrendered({ ...f2 });
 
         //console.log("updating lenqueue");
-        let len = zkClient.moveCache.length;
+        let len = zkClient.moveQueue.length;
         setLenQueue(len);
 
         let surr = state.surrendered;
@@ -272,7 +272,7 @@ export default function Game2048Page() {
                           timer={state.timer}
                           rematch={rematch}
                           rem={rem}
-                          remProcessing={zkClient.isProcessing}
+                          remProcessing={zkClient.workersProcessing > 0}
                           downloadProof={downloadProof}
                           key={peerId}
                           className="text-base"
@@ -292,7 +292,7 @@ export default function Game2048Page() {
                           frontSurrendered={frontSurrendered}
                           totalPlayers={state.totalPlayers}
                           width={80}
-                          lenQueue={zkClient.moveCache.length}
+                          lenQueue={zkClient.moveQueue.length}
                           clock={state.timer - counter}
                         />
                       </div>
@@ -311,9 +311,12 @@ export default function Game2048Page() {
                                     timer={state.timer}
                                     rematch={rematch}
                                     rem={rem}
-                                    remProcessing={zkClient.isProcessing}
+                                    //TODO change the processing thing
+                                    remProcessing={
+                                      zkClient.workersProcessing > 0
+                                    }
                                     downloadProof={downloadProof}
-                                    lenQueue={zkClient.moveCache.length}
+                                    lenQueue={zkClient.moveQueue.length}
                                     key={player}
                                     className="text-sm"
                                     dispatchDirection={dispatchDirection}

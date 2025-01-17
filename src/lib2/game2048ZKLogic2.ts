@@ -1,7 +1,16 @@
-import { Bool, Field, Poseidon, Provable, Struct, UInt64, Proof } from "o1js";
+import {
+  Bool,
+  Field,
+  Poseidon,
+  Provable,
+  Struct,
+  UInt64,
+  Proof,
+  SelfProof,
+} from "o1js";
 
 export const MAX_MOVES2 = 11;
-export const MAX_PARALLEL = 4;
+export const MAX_PARALLEL = 1;
 /* -------------------------------------------------------------------------- */
 /*                                  GameBoard                                  */
 
@@ -120,11 +129,14 @@ export class BoardArray extends Struct({
   }
 }
 
+//Proof subType
+export class myProof extends SelfProof<void, BoardArray> {}
+
 //Proof array type
 export class ProofArray extends Struct({
-  value: Provable.Array(Proof, MAX_PARALLEL),
+  value: Provable.Array(myProof, MAX_PARALLEL),
 }) {
-  constructor(value: Proof<GameBoardWithSeed, void>[]) {
+  constructor(value: myProof[]) {
     super({ value });
   }
 }
