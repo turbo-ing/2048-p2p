@@ -40,11 +40,16 @@ const config: Config = {
           "46%": { transform: "scale(1.2)", opacity: "1" },
           "100%": { transform: "scale(1)", opacity: "1" },
         },
+        fadeIn: {
+          "0%": { opacity: "0", transform: "scale(0.9)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
       },
       animation: {
         fadeOut: "fadeOut 1s ease-out forwards",
         newTile: `newTile ${BASE_ANIMATION_SPEED * 2}s ease`,
         mergeTile: `mergeTile ${BASE_ANIMATION_SPEED * 2}s ease`,
+        fadeIn: "fadeIn 0.5s ease-out",
       },
     },
   },

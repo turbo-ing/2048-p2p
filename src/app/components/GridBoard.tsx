@@ -11,8 +11,7 @@ import { MergePreview } from "./MergePreview";
 const NUM_CELLS = 4;
 
 /**
- * You can tweak these default values,
- * or remove them in favor of purely computed values.
+ * Default values
  */
 const DEFAULT_GAP = 8;
 const DEFAULT_FONT_RATIO = 0.35;

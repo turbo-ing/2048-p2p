@@ -116,7 +116,7 @@ export default function HomePage() {
       <ResponsiveContainer
         top={
           <div className="size-full flex items-center justify-center  md:items-end">
-            <h1 className="flex-none text-text text-8xl font-bold text-center px-2 mt-2 md:text-9xl md:pb-8">
+            <h1 className="flex-none text-8xl font-bold text-center px-2 mt-2 md:text-9xl md:pb-8">
               Turbo
               <br />
               2048
