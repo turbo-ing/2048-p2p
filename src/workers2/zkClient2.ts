@@ -65,6 +65,7 @@ export default class ZkClient2 {
     if (this.compiled) {
       return;
     }
+    console.log("Beginning compile");
     const result = await this.remoteApi.compileZKProgram();
     this.compiled = true;
     console.log("Compiled ZK program");
@@ -73,7 +74,16 @@ export default class ZkClient2 {
 
   startInterval() {
     this.intervalId = window.setInterval(async () => {
-      let proofJSON;
+      /*
+      console.debug("Current zkClient state:");
+      console.log("Compiled: " + this.compiled);
+      console.log("Workers processing: " + this.workersProcessing);
+      console.debug("Queues: (move, proof, board)");
+      console.log(this.moveQueue);
+      console.log(this.proofQueue);
+      console.log(this.boardQueue);
+      */
+
       if (!this.compiled) {
         console.debug("Still compiling, skipping interval");
 

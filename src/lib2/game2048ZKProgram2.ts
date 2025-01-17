@@ -63,6 +63,11 @@ export const Game2048ZKProgram2 = ZkProgram({
       privateInputs: [ProofArray],
 
       async method(proofs: ProofArray) {
+        if (proofs.value.length === 1) {
+          proofs.value[0].proof.verify;
+          return { publicOutput: proofs.value[0].proof.publicOutput };
+        }
+
         //verify all proofs in group
         for (let i = 0; i < MAX_PARALLEL; i++) {
           proofs.value[i].proof.verify();

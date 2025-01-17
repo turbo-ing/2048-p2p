@@ -9,8 +9,8 @@ import {
   SelfProof,
 } from "o1js";
 
-export const MAX_MOVES2 = 11;
-export const MAX_PARALLEL = 1;
+export const MAX_MOVES2 = 3;
+export const MAX_PARALLEL = 2;
 /* -------------------------------------------------------------------------- */
 /*                                  GameBoard                                  */
 
