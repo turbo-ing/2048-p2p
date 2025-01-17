@@ -94,9 +94,7 @@ export const ResultModal = ({
                 {headingText()}
               </h2>
               {/* Optional subheading */}
-              <p className="mt-3 text-center text-sm md:text-base">
-                {subText()}
-              </p>
+              <p className="mt-3 text-center text-sm ">{subText()}</p>
             </div>
 
             {/* Ranking / Scores */}

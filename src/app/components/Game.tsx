@@ -180,7 +180,7 @@ const Game: React.FC<GameProps> = ({
 
   return (
     <>
-      {/* Dont know "\_,() '-' ),_/"  */}
+      {/* When a user winds or runs out of moves  */}
       {(gameOver || gameWon) &&
         !allFinished &&
         !allSurrendered &&
