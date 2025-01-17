@@ -1,6 +1,6 @@
 "use client";
 import { use2048, generateRoomCode } from "@/reducer/2048";
-import { useState, useEffect, ReactNode } from "react";
+import { useState, useEffect, ReactNode, useMemo } from "react";
 import Modal from "./Modal";
 import Input from "./Input";
 import Button from "./Button";
@@ -67,18 +67,16 @@ export default function MultiplayerModal({
   };
 
   const renderContent = () => {
-    switch (selectedMode) {
-      case SelectedMode.INVITE_CHOICE:
-        return <InviteContent />;
-      case SelectedMode.CREATE_ROOM:
-        return <CreateRoomContent />;
-      case SelectedMode.JOIN_ROOM:
-        return <JoinRoomContent />;
-      case SelectedMode.SHOW_ROOM_CODE:
-        return <ShowRoomCodeContent />;
-      default:
-        return null;
-    }
+    return (
+      <>
+        {selectedMode === SelectedMode.INVITE_CHOICE && <InviteContent />}
+        {selectedMode === SelectedMode.CREATE_ROOM && <CreateRoomContent />}
+        {selectedMode === SelectedMode.JOIN_ROOM && <JoinRoomContent />}
+        {selectedMode === SelectedMode.SHOW_ROOM_CODE && (
+          <ShowRoomCodeContent />
+        )}
+      </>
+    );
   };
 
   const InviteContent = () => {
@@ -234,6 +232,8 @@ export default function MultiplayerModal({
       </div>
     );
   };
+
+  // const content = useMemo(() => renderContent(), [dependencies]);
 
   return (
     <Modal show={isOpen} onClose={onClose}>
