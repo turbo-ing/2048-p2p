@@ -61,14 +61,14 @@ export const CreateRoomContent = () => {
         id={"number-of-players"}
         type="number"
       />
-      <Input
+      {/* <Input
         labelText={"Game timer"}
         value={gameTimerInput}
         onChange={setGameTimerInput}
         placeholder={"Enter Game Timer"}
         id={"gametimer"}
         type="number"
-      />
+      /> */}
       <div className="mt-8 space-y-2 text-white transition-all">
         <Button onClick={onCreateNewGame}>
           <img alt="" className="w-5 h-5 text" src="/svg/2048-join-game.svg" />

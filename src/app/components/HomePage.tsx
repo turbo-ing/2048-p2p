@@ -182,7 +182,7 @@ export default function HomePage() {
               high scores, or take on the competition in Versus Mode on the
               Turbo Edge P2P network.
             </div>
-            <div className="flex sm:flex-row flex-col w-full space-y-2 sm:space-y-0">
+            <div className="flex sm:flex-row flex-col w-full space-y-2 sm:space-y-0 sm:space-x-2">
               <Button onClick={handleSingleplayer}>
                 <div className="text-left flex flex-row items-center hover:text-text">
                   <SinglePlayer size={28} />
