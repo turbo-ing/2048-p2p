@@ -11,6 +11,7 @@ import {
   ProofArray,
   BoardArray,
   myProof,
+  ProofWrapper,
 } from "../lib2/game2048ZKLogic2";
 
 import { Action } from "@/reducer/2048";
@@ -99,7 +100,12 @@ export default class ZkClient2 {
 
         //Peel off a section of the proofQueue
         const proofs = this.proofQueue.slice(0, MAX_PARALLEL);
-        const proofArr = new ProofArray(proofs);
+
+        const proofWrappers = [];
+        for (let proof of proofs) {
+          proofWrappers.push(new ProofWrapper(proof));
+        }
+        const proofArr = new ProofArray(proofWrappers);
 
         const [proof, proofJSON] = await this.remoteApi.inductiveStep(proofArr);
 
@@ -160,7 +166,13 @@ export default class ZkClient2 {
 
         //Peel off a section of the proofQueue
         const proofs = this.proofQueue.slice(0, MAX_PARALLEL);
-        const proofArr = new ProofArray(proofs);
+
+        //Create proof array
+        const proofWrappers = [];
+        for (let proof of proofs) {
+          proofWrappers.push(new ProofWrapper(proof));
+        }
+        const proofArr = new ProofArray(proofWrappers);
 
         const [proof, proofJSON] = await this.remoteApi.inductiveStep(proofArr);
 

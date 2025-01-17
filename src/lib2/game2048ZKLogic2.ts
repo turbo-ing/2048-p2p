@@ -120,6 +120,11 @@ export class Direction extends Struct({
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                Extra types                                 */
+
+/* -------------------------------------------------------------------------- */
+
 //Board array type
 export class BoardArray extends Struct({
   value: Provable.Array(GameBoardWithSeed, 2),
@@ -129,17 +134,32 @@ export class BoardArray extends Struct({
   }
 }
 
-//Proof subType
-export class myProof extends SelfProof<void, BoardArray> {}
+export class myProof extends Proof<void, BoardArray> {}
 
-//Proof array type
+export class ProofWrapper extends Struct({ proof: myProof }) {
+  constructor(proof: myProof) {
+    super({ proof });
+  }
+}
+
+//TODO: fix ProofArray type apparently being banned
 export class ProofArray extends Struct({
-  value: Provable.Array(myProof, MAX_PARALLEL),
+  value: Provable.Array(ProofWrapper, MAX_PARALLEL),
 }) {
+  constructor(value: ProofWrapper[]) {
+    super({ value });
+  }
+}
+
+/*
+export class ProofArray extends Struct({
+  value: Provable.Array(myProof, MAX_PARALLEL), 
+}){
   constructor(value: myProof[]) {
     super({ value });
   }
 }
+  */
 
 /* -------------------------------------------------------------------------- */
 /*                          Parsing Move Directions                           */

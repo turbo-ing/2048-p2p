@@ -65,15 +65,15 @@ export const Game2048ZKProgram2 = ZkProgram({
       async method(proofs: ProofArray) {
         //verify all proofs in group
         for (let i = 0; i < MAX_PARALLEL; i++) {
-          proofs.value[i].verify();
+          proofs.value[i].proof.verify();
         }
 
         //verify all state transitions
         for (let j = 1; j < MAX_PARALLEL; j++) {
           //define current pair of proof boards
           //TODO: have the later board provide its initial board state. Currently, both are providing their final board states, which will always fail.
-          let earlierBoard = proofs.value[j - 1].publicOutput.value[1];
-          let laterBoard = proofs.value[j].publicOutput.value[0];
+          let earlierBoard = proofs.value[j - 1].proof.publicOutput.value[1];
+          let laterBoard = proofs.value[j].proof.publicOutput.value[0];
 
           //compare seeds
           earlierBoard.board.seed.assertEquals(laterBoard.board.seed[j]);
@@ -87,8 +87,8 @@ export const Game2048ZKProgram2 = ZkProgram({
         //construct new BoardArray capturing the fact that we now have a proof for A->Z from {A->B, B->C, ..., Y->Z}
 
         let retArray = new BoardArray([
-          proofs.value[0].publicOutput.value[0],
-          proofs.value[MAX_PARALLEL - 1].publicOutput.value[1],
+          proofs.value[0].proof.publicOutput.value[0],
+          proofs.value[MAX_PARALLEL - 1].proof.publicOutput.value[1],
         ]);
 
         return { publicOutput: retArray };
