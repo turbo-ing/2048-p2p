@@ -147,15 +147,6 @@ export default function HomePage() {
       )}
 
       <TurboEdgeNotification connected={turboEdge?.connected || false} />
-      {/* 
-      {!turboEdge?.connected && (
-        <div className="fixed bottom-0 left-0 w-full bg-black text-white flex justify-center p-2 z-50">
-          <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-3 w-3 border-t-2"></div>
-            <span className="text-sm">Connecting to TurboEdge...</span>
-          </div>
-        </div>
-      )} */}
 
       <MultiplayerModal
         isOpen={isModalOpen}
@@ -185,7 +176,7 @@ export default function HomePage() {
               high scores, or take on the competition in Versus Mode on the
               Turbo Edge P2P network.
             </div> */}
-            <div className="flex sm:flex-row flex-col w-full space-y-2 sm:space-y-0 sm:space-x-2">
+            <div className="flex flex-row w-full space-x-2">
               <Button onClick={handleSingleplayer}>
                 <div className="text-left flex flex-row items-center hover:text-text">
                   <SinglePlayer size={28} />
