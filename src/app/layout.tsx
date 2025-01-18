@@ -20,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html className="dark text-text bg-background" lang="en">
-      <body className={`${rubik.className} w-screen h-screen overflow-hidden `}>
+      <body
+        className={`${rubik.className} w-screen h-[100dvh] overflow-hidden `}
+      >
         <Providers>{children}</Providers>
       </body>
     </html>
