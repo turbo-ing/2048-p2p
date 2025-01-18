@@ -4,12 +4,13 @@ import ResponsiveContainer from "./ResponsiveContainer";
 import { initBoardWithSeed, use2048, generateRoomCode } from "@/reducer/2048";
 import MultiplayerModal from "./MultiplayerModal";
 import Mock2048 from "./Mock2048";
-import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
+import { TurboEdgeContext, useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import ZkClient from "@/workers/zkClient";
 import { assignMyPeerId, zkClient } from "@/workers/zkQueue";
 import { useRouter } from "next/navigation";
 import SinglePlayer from "./icon/Singleplayer";
 import Versus from "./icon/Versus";
+import TurboEdgeNotification from "./TurboEdgeNotifcation";
 
 export const useJoinRoom = () => {
   const [waitingToJoin, setWaitingToJoin] = useState(false);
@@ -145,6 +146,8 @@ export default function HomePage() {
         </div>
       )}
 
+      <TurboEdgeNotification connected={turboEdge?.connected || false} />
+      {/* 
       {!turboEdge?.connected && (
         <div className="fixed bottom-0 left-0 w-full bg-black text-white flex justify-center p-2 z-50">
           <div className="flex items-center space-x-2">
@@ -152,7 +155,7 @@ export default function HomePage() {
             <span className="text-sm">Connecting to TurboEdge...</span>
           </div>
         </div>
-      )}
+      )} */}
 
       <MultiplayerModal
         isOpen={isModalOpen}
@@ -177,11 +180,11 @@ export default function HomePage() {
         }
         bottom={
           <div className="flex items-center justify-center flex-col px-6">
-            <div className="mb-4 text-center py-3">
+            {/* <div className="mb-4 text-center py-3">
               Challenge yourself in single-player mode with zero-knowledge proof
               high scores, or take on the competition in Versus Mode on the
               Turbo Edge P2P network.
-            </div>
+            </div> */}
             <div className="flex sm:flex-row flex-col w-full space-y-2 sm:space-y-0 sm:space-x-2">
               <Button onClick={handleSingleplayer}>
                 <div className="text-left flex flex-row items-center hover:text-text">
