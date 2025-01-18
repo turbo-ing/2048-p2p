@@ -122,7 +122,7 @@ export const ResultModal = ({
             </div>
 
             {/* Buttons at the bottom */}
-            <div className="mt-8 space-y-2 sm:space-y-0 sm:flex sm:justify-center sm:gap-4">
+            <div className="mt-8 space-y-2 sm:space-y-0 sm:flex sm:justify-center sm:gap-4 text-base">
               <Button onClick={leave} className="w-full sm:w-auto">
                 Home
               </Button>
