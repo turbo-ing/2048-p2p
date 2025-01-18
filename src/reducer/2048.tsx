@@ -73,7 +73,7 @@ interface JoinAction extends EdgeAction<Game2048State> {
     name: string;
     grid: Grid;
     zkBoard: GameBoardWithSeed;
-    numPlayers: number;
+    numPlayers?: number;
   };
 }
 
@@ -160,7 +160,6 @@ const merge = (row: (Tile | null)[], rowIndex: number): MergeResult => {
     // Check if we can merge
     if (tile1 && tile2 && tile1.value === tile2.value) {
       const newValue = tile1.value * 2;
-
       // Create the merged tile
       const newTile: Tile = {
         id: crypto.randomUUID(),
@@ -367,14 +366,16 @@ export function moveGrid(grid: Grid, direction: Direction): GridMoveResult {
 
   // Find the new tile id in the new position regardless of what
   // transformations(reverse/transpose) has been applied
-  mergeEvents.forEach((evt) => {
-    const mergedTile = findTileById(workingGrid, evt.tileId);
-    if (mergedTile) {
-      evt.to = { x: mergedTile.x, y: mergedTile.y };
-    } else {
-      console.warn("Could not find merged tile in final grid:", evt);
-    }
-  });
+  if (totalScore > 0) {
+    mergeEvents.forEach((evt) => {
+      const mergedTile = findTileById(workingGrid, evt.tileId);
+      if (mergedTile) {
+        evt.to = { x: mergedTile.x, y: mergedTile.y };
+      } else {
+        console.warn("Could not find merged tile in final grid:", evt);
+      }
+    });
+  }
 
   return {
     newGrid: workingGrid,
@@ -546,9 +547,10 @@ const game2048Reducer = (
           actionDirection: action.payload,
         };
       } else return { ...state };
-    case "JOIN":
+    case "JOIN": {
       console.log("Payload on JOIN", action.payload);
 
+      // Re-create the board from the payload
       const payloadBoard = new GameBoardWithSeed({
         board: new GameBoard(action.payload.zkBoard.board.cells.map(Field)),
         seed: Field.from(action.payload.zkBoard.seed),
@@ -556,37 +558,62 @@ const game2048Reducer = (
 
       printBoard(payloadBoard.board);
 
-      const newState = state;
-      let newNumPlayers = action.payload.numPlayers;
+      // Create new copies of every sub-object rather than mutate old ones
+      const newBoard = { ...state.board };
+      const newPlayers = { ...state.players };
+      const newPlayerId = [...state.playerId];
+      const newZkBoard = { ...state.zkBoard };
+      const newScore = { ...state.score };
+      const newIsFinished = { ...state.isFinished };
+      const newSurrendered = { ...state.surrendered };
+      const newRematch = { ...state.rematch };
 
-      newNumPlayers =
-        state.totalPlayers > newNumPlayers ? state.totalPlayers : newNumPlayers;
-      const playerCount = state.playerId.includes(action.peerId!)
-        ? state.playersCount
-        : state.playersCount + 1;
-
-      newState.playersCount = playerCount;
-      newState.totalPlayers = newNumPlayers;
-      if (!state.playerId.includes(action.peerId!)) {
-        newState.players[action.peerId!] = action.payload.name;
-        newState.playerId.push(action.peerId!);
+      // Figure out if we're adding a brand-new player
+      // - If already in the list, don't increment player count
+      let newPlayersCount = state.playersCount;
+      if (!newPlayerId.includes(action.peerId!)) {
+        newPlayersCount += 1;
+        newPlayers[action.peerId!] = action.payload.name;
+        newPlayerId.push(action.peerId!);
       }
-      newState.zkBoard[action.peerId!] = payloadBoard;
-      newState.board[action.peerId!] = {
+
+      // For totalPlayers, either take action.payload.numPlayers or keep the existing if higher
+      // (common for 2+ players game)
+      let newNumPlayers = action.payload.numPlayers ?? state.totalPlayers;
+      if (newNumPlayers < state.totalPlayers) {
+        newNumPlayers = state.totalPlayers;
+      }
+
+      // Assign the new player's board
+      newBoard[action.peerId!] = {
         grid: action.payload.grid,
         merges: [],
       };
-      newState.score[action.peerId!] = 0;
-      newState.actionPeerId = action.peerId;
+      newZkBoard[action.peerId!] = payloadBoard;
+      newScore[action.peerId!] = 0;
+      newIsFinished[action.peerId!] = false;
+      newSurrendered[action.peerId!] = false;
+      newRematch[action.peerId!] = false;
 
-      newState.isFinished[action.peerId!] = false;
-      newState.surrendered[action.peerId!] = false;
-      newState.rematch[action.peerId!] = false;
-
+      // Queue the “init” move
       queueMove(action.peerId!, payloadBoard, "init");
 
-      return { ...newState };
-
+      // Now return a brand-new state object
+      return {
+        ...state,
+        board: newBoard,
+        zkBoard: newZkBoard,
+        players: newPlayers,
+        playerId: newPlayerId,
+        score: newScore,
+        isFinished: newIsFinished,
+        surrendered: newSurrendered,
+        rematch: newRematch,
+        playersCount: newPlayersCount,
+        totalPlayers: newNumPlayers,
+        actionPeerId: action.peerId,
+      };
+    }
     case "LEAVE":
       //error("Not implemented yet");
       console.log("Player " + action.peerId! + " is leaving the game.");

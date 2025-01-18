@@ -7,12 +7,14 @@ interface MergePreviews {
   merges: MergeEvent[];
   cellSize: number;
   gap: number;
+  fonstSize: number;
 }
 
 export const MergePreview: React.FC<MergePreviews> = ({
   merges,
   cellSize,
   gap,
+  fonstSize,
 }) => {
   return (
     <>
@@ -51,6 +53,7 @@ export const MergePreview: React.FC<MergePreviews> = ({
               cellSize={cellSize}
               gap={gap}
               style={{ zIndex: 1 }}
+              fontSize={fonstSize}
             />
             <Tile
               key={merge.tileId + "-2"}
@@ -58,6 +61,7 @@ export const MergePreview: React.FC<MergePreviews> = ({
               cellSize={cellSize}
               gap={gap}
               style={{ zIndex: 1 }}
+              fontSize={fonstSize}
             />
           </Fragment>
         );
