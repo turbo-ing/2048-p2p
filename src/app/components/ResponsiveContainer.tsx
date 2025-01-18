@@ -30,7 +30,7 @@ const ResponsiveContainer: React.FC<ResponsiveContainerProps> = ({
      */
     <div
       className={classNames(
-        "grid min-h-screen grid-cols-1 md:grid-cols-2 text-text overflow-hidden",
+        "grid min-h-[100dvh] grid-cols-1 md:grid-cols-2 text-text overflow-hidden",
         className,
       )}
     >
