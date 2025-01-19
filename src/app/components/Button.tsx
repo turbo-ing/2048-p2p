@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import classNames from "classnames";
+import { button } from "@nextui-org/theme";
 
 interface ButtonProps {
   onClick: () => Promise<void> | void;
@@ -15,7 +16,7 @@ const Button = ({
   variant = "default",
 }: ButtonProps) => {
   const baseClasses =
-    "py-2.5 px-4 rounded-lg w-full flex items-center justify-center gap-1 border-1 transition-all";
+    "py-2.5 px-4 rounded-lg w-full flex items-center justify-center gap-1 border-1 transition-all text-base";
 
   const defaultClasses =
     "bg-bg-dark border-background hover:border-bg-dark hover:bg-background hover:text-bg-dark text-background";
