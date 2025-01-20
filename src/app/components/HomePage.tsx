@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import SinglePlayer from "./icon/Singleplayer";
 import Versus from "./icon/Versus";
 import TurboEdgeNotification from "./TurboEdgeNotifcation";
+import useIsMobile from "../hooks/useIsMobile";
 
 export const useJoinRoom = () => {
   const [waitingToJoin, setWaitingToJoin] = useState(false);
@@ -52,12 +53,17 @@ export const useJoinRoom = () => {
 
 export default function HomePage() {
   const [state, dispatch, connected, room, setRoom] = use2048();
+  const join = useJoinRoom();
+  const isMobile = useIsMobile();
+
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
 
   const [gameTimerInput, setGameTimerInput] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [sentTimer, setSentTimer] = useState(false);
+
+  const [isModalOpen, setModalOpen] = useState(false);
 
   const router = useRouter();
 
@@ -122,9 +128,6 @@ export default function HomePage() {
     }
   }, [connected, dispatch]);
 
-  const [isModalOpen, setModalOpen] = useState(false);
-  const join = useJoinRoom();
-
   const handleSingleplayer = () => {
     join("solomode-" + generateRoomCode(), "Solo", 1);
   };
@@ -177,26 +180,40 @@ export default function HomePage() {
               Turbo Edge P2P network.
             </div> */}
             <div className="flex flex-row w-full space-x-2">
-              <Button onClick={handleSingleplayer}>
-                <div className="text-left flex flex-row items-center hover:text-text">
-                  <SinglePlayer size={28} />
-                  <div>
-                    <div className="ml-2 text-[clamp(1rem, 2.5vw, 2rem)]">
-                      Singleplayer
+              {!isMobile ? (
+                <>
+                  <Button onClick={handleSingleplayer}>
+                    <div className="text-left flex flex-row items-center hover:text-text">
+                      <SinglePlayer size={28} />
+                      <div>
+                        <div className="ml-2 text-[clamp(1rem, 2.5vw, 2rem)]">
+                          Singleplayer
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </Button>
-              <Button onClick={handleVersus}>
-                <div className="flex flex-row items-center hover:text-text">
-                  <Versus size={28} />
-                  <div className="text-left">
-                    <div className="text-[clamp(1rem, 2.5vw, 2rem)]">
-                      Versus
+                  </Button>
+                  <Button onClick={handleVersus}>
+                    <div className="flex flex-row items-center hover:text-text">
+                      <Versus size={28} />
+                      <div className="text-left">
+                        <div className="text-[clamp(1rem, 2.5vw, 2rem)]">
+                          Versus
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </Button>
+                </>
+              ) : (
+                <div className="space-y-4 text-center">
+                  <h1 className="text-3xl font-semibold">
+                    Best Viewed on Desktop
+                  </h1>
+                  <p className=" text-lg">
+                    For a smoother experience and access to all features, visit
+                    this site on desktop.
+                  </p>
                 </div>
-              </Button>
+              )}
             </div>
           </div>
         }
