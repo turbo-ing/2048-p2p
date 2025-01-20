@@ -87,7 +87,7 @@ export default function Game2048Page() {
     });
   };
 
-  useDisableScroll(isMobile);
+  useDisableScroll(isMobile.isMobileByScreenSize);
 
   useEffect(() => {
     /**
@@ -281,7 +281,7 @@ export default function Game2048Page() {
                   </div>
                   {state.playersCount > 1 && (
                     <div className="relative flex flex-row flex-wrap lg:w-1/2 w-full px-5 lg:-mx-2.5 gap-y-2 lg:before:bg-text lg:before:content-[''] lg:before:absolute lg:before:left-0 lg:before:top-[10%] lg:before:bottom-[10%] lg:before:w-[1px] border-text">
-                      {!isMobile &&
+                      {!isMobile.isMobileByScreenSize &&
                         state.playerId.map(
                           (player) =>
                             player !== peerId && (

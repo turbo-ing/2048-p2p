@@ -180,7 +180,7 @@ export default function HomePage() {
               Turbo Edge P2P network.
             </div> */}
             <div className="flex flex-row w-full space-x-2">
-              {!isMobile ? (
+              {!isMobile.isMobileByUserAgent ? (
                 <>
                   <Button onClick={handleSingleplayer}>
                     <div className="text-left flex flex-row items-center hover:text-text">

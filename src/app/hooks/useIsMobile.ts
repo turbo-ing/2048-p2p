@@ -1,21 +1,30 @@
 import { useEffect, useState } from "react";
 
 const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobileByUserAgent, setIsMobileByUserAgent] = useState(false);
+  const [isMobileByScreenSize, setIsMobileByScreenSize] = useState(false);
 
   useEffect(() => {
-    const checkScreenSize = () => {
-      if (window.innerWidth <= 1024) {
-        setIsMobile(true);
-      } else {
-        setIsMobile(false);
-      }
+    // Check if the device is mobile based on user-agent
+    const checkUserAgent = () => {
+      const userAgent = navigator.userAgent || navigator.vendor;
+      const isMobileDevice =
+        /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+          userAgent,
+        );
+      setIsMobileByUserAgent(isMobileDevice);
     };
 
-    // Check screen size on initial load
+    // Check if the screen size is small enough to consider mobile
+    const checkScreenSize = () => {
+      setIsMobileByScreenSize(window.innerWidth <= 1024);
+    };
+
+    // Run both checks on initial load
+    checkUserAgent();
     checkScreenSize();
 
-    // Add event listener for resizing
+    // Add event listener for screen resizing
     window.addEventListener("resize", checkScreenSize);
 
     // Clean up the event listener on unmount
@@ -24,7 +33,7 @@ const useIsMobile = () => {
     };
   }, []);
 
-  return isMobile;
+  return { isMobileByUserAgent, isMobileByScreenSize };
 };
 
 export default useIsMobile;
