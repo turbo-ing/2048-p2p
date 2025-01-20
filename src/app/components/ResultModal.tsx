@@ -39,7 +39,6 @@ export const ResultModal = ({
   frontSurrendered,
   downloadProof,
   lenQueue,
-  // leave,
   player,
   open,
   isWinner,
@@ -110,7 +109,7 @@ export const ResultModal = ({
   };
   const renderButtons = () => (
     <div className="mt-8 space-y-2 text-white transition-all sm:space-y-0 sm:flex sm:justify-center sm:gap-4 text-base">
-      <Link href={""} passHref className="w-full">
+      <Link href={""} passHref>
         <Button className="w-full sm:w-auto" onClick={handleLeave}>
           Home
         </Button>
