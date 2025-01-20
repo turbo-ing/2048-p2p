@@ -1,4 +1,6 @@
 import Button from "../Button";
+import CreateRoom from "../icon/CreateRoom";
+import JoinRoom from "../icon/JoinRoom";
 import Input from "../Input";
 import { useMultiplayerContext } from "./context";
 
@@ -17,11 +19,11 @@ export const InviteContent = () => {
       </div>
       <div className="mt-6 space-y-2  transition-all">
         <Button onClick={joinRoom}>
-          <img alt="" className="w-5 h-5" src="/svg/2048-join-game.svg" />
+          <JoinRoom />
           <p className="font px-0.5">Join Room</p>
         </Button>
         <Button onClick={createNewRoom}>
-          <img alt="" className="w-5 h-5" src="/svg/2048-create-room.svg" />
+          <CreateRoom />
           <p className="text-base px-0.5">Create Room</p>
         </Button>
       </div>
@@ -71,7 +73,7 @@ export const CreateRoomContent = () => {
       /> */}
       <div className="mt-8 space-y-2 text-white transition-all">
         <Button onClick={onCreateNewGame}>
-          <img alt="" className="w-5 h-5 text" src="/svg/2048-join-game.svg" />
+          <JoinRoom />
           <p className="font text-base px-0.5">Create Room</p>
         </Button>
       </div>
