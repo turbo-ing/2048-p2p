@@ -24,8 +24,8 @@ export default function LeaveGameModal() {
       <Modal show={exitModalOpen}>
         <div className="space-y-6">
           <div className="space-y-4">
-            <h3>Confirm Exit</h3>
-            <p className="text-sm">
+            <h3 className="font-semibold text-2xl md:text-4xl">Confirm Exit</h3>
+            <p className="">
               Are you sure you want to leave? All your game data will be lost.
             </p>
           </div>

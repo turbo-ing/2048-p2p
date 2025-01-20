@@ -260,7 +260,6 @@ export default function Game2048Page() {
                         key={peerId}
                         className=" text-medium"
                         dispatchDirection={dispatchDirection}
-                        // leave={leave}
                         board={state.board[peerId!]}
                         height={80}
                         player={state.players[peerId!]}
@@ -300,7 +299,6 @@ export default function Game2048Page() {
                                   key={player}
                                   className="text-medium"
                                   dispatchDirection={dispatchDirection}
-                                  // leave={leave}
                                   board={state.board[player]}
                                   height={40}
                                   player={state.players[player]}
