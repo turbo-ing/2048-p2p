@@ -210,7 +210,7 @@ export default function Game2048Page() {
       setAllFinished(false);
       timeCounter.current = 0;
       //only call it once
-      if (!reset) {
+      if (!reset && connected) {
         dispatch({
           type: "RESET",
         });
