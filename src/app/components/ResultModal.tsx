@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 
 import Modal from "./Modal";
 import Button from "./Button";
+import Link from "next/link";
+import { use2048 } from "@/reducer/2048";
 
 export interface Player {
   name: string;
@@ -19,7 +21,7 @@ interface ResultModalProps {
   allSurrendered: boolean;
   downloadProof: () => void;
   lenQueue: number;
-  leave: () => void;
+  // leave: () => void;
   player: string;
   isWinner: boolean;
   open: boolean;
@@ -37,13 +39,14 @@ export const ResultModal = ({
   frontSurrendered,
   downloadProof,
   lenQueue,
-  leave,
+  // leave,
   player,
   open,
   isWinner,
   rankingData,
   totalPlayers,
 }: ResultModalProps) => {
+  const [, dispatch] = use2048();
   const [ranking, setRanking] = useState<Player[]>(rankingData);
   const [isZKModalOpen, setIsZKModalOpen] = useState<boolean>(false);
   const [isRematchRequested, setIsRematchRequested] = useState<boolean>(false);
@@ -100,11 +103,18 @@ export const ResultModal = ({
     </div>
   );
 
+  const handleLeave = () => {
+    dispatch({
+      type: "LEAVE",
+    });
+  };
   const renderButtons = () => (
     <div className="mt-8 space-y-2 text-white transition-all sm:space-y-0 sm:flex sm:justify-center sm:gap-4 text-base">
-      <Button onClick={leave} className="w-full sm:w-auto">
-        Home
-      </Button>
+      <Link href={""} passHref className="w-full">
+        <Button className="w-full sm:w-auto" onClick={handleLeave}>
+          Home
+        </Button>
+      </Link>
       <Button
         onClick={() => setIsZKModalOpen(true)}
         className="w-full sm:w-auto"

@@ -10,6 +10,7 @@ import { Player } from "@/app/components/ResultModal";
 import useIsMobile from "@/app/hooks/useIsMobile";
 import { useDisableScroll } from "@/app/hooks/useSwipe";
 import { MoveType } from "@/utils/constants";
+import LeaveGameModal from "../components/LeaveGameModal";
 
 export default function Game2048Page() {
   const router = useRouter();
@@ -77,15 +78,6 @@ export default function Game2048Page() {
     document.body.appendChild(download);
     download.click();
     download.remove();
-  };
-
-  const leave = () => {
-    // console.log("Leaving");
-    dispatch({
-      type: "LEAVE",
-    });
-    window.location.href = "/";
-    //router.replace("/");
   };
 
   const rematch = () => {
@@ -246,6 +238,7 @@ export default function Game2048Page() {
           isShowButton={true}
           onClick={() => (window.location.href = "/")}
         /> */}
+      <LeaveGameModal />
       <main className="w-full h-full text-4xl transition-opacity duration-1000">
         <div className="h-full">
           <div className="max-w-7xl mx-auto lg:px-8">
@@ -267,7 +260,7 @@ export default function Game2048Page() {
                         key={peerId}
                         className=" text-medium"
                         dispatchDirection={dispatchDirection}
-                        leave={leave}
+                        // leave={leave}
                         board={state.board[peerId!]}
                         height={80}
                         player={state.players[peerId!]}
@@ -307,7 +300,7 @@ export default function Game2048Page() {
                                   key={player}
                                   className="text-medium"
                                   dispatchDirection={dispatchDirection}
-                                  leave={leave}
+                                  // leave={leave}
                                   board={state.board[player]}
                                   height={40}
                                   player={state.players[player]}

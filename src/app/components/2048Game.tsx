@@ -32,7 +32,6 @@ interface Game2048Props {
   rankingData: Player[];
   className?: string;
   dispatchDirection: (dir: Direction) => void;
-  leave: () => void;
   width: number;
   height: number;
   isFinished: { [playerId: string]: boolean };
@@ -59,7 +58,6 @@ const Game2048: React.FC<Game2048Props> = ({
   rankingData,
   className,
   dispatchDirection,
-  leave,
   isFinished,
   allFinished,
   setAllFinished,
@@ -184,26 +182,6 @@ const Game2048: React.FC<Game2048Props> = ({
 
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4">
-      <ExitButton
-        onClose={() => setExitModalOpen(true)}
-        className="text-base absolute top-5 right-5"
-      />
-      <Modal show={exitModalOpen}>
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <h3>Confirm Exit</h3>
-            <p className="text-sm">
-              Are you sure you want to leave? All your game data will be lost.
-            </p>
-          </div>
-          <div className="flex flex-row space-x-2">
-            <Button variant="inverted" onClick={() => setExitModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => leave()}>Leave</Button>
-          </div>
-        </div>
-      </Modal>
       {/* Result Modal */}
       {(((gameOver || gameWon) && allFinished) ||
         allSurrendered ||
@@ -220,7 +198,6 @@ const Game2048: React.FC<Game2048Props> = ({
           surrendered={surrendered}
           allSurrendered={allSurrendered}
           frontSurrendered={frontSurrendered}
-          leave={leave}
           player={trueid}
           isWinner={gameWon}
           open={true}
