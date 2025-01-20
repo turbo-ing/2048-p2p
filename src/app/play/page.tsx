@@ -245,7 +245,7 @@ export default function Game2048Page() {
             {!state || state.playersCount < 1 ? (
               <div className="items-center">Loading</div>
             ) : (
-              <div className="flex items-center min-h-[100vh] max-w-[960px] mx-auto">
+              <div className="flex items-center min-h-[100dvh] max-w-[960px] mx-auto">
                 <div className="w-full flex lg:flex-row flex-col justify-center lg:-mx-5">
                   <div className="lg:w-1/2 mx-auto size-full ">
                     <div className="max-w-[365px] mx-auto text-3xl w-[365px] ">
