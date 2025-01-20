@@ -39,6 +39,7 @@ export default function MultiplayerModal({
 
   useEffect(() => {
     if (!isOpen) {
+      setSelectedMode(SelectedMode.INVITE_CHOICE);
       setNameInput("");
       setGameTimerInput("");
       setNumOfPlayers("");
