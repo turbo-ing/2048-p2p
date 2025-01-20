@@ -8,10 +8,10 @@ import { WaitingModal } from "@/app/components/WaitingModal";
 import useArrowKeyPress from "@/app/hooks/useArrowKeyPress";
 import useSwipe from "@/app/hooks/useSwipe";
 import { gridsAreEqual, getGameState, hasValidMoves } from "@/utils/helper";
-import { Tile } from "./Tile";
-import { MergePreview } from "./MergePreview";
 import { BASE_ANIMATION_SPEED } from "../../../tailwind.config";
 import { GridBoard } from "./GridBoard";
+import ExitButton from "./ExitButton";
+import Modal from "./Modal";
 import Button from "./Button";
 
 // --- Constants ---
@@ -69,7 +69,7 @@ const Game2048: React.FC<Game2048Props> = ({
   totalPlayers,
   clock,
 }) => {
-  const { grid, merges } = board;
+  const { grid, merges } = board || { grid: [], merges: [] };
 
   const [currentGrid, setCurrentGrid] = useState<Grid>(grid);
   const previousGridRef = useRef<Grid | null>(null);
@@ -78,6 +78,8 @@ const Game2048: React.FC<Game2048Props> = ({
   const [gameWon, setGameWon] = useState(false);
 
   const [mergeTiles, setMergeTiles] = useState<MergeEvent[]>([]);
+
+  const [exitModalOpen, setExitModalOpen] = useState<boolean>(false);
 
   /**
    * Updates the grid with prevX/prevY data for animations.
@@ -182,6 +184,26 @@ const Game2048: React.FC<Game2048Props> = ({
 
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4">
+      <ExitButton
+        onClose={() => setExitModalOpen(true)}
+        className="text-base absolute top-5 right-5"
+      />
+      <Modal show={exitModalOpen}>
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <h3>Confirm Exit</h3>
+            <p className="text-sm">
+              Are you sure you want to leave? All your game data will be lost.
+            </p>
+          </div>
+          <div className="flex flex-row space-x-2">
+            <Button variant="inverted" onClick={() => setExitModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => leave()}>Leave</Button>
+          </div>
+        </div>
+      </Modal>
       {/* Result Modal */}
       {(((gameOver || gameWon) && allFinished) ||
         allSurrendered ||
@@ -209,9 +231,9 @@ const Game2048: React.FC<Game2048Props> = ({
       )}
 
       {/* Scoreboard */}
-      <div className="flex justify-center mb-6 w-full">
+      <div className="flex justify-evenly mb-6 w-full">
         <ScoreBoard title="SCORE" total={score} />
-        {timer !== 0 && <ScoreBoard title="Time left:" total={clock} />}
+        {timer !== 0 && <ScoreBoard title="TIMER" total={clock} />}
       </div>
 
       {/* Board */}
@@ -245,13 +267,13 @@ const Game2048: React.FC<Game2048Props> = ({
         </div>
       )}
       {/* surrender button */}
-      {player === trueid && (
+      {/* {player === trueid && (
         <Button className="mt-6 text-base" onClick={() => leave()}>
           <p>
             {totalPlayers > 1 && "Surrender"} {totalPlayers < 2 && "Leave"}
           </p>
         </Button>
-      )}
+      )} */}
     </div>
   );
 };
