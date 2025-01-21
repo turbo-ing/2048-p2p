@@ -28,10 +28,9 @@ export async function queueMove(
   move: string,
 ) {
   if (peerId != myPeerId) return;
-
-  // What was once here doesn't apply anymore, as "init" is now our base move.
-  // TODO: Construct a different action to kickstart the init.
-  //       This might work as-is, but it might also be awful.
-  if (move !== "init") return zkClient3.addMove(zkBoard, move);
-  else return;
+  if (move === "init") {
+    return zkClient3.addBoard(zkBoard);
+  } else {
+    return zkClient3.addMove(zkBoard, move);
+  }
 }

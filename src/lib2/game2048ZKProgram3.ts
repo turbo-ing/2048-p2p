@@ -20,23 +20,24 @@ export const Game2048ZKProgram3 = ZkProgram({
      * Base Case: Generate a proof of state transition between two arbitrary
      * board states, given a list of direction and the two states in question.
      */
-    initialize: {
+    baseCase: {
       privateInputs: [BoardArray, Direction],
 
       async method(boards: BoardArray, directions: Direction) {
+        //console.debug("27");
         let initBoard = boards.value[0];
         let newBoard = boards.value[1];
-
+        //console.debug("30");
         let currentBoard = initBoard.board;
         let currentSeed = initBoard.seed;
-
+        //console.debug("33");
         for (let i = 0; i < MAX_MOVES2; i++) {
           let nextBoard = applyOneMoveCircuit(
             currentBoard,
             directions.value[i],
           );
           let needAddTile = nextBoard.hash().equals(currentBoard.hash()).not();
-
+          //console.debug("40");
           currentBoard = nextBoard;
           [currentBoard, currentSeed] = addRandomTile(
             currentBoard,
@@ -44,13 +45,20 @@ export const Game2048ZKProgram3 = ZkProgram({
             needAddTile,
           );
         }
-
+        //console.debug("48");
         for (let j = 0; j < 16; j++) {
+          console.log("Cells debugging:");
+          console.log(j);
+          console.log(boards.value);
+          console.debug(currentBoard.cells[j]);
+          console.debug(newBoard.board.cells[j]);
           currentBoard.cells[j].assertEquals(newBoard.board.cells[j]);
         }
-
+        //console.debug("52");
         newBoard.seed.assertEquals(currentSeed);
-
+        console.log(newBoard.seed);
+        console.log(currentSeed);
+        //console.debug("54");
         return { publicOutput: boards };
       },
     },
@@ -59,7 +67,7 @@ export const Game2048ZKProgram3 = ZkProgram({
      * initial and terminal states to verify that there is a continuous transition
      * between them (eg A->E, E->I. We compare E, E and return proof that A->I).
      */
-    verifyTransition: {
+    inductiveStep: {
       privateInputs: [SelfProof, SelfProof],
 
       async method(
@@ -71,21 +79,28 @@ export const Game2048ZKProgram3 = ZkProgram({
         proof2.verify();
 
         //Get both boards from the proofs
-        const board1proof1 = proof1.publicOutput.value[0];
-        const board2proof1 = proof1.publicOutput.value[1];
-        const board1proof2 = proof2.publicOutput.value[0];
-        const board2proof2 = proof2.publicOutput.value[1];
+        const proof1board1 = proof1.publicOutput.value[0];
+        const proof1board2 = proof1.publicOutput.value[1];
+        const proof2board1 = proof2.publicOutput.value[0];
+        const proof2board2 = proof2.publicOutput.value[1];
+
+        //console.debug(proof1board1.seed);
+        //console.debug(proof1board2.seed);
+        //console.debug(proof2board1.seed);
+        //console.debug(proof2board2.seed);
 
         //compare seeds
-        board2proof1.seed.assertEquals(board1proof2.seed);
+        proof1board2.seed.assertEquals(proof2board1.seed);
+        console.log(proof1board2.seed);
+        console.log(proof2board1.seed);
 
         //compare cells
         for (let c = 0; c < 16; c++) {
-          board2proof1.board.cells[c].assertEquals(board1proof2.board.cells[c]);
+          proof1board2.board.cells[c].assertEquals(proof2board1.board.cells[c]);
         }
 
         //construct new BoardArray capturing the fact that we now have a proof for A->C from A->B, B->C
-        let retArray = new BoardArray([board1proof1, board2proof2]);
+        let retArray = new BoardArray([proof1board1, proof2board2]);
 
         return { publicOutput: retArray };
       },

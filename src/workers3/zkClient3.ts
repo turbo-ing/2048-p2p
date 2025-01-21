@@ -40,13 +40,13 @@ export default class ZkClient3 {
   //      boardQueue. CRUCIAL STEP: we need to get the new base index of the
   //      boardQueue, as this will store the new final state.
   initialBoard: GameBoardWithSeed;
-  boardQueue: GameBoardWithSeed[];
+  boardQueue: GameBoardWithSeed[] = [];
 
   intervalId: number | null = null;
   dispatch: Dispatch<Action>;
 
   constructor() {
-    setNumberOfWorkers(14);
+    //setNumberOfWorkers(1);
     // Initialize the worker from the zkWorker
     // TODO: Maybe create a set of workers? For parallelisation.
     if (typeof window !== "undefined") {
@@ -87,6 +87,9 @@ export default class ZkClient3 {
       console.log(this.boardQueue);
       */
 
+      //TODO: look into grabbing necessary data before starting a worker.
+      //      nvm it does that anyway i think
+
       if (!this.compiled) {
         console.debug("Still compiling, skipping interval");
 
@@ -109,15 +112,45 @@ export default class ZkClient3 {
         return;
       } else if (this.proofQueue.length > 2) {
         //Highest priority if we have a lot of proofs remaining. If we can clear the proof queue optimally, then we should do so.
+        console.log("Processing proofQueue (Priority)");
         this.workersProcessing += 1;
 
         //Peel off a section of the proofQueue
         const proofs = this.proofQueue.slice(0, 2);
         this.proofQueue = this.proofQueue.slice(2);
 
-        const [proof, proofJSON] = await this.remoteApi.inductiveStep(
+        //Step 1: peel away the boards from the proofs
+        const proof0 = proofs[0];
+        const proof1 = proofs[1];
+
+        let board0 = proof0.publicOutput.value[1];
+        let board1 = proof1.publicOutput.value[0];
+
+        console.log("board0:\n");
+        console.debug(board0);
+        console.log("board1:\n");
+        console.debug(board1);
+
+        console.log(board0.board.cells);
+        const boardNums0 = board0.board.cells.map((cell) =>
+          Number(cell.toBigInt()),
+        );
+        const seedNums0 = board0.seed.toBigInt();
+
+        console.log(board0.board.cells);
+        const boardNums1 = board1.board.cells.map((cell) =>
+          Number(cell.toBigInt()),
+        );
+        const seedNums1 = board1.seed.toBigInt();
+
+        //TODO fix the inductive step breaking
+        const [proof, proofJSON] = await this.remoteApi.inductiveStepAux(
           proofs[0],
+          boardNums0,
+          seedNums0,
           proofs[1],
+          boardNums1,
+          seedNums1,
         );
 
         this.proofQueue.push(proof);
@@ -131,31 +164,53 @@ export default class ZkClient3 {
         });
 
         this.workersProcessing -= 1;
-      } else if (this.moveQueue.length > 0) {
+      } else if (this.moveQueue.length > 0 && this.boardQueue.length > 1) {
         //We want to clear the moveQueue ideally before the proofQueue,
         //unless the latter has a large backlog.
+
+        console.log("Processing moveQueue");
         this.workersProcessing += 1;
 
-        console.log("Generating proof for moves", this.moveQueue);
+        console.log("Generating proof for moveQueue", this.moveQueue);
 
         //Peel off a section of the moveQueue and boardQueue
         const moves = this.moveQueue.slice(0, MAX_MOVES2);
         const boards = this.boardQueue.slice(0, MAX_MOVES2);
 
+        console.log("moves to use in proof: ", moves);
+
         //Remove those moves/boards from the queue also
         this.moveQueue = this.moveQueue.slice(MAX_MOVES2);
         this.boardQueue = this.boardQueue.slice(MAX_MOVES2);
+        console.log("updated moveQueue: ", this.moveQueue);
+        console.log("updated boardQueue: ", this.boardQueue);
+
+        //replace the last board if we dont have enough boards normally
+        this.boardQueue.push(boards[boards.length - 1]);
 
         //refer to notes at boardQueuedeclaration
         let initBoard = boards[0];
-        let newBoard = this.boardQueue[0];
+        let newBoard = boards[boards.length - 1];
 
-        console.log("Generating proof for moves", moves);
-        console.log("Moves left in cache", this.moveQueue);
+        console.log("initBoard: " + initBoard);
+        console.log("newBoard: " + newBoard);
 
-        const [proof, proofJSON] = await this.remoteApi.baseCase(
-          initBoard,
-          newBoard,
+        const boardNums0 = initBoard.board.cells.map((cell) =>
+          Number(cell.toBigInt()),
+        );
+        const seedNums0 = initBoard.seed.toBigInt();
+
+        //TODO error here??
+        const boardNums1 = newBoard.board.cells.map((cell) =>
+          Number(cell.toBigInt()),
+        );
+        const seedNums1 = newBoard.seed.toBigInt();
+
+        const [proof, proofJSON] = await this.remoteApi.baseCaseAux(
+          boardNums0,
+          seedNums0,
+          boardNums1,
+          seedNums1,
           moves,
         );
 
@@ -170,7 +225,8 @@ export default class ZkClient3 {
         });
 
         this.workersProcessing -= 1;
-      } else if (this.proofQueue.length > 0) {
+      } else if (this.proofQueue.length > 1) {
+        console.log("Processing proofQueue (Regular)");
         //We only deal with remaining proofs in the queue if there's nothing else to do.
         //This should be the last step.
         this.workersProcessing += 1;
@@ -179,12 +235,38 @@ export default class ZkClient3 {
         const proofs = this.proofQueue.slice(0, 2);
         this.proofQueue = this.proofQueue.slice(2);
 
-        const [proof, proofJSON] = await this.remoteApi.inductiveStep(
+        const proof0 = proofs[0];
+        const proof1 = proofs[1];
+
+        let board0 = proof0.publicOutput.value[1];
+        let board1 = proof1.publicOutput.value[0];
+
+        console.log("board0:\n");
+        console.debug(board0);
+        console.log("board1:\n");
+        console.debug(board1);
+
+        const boardNums0 = board0.board.cells.map((cell) =>
+          Number(cell.toBigInt()),
+        );
+        const seedNums0 = board0.seed.toBigInt();
+
+        const boardNums1 = board1.board.cells.map((cell) =>
+          Number(cell.toBigInt()),
+        );
+        const seedNums1 = board1.seed.toBigInt();
+
+        //TODO fix the inductive step breaking
+        const [proof, proofJSON] = await this.remoteApi.inductiveStepAux(
           proofs[0],
+          boardNums0,
+          seedNums0,
           proofs[1],
+          boardNums1,
+          seedNums1,
         );
 
-        this.proofQueue.push(proof);
+        await this.proofQueue.push(proof);
 
         //send proof
         this.dispatch({
@@ -241,12 +323,20 @@ export default class ZkClient3 {
     return proof;
   }*/
 
-  //Add a move to the moveQueue. We push the new board to currentBoard.
+  //Add a move to the moveQueue. Likewise with a board.
   async addMove(zkBoard: GameBoardWithSeed, move: string) {
     console.log("Adding move to queue", zkBoard, move);
     console.log("Active worker count", this.workersProcessing);
-    this.moveQueue.push(move);
-    this.boardQueue.push(zkBoard);
+    await this.moveQueue.push(move);
+    await this.boardQueue.push(zkBoard);
     console.log("Move added to queue: ", this.moveQueue.length);
+    console.log("Board added to queue: ", this.boardQueue.length);
+  }
+  //Adds the initial board to the boardQueue.
+  async addBoard(zkBoard: GameBoardWithSeed) {
+    console.log("Adding initial board to queue", zkBoard);
+    console.log("Active worker count", this.workersProcessing);
+    await this.boardQueue.push(zkBoard);
+    console.log("Board added to queue: ", this.boardQueue.length);
   }
 }
