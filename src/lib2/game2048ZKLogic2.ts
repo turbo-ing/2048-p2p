@@ -9,7 +9,7 @@ import {
   SelfProof,
 } from "o1js";
 
-export const MAX_MOVES2 = 3;
+export const MAX_MOVES2 = 20;
 export const MAX_PARALLEL = 2;
 /* -------------------------------------------------------------------------- */
 /*                                  GameBoard                                  */
@@ -134,10 +134,10 @@ export class BoardArray extends Struct({
   }
 }
 
-export class myProof extends Proof<void, BoardArray> {}
+export class myProof extends SelfProof<void, BoardArray> {}
 
-export class ProofWrapper extends Struct({ proof: myProof }) {
-  constructor(proof: myProof) {
+export class ProofWrapper extends Struct({ proof: SelfProof }) {
+  constructor(proof: SelfProof<void, BoardArray>) {
     super({ proof });
   }
 }
