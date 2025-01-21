@@ -3335,10 +3335,10 @@
   dependencies:
     tslib "^2.4.0"
 
-"@turbo-ing/edge-v0@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@turbo-ing/edge-v0/-/edge-v0-0.3.0.tgz#b1cdb1efec05dab48aae1f6c4838badfaba3cb4d"
-  integrity sha512-tEw1WOdmtUyslXNgfPgsehdNZOPQEjQu5rwehTgFp/dfRODiqWwxNztbZDTjny0MRAbtn14H6i5xSwwIcwedpA==
+"@turbo-ing/edge-v0@^0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@turbo-ing/edge-v0/-/edge-v0-0.3.1.tgz#23ba15347603a881d0025abcad15441ae11982cb"
+  integrity sha512-0jLFnWwrMIt4VkucP6lYH51/u83Fi2cy25GEro86y7dKHsrnyRE227NWycRLQ5ugszT2h3YZRwYiX6zy1H1kdQ==
   dependencies:
     "@chainsafe/libp2p-gossipsub" "^14.1.0"
     "@chainsafe/libp2p-noise" "^16.0.0"
