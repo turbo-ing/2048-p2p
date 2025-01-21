@@ -6,7 +6,7 @@
 // import ZkClient from "@/workers/zkClient";
 // import { assignMyPeerId, zkClient } from "@/workers/zkQueue";
 // import MultiplayerModal from "./MultiplayerModal";
-// import { useJoinRoom } from "../hooks/useJoinRoom";
+// import { useJoin } from "../hooks/useJoin";
 // import Button from "./Button";
 
 // // interface PlayNowProps {
@@ -23,7 +23,7 @@
 
 //   const [isModalOpen, setModalOpen] = useState(false);
 
-//   const join = useJoinRoom();
+//   const join = useJoin();
 
 //   const [gameTimerInput, setGameTimerInput] = useState(0);
 //   const [isLoading, setIsLoading] = useState(false);

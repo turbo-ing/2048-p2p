@@ -19,7 +19,7 @@ const NUM_CELLS = 4;
 const DEFAULT_GAP = 8;
 
 interface Game2048Props {
-  timer: number;
+  timer?: number;
   rematch: () => void;
   rem: number;
   remProcessing: boolean;

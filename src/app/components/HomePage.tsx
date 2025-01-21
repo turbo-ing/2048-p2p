@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Button from "./Button";
 import ResponsiveContainer from "./ResponsiveContainer";
-import { initBoardWithSeed, use2048, generateRoomCode } from "@/reducer/2048";
+import { use2048, generateRoomCode } from "@/reducer/2048";
 import MultiplayerModal from "./MultiplayerModal";
 import Mock2048 from "./Mock2048";
 import { TurboEdgeContext, useTurboEdgeV0 } from "@turbo-ing/edge-v0";
@@ -12,107 +12,39 @@ import SinglePlayer from "./icon/Singleplayer";
 import Versus from "./icon/Versus";
 import TurboEdgeNotification from "./TurboEdgeNotifcation";
 import useIsMobile from "../hooks/useIsMobile";
+import { useJoin } from "../hooks/useJoin";
+import React from "react";
 
-export const useJoinRoom = () => {
-  const [waitingToJoin, setWaitingToJoin] = useState(false);
-  const [state, dispatch, connected, room, setRoom] = use2048();
-  const [name, setName] = useState("");
-  const [numberOfPlayers, setNumOfPlayers] = useState<number | undefined>(
-    undefined,
-  );
-
-  useEffect(() => {
-    if (waitingToJoin && connected) {
-      const [gridBoard, zkBoard] = initBoardWithSeed(
-        Math.floor(Math.random() * 100000000000),
-      );
-
-      dispatch({
-        type: "JOIN",
-        payload: {
-          name: name,
-          grid: gridBoard,
-          zkBoard: zkBoard,
-          numPlayers: numberOfPlayers,
-        },
-      });
-
-      setWaitingToJoin(false); // Reset the waiting state
-    }
-  }, [waitingToJoin, connected, state, room, name, numberOfPlayers, dispatch]);
-
-  const joinRoom = (roomId: string, name: string, numberOfPlayers?: number) => {
-    setRoom(roomId);
-    setName(name);
-    setNumOfPlayers(numberOfPlayers);
-    setWaitingToJoin(true);
-  };
-
-  return joinRoom;
-};
+const LazyMock2048 = React.lazy(() => import("./Mock2048"));
 
 export default function HomePage() {
   const [state, dispatch, connected, room, setRoom] = use2048();
-  const join = useJoinRoom();
   const isMobile = useIsMobile();
 
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
 
   const [gameTimerInput, setGameTimerInput] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
   const [sentTimer, setSentTimer] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setModalOpen] = useState(false);
-
   const router = useRouter();
+
+  const handleJoin = (joining: boolean) => {
+    if (joining) {
+      setIsLoading(true);
+      router.push("/play");
+    }
+  };
+
+  const joinRoom = useJoin(handleJoin);
 
   // If you're compiling a ZK program on startup, you'd do that here.
   const compileZKProgram = async (zkClient: ZkClient) => {
     const result = await zkClient?.compileZKProgram();
     console.log("Verification Key", result?.verificationKey);
   };
-
-  useEffect(() => {
-    // We only consider players "ready" if:
-    // 1) There's at least 1 player (totalPlayers > 0)
-    // 2) The actual number of players who joined matches totalPlayers
-    // 3) We are connected to TurboEdge (turboEdge?.connected === true)
-    // 4) We are connected to the 2048 game (the `connected` flag from use2048 === true)
-    const allPlayersReady =
-      state.totalPlayers > 0 && state.totalPlayers === state.playersCount;
-
-    if (allPlayersReady && turboEdge?.connected && connected) {
-      setIsLoading(true);
-      setModalOpen(false);
-
-      // If time is set and we haven't sent it yet, dispatch it
-      if (gameTimerInput && gameTimerInput > 0 && !sentTimer) {
-        setSentTimer(true);
-        dispatch({
-          type: "TIMER",
-          payload: {
-            time: gameTimerInput,
-            ended: false,
-          },
-        });
-      }
-
-      // Now that everything is ready, redirect to /play
-      router.push("/play");
-    } else {
-      setIsLoading(false);
-    }
-  }, [
-    state.totalPlayers,
-    state.playersCount,
-    turboEdge?.connected,
-    connected,
-    gameTimerInput,
-    sentTimer,
-    dispatch,
-    router,
-  ]);
 
   // Assign the peer ID once we have a turboEdge instance
   useEffect(() => {
@@ -129,7 +61,8 @@ export default function HomePage() {
   }, [connected, dispatch]);
 
   const handleSingleplayer = () => {
-    join("solomode-" + generateRoomCode(), "Solo", 1);
+    setIsLoading(true);
+    joinRoom("solomode-" + generateRoomCode(), "Solo", 1);
   };
 
   const handleVersus = () => {
@@ -142,9 +75,11 @@ export default function HomePage() {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="flex flex-col items-center">
             <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-white border-opacity-75" />
-            <div className="flex items-center mt-4">
-              {!connected && "Connecting to Turbo"}
-            </div>
+            {/* <div className="flex items-center mt-4">
+              {!connected && (
+                <p className="text-white mt-4">Connecting to TurboEdge</p>
+              )}
+            </div> */}
           </div>
         </div>
       )}
@@ -154,7 +89,7 @@ export default function HomePage() {
       <MultiplayerModal
         isOpen={isModalOpen}
         onClose={() => setModalOpen(false)}
-        join={join}
+        pushPlay={() => handleJoin(true)}
       />
 
       <ResponsiveContainer
@@ -169,7 +104,13 @@ export default function HomePage() {
         }
         middle={
           <div className="flex-1 h-fit max-w-[600px] px-14 lg:px-20 w-full md:drop-shadow-2xl">
-            <Mock2048 />
+            <Suspense
+              fallback={
+                <div className="text-center">Loading Game Preview...</div>
+              }
+            >
+              <LazyMock2048 />
+            </Suspense>
           </div>
         }
         bottom={

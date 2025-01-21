@@ -8,11 +8,13 @@ import {
   JoinRoomContent,
   ShowRoomCodeContent,
 } from "./Content";
+import { useJoin } from "@/app/hooks/useJoin";
+import { useRouter } from "next/router";
 
 interface MultiplayerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  join: (roomId: string, name: string, numberOfPlayers?: number) => void;
+  pushPlay: () => void;
 }
 
 enum SelectedMode {
@@ -25,7 +27,7 @@ enum SelectedMode {
 export default function MultiplayerModal({
   isOpen,
   onClose,
-  join,
+  pushPlay,
 }: MultiplayerModalProps) {
   const [state, dispatch, connected, roomId, setRoomId, zkClient] = use2048();
   const [selectedMode, setSelectedMode] = useState<SelectedMode>(
@@ -37,6 +39,14 @@ export default function MultiplayerModal({
   const [numOfPlayers, setNumOfPlayers] = useState<string>("");
   const [roomIdInput, setRoomIdInput] = useState<string>("");
 
+  const handleJoining = (loading: boolean) => {
+    if (loading) {
+      pushPlay();
+    }
+  };
+
+  const joinRoom = useJoin(handleJoining);
+
   useEffect(() => {
     if (!isOpen) {
       setSelectedMode(SelectedMode.INVITE_CHOICE);
@@ -44,18 +54,29 @@ export default function MultiplayerModal({
       setGameTimerInput("");
       setNumOfPlayers("");
       setRoomIdInput("");
+      // if (connected) {
+      //   setRoomId("");
+      //   dispatch({
+      //     type: "LEAVE",
+      //   });
+      // }
     }
   }, [isOpen]);
 
   const createNewRoom = () => setSelectedMode(SelectedMode.CREATE_ROOM);
-  const joinRoom = () => setSelectedMode(SelectedMode.JOIN_ROOM);
+  const setJoinRoom = () => setSelectedMode(SelectedMode.JOIN_ROOM);
   const joinGame = () => {
-    join(roomIdInput, nameInput);
+    joinRoom(roomIdInput, nameInput);
     setSelectedMode(SelectedMode.SHOW_ROOM_CODE);
   };
   const newGame = () => {
     const room = generateRoomCode();
-    join(room, nameInput, parseInt(numOfPlayers));
+    joinRoom(
+      room,
+      nameInput,
+      parseInt(numOfPlayers) ?? 1,
+      parseInt(gameTimerInput) ?? 0,
+    );
     setSelectedMode(SelectedMode.SHOW_ROOM_CODE);
   };
 
@@ -76,7 +97,7 @@ export default function MultiplayerModal({
       state={state}
       roomId={roomId}
       createNewRoom={createNewRoom}
-      joinRoom={joinRoom}
+      joinRoom={setJoinRoom}
     >
       <Modal show={isOpen} onClose={onClose}>
         {selectedMode === SelectedMode.INVITE_CHOICE && <InviteContent />}

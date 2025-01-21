@@ -290,7 +290,6 @@ export default function Game2048Page() {
                                 className="w-1/2 px-2.5 text-xl"
                               >
                                 <Game2048
-                                  timer={state.timer}
                                   rematch={rematch}
                                   rem={rem}
                                   remProcessing={zkClient.isProcessing}
