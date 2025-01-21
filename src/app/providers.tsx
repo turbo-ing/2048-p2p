@@ -6,7 +6,7 @@ import { Game2048Provider } from "@/reducer/2048";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <TurboEdgeProviderV0>
+    <TurboEdgeProviderV0 gameId="turbo-2048">
       <Game2048Provider>{children}</Game2048Provider>
     </TurboEdgeProviderV0>
   );

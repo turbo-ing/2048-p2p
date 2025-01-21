@@ -18,7 +18,7 @@
     "@noble/hashes": "^1.5.0",
     "@noble/secp256k1": "^2.1.0",
     "@reduxjs/toolkit": "^2.2.7",
-    "@turbo-ing/edge-v0": "^0.2.1",
+    "@turbo-ing/edge-v0": "^0.3.0",
     "@types/styled-components": "^5.1.26",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",
