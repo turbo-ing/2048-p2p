@@ -421,7 +421,7 @@ function applyMoveDown(board: GameBoard): GameBoard {
  */
 function applyMoveUpDown(board: GameBoard, direction: Field): GameBoard {
   let newBoard = board.clone();
-  const isDown = direction.equals(Field(MoveDirection.Down));
+  const isDown = direction.equals(Field.from(MoveDirection.Down));
 
   for (let col = 0; col < 4; col++) {
     let colVals = [
@@ -453,7 +453,7 @@ function applyMoveUpDown(board: GameBoard, direction: Field): GameBoard {
  */
 function applyMoveLeftRight(board: GameBoard, direction: Field): GameBoard {
   let newBoard = board.clone();
-  const isRight = direction.equals(Field(MoveDirection.Right));
+  const isRight = direction.equals(Field.from(MoveDirection.Right));
 
   for (let row = 0; row < 4; row++) {
     let rowVals = [
@@ -483,8 +483,8 @@ function applyMoveLeftRight(board: GameBoard, direction: Field): GameBoard {
  */
 function applyMoveUniversal(board: GameBoard, direction: Field): GameBoard {
   let newBoard = board.clone();
-  const isDown = direction.equals(Field(MoveDirection.Down));
-  const isRight = direction.equals(Field(MoveDirection.Right));
+  const isDown = direction.equals(Field.from(MoveDirection.Down));
+  const isRight = direction.equals(Field.from(MoveDirection.Right));
   const isUpDown = direction.lessThanOrEqual(2);
   const isLeftRight = isUpDown.not();
   const isReverse = isDown.or(isRight);
@@ -540,7 +540,7 @@ export function applyOneMoveCircuit(
   const newBoard = applyMoveUniversal(board, direction);
 
   // Check which direction we're moving
-  const isNone = direction.equals(Field(MoveDirection.None));
+  const isNone = direction.equals(Field.from(MoveDirection.None));
 
   return Provable.if<GameBoard>(isNone, GameBoard, noChangeBoard, newBoard);
 }
@@ -615,7 +615,7 @@ export function addRandomTile(
   for (let i = 0; i < 16; i++) {
     board.cells[i] = Provable.if(
       isZeroes[i].and(emptyTilesIndex[i].equals(randIndex)).and(enabled),
-      Field(2),
+      Field.from(2),
       board.cells[i],
     );
   }

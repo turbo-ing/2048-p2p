@@ -5,8 +5,8 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Modal from "./Modal";
 
 import { generateRoomCode, initBoardWithSeed, use2048 } from "@/reducer/2048";
-import ZkClient3 from "../../workers3/zkClient3";
-import { assignMyPeerId, zkClient3 } from "../../workers3/zkQueue3";
+import ZkClient4 from "../../workers3/zkClient4";
+import { assignMyPeerId, zkClient4 } from "../../workers3/zkQueue3";
 
 interface PlayNowProps {
   activeIndex: number;
@@ -34,9 +34,9 @@ export const PlayNow = ({
 
   const router = useRouter();
 
-  const compileZKProgram = async (zkClient3: ZkClient3) => {
-    const result = await zkClient3?.compileZKProgram();
-    console.log("Verification Key", result?.verificationKey);
+  const compileZKProgram = async (zkClient4: ZkClient4) => {
+    const result = await zkClient4?.compileZKProgram();
+    //console.log("Verification Key", result?.verificationKey);
   };
 
   const onClose = () => {
@@ -95,7 +95,7 @@ export const PlayNow = ({
   }, [connected, peerId, room, nameInput]);
 
   useEffect(() => {
-    console.log("state", state);
+    //console.log("state", state);
     if (state.totalPlayers > 0) {
       if (state.totalPlayers === state.playersCount) {
         setIsShowModal(false);
@@ -123,8 +123,8 @@ export const PlayNow = ({
 
   useEffect(() => {
     if (!connected) return;
-    zkClient3?.setDispatch(dispatch);
-  }, [connected, dispatch, zkClient3]);
+    zkClient4?.setDispatch(dispatch);
+  }, [connected, dispatch, zkClient4]);
 
   return (
     <>

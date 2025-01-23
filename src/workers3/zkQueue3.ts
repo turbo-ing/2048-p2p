@@ -1,15 +1,15 @@
 "use client";
 
 import { GameBoardWithSeed } from "../lib2/game2048ZKLogic2";
-import ZkClient3 from "./zkClient3";
+import ZkClient4 from "./zkClient4";
 
 // Global Singleton
-export const zkClient3: ZkClient3 = new ZkClient3();
+export const zkClient4: ZkClient4 = new ZkClient4();
 
 //Start compiling the ZK program if we have a window.
 if (typeof window !== "undefined") {
-  zkClient3.compileZKProgram().then((result) => {
-    console.log("Verification Key:", result);
+  zkClient4.compileZKProgram().then((result) => {
+    //console.log("Verification Key:", result);
   });
 }
 
@@ -29,8 +29,9 @@ export async function queueMove(
 ) {
   if (peerId != myPeerId) return;
   if (move === "init") {
-    return zkClient3.addBoard(zkBoard);
+    //console.log("init detected");
+    return zkClient4.addBoard(zkBoard);
   } else {
-    return zkClient3.addMove(zkBoard, move);
+    return zkClient4.addMove(zkBoard, move);
   }
 }

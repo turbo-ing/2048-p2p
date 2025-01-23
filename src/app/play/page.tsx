@@ -69,7 +69,7 @@ export default function Game2048Page() {
   };
 
   const downloadProof = () => {
-    console.log(state.compiledProof);
+    //console.log(state.compiledProof);
     let json = JSON.parse(state.compiledProof);
 
     const dataStr =
@@ -83,7 +83,7 @@ export default function Game2048Page() {
   };
 
   const leave = () => {
-    console.log("Leaving");
+    //console.log("Leaving");
     dispatch({
       type: "LEAVE",
     });
@@ -92,7 +92,7 @@ export default function Game2048Page() {
   };
 
   const rematch = () => {
-    console.log("Voting for rematch");
+    //console.log("Voting for rematch");
     dispatch({
       type: "REMATCH",
     });
@@ -130,7 +130,7 @@ export default function Game2048Page() {
       !timerTriggered
     ) {
       //when timer ends we broadcast it but if everyones not done
-      console.log("Timer triggered");
+      //console.log("Timer triggered");
       dispatch({
         type: "TIMER",
         payload: {

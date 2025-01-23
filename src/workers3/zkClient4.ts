@@ -5,6 +5,7 @@ import { Dispatch } from "react";
 
 import {
   GameBoardWithSeed,
+  GameBoard,
   MAX_MOVES2,
   MAX_PARALLEL,
   printBoard,
@@ -14,16 +15,17 @@ import {
   ProofWrapper,
 } from "../lib2/game2048ZKLogic2";
 
-import { setNumberOfWorkers, SelfProof } from "o1js";
+import { setNumberOfWorkers, SelfProof, Field } from "o1js";
 
 import { Action } from "@/reducer/2048";
 
-export default class ZkClient3 {
+export default class ZkClient4 {
   worker: Worker;
   // Proxy to interact with the worker's methods as if they were local
   remoteApi: Comlink.Remote<typeof import("./zkWorker3").zkWorkerAPI3>;
 
   compiled = false;
+  initialising = true;
   workersProcessing = 0;
   moveQueue: string[] = [];
   proofQueue: myProof[] = [];
@@ -95,6 +97,11 @@ export default class ZkClient3 {
 
         return;
       }
+      if (this.initialising === true) {
+        console.debug("Still initialising, skipping interval");
+
+        return;
+      }
       if (this.workersProcessing == MAX_PARALLEL) {
         console.debug("All workers processing, skipping interval");
 
@@ -119,43 +126,8 @@ export default class ZkClient3 {
         const proofs = this.proofQueue.slice(0, 2);
         this.proofQueue = this.proofQueue.slice(2);
 
-        //Step 1: peel away the boards from the proofs
-        const proof0 = proofs[0];
-        const proof1 = proofs[1];
-
-        let board0 = proof0.publicOutput.value[1];
-        let board1 = proof1.publicOutput.value[0];
-
-        console.log("board0:\n");
-        console.debug(board0);
-        console.log("board1:\n");
-        console.debug(board1);
-
-        console.log("cells:");
-        console.log(board0.board.cells);
-        for (let cell of board0.board.cells) {
-          console.log(cell);
-        }
-        const boardNums0 = board0.board.cells.map((cell) =>
-          Number(cell.toBigInt()),
-        );
-        const seedNums0 = board0.seed.toBigInt();
-
-        console.log(board0.board.cells);
-        const boardNums1 = board1.board.cells.map((cell) =>
-          Number(cell.toBigInt()),
-        );
-        const seedNums1 = board1.seed.toBigInt();
-
-        //TODO fix the inductive step breaking
-        const [proof, proofJSON] = await this.remoteApi.inductiveStepAux(
-          proofs[0],
-          boardNums0,
-          seedNums0,
-          proofs[1],
-          boardNums1,
-          seedNums1,
-        );
+        const [proof, proofJSON]: [SelfProof<void, BoardArray>, string] =
+          await this.remoteApi.inductiveStepAux2(proofs[0], proofs[1]);
 
         this.proofQueue.push(proof);
 
@@ -172,67 +144,93 @@ export default class ZkClient3 {
         //We want to clear the moveQueue ideally before the proofQueue,
         //unless the latter has a large backlog.
 
-        console.log("Processing moveQueue");
+        //console.log("Processing moveQueue");
         this.workersProcessing += 1;
 
-        console.log("Generating proof for moveQueue", this.moveQueue);
+        //We need to firstly check how many boards are in the queue.
+        //We know there are 1 < b < n boards.
+        //We want to take at most 5 boards and peek at the 6th.
+        //Thus, if boards.length < 6:
+        //  - we grab boards.length-1 boards and moves, then peek at the boards.length one
+        //  eg if we only have 5 boards (4 moves), aka if moves < max_moves,
+        //      we would grab 4 boards and 4 moves and peek at the last one.
+
+        //console.log("Generating proof for moveQueue", this.moveQueue);
 
         //Peel off a section of the moveQueue and boardQueue
         const moves = this.moveQueue.slice(0, MAX_MOVES2);
-        const boards = this.boardQueue.slice(0, MAX_MOVES2);
+        const boards = this.boardQueue.slice(0, moves.length);
 
-        console.log("moves to use in proof: ", moves);
+        //console.log("moves to use in proof: ", moves);
 
         //Remove those moves/boards from the queue also
-        this.moveQueue = this.moveQueue.slice(MAX_MOVES2);
-        this.boardQueue = this.boardQueue.slice(MAX_MOVES2);
-        console.log("updated moveQueue: ", this.moveQueue);
-        console.log("updated boardQueue: ", this.boardQueue);
+        this.moveQueue = this.moveQueue.slice(moves.length);
+
+        this.boardQueue = this.boardQueue.slice(moves.length);
 
         //replace the last board if we dont have enough boards normally
-        this.boardQueue.push(boards[boards.length - 1]);
+
+        //not necessary because I changed it just now
+        //this.boardQueue.unshift(boards[boards.length - 1]);
+
+        //console.log("updated moveQueue: ", this.moveQueue);
+        // console.log("updated boardQueue: ", this.boardQueue);
 
         //refer to notes at boardQueuedeclaration
         let initBoard = boards[0];
-        let newBoard = boards[boards.length - 1];
+        let newBoard: GameBoardWithSeed = this.boardQueue[0];
+        console.log(initBoard);
+        console.log(newBoard);
 
-        console.log("initBoard: " + initBoard);
-        console.log("newBoard: " + newBoard);
+        const zkBoard = new GameBoardWithSeed({
+          board: new GameBoard(new Array(16).fill(Field.from(0))),
+          seed: Field.from(0),
+        });
+        console.log("THE DEFINITIVE TEST");
+        console.log(zkBoard.getBoard());
+        console.log(zkBoard.getSeed());
+        console.log("-----------------");
+        console.log(Field.from(0));
+        console.log("-----------------");
 
-        console.log("board0:\n");
-        console.debug(initBoard);
-        console.log("board1:\n");
-        console.debug(newBoard);
+        console.log("Trying function on new object pre-crash");
+        let initBoard2: GameBoardWithSeed = new GameBoardWithSeed({
+          board: initBoard.board,
+          seed: initBoard.seed,
+        });
+        let newBoard2: GameBoardWithSeed = new GameBoardWithSeed({
+          board: newBoard.board,
+          seed: newBoard.seed,
+        });
+        //console.log(newBoard2.getBoard());
 
-        console.log("cells:");
-        console.log(initBoard.board.cells);
-        for (let cell of initBoard.board.cells) {
-          console.log(cell);
-        }
-        const boardNums0 = initBoard.board.cells.map((cell) =>
-          Number(cell.toBigInt()),
-        );
-        const seedNums0 = initBoard.seed.toBigInt();
-        console.debug(boardNums0);
-        console.debug(seedNums0);
+        console.log("Before crash");
+        //console.log(initBoard2.getBoard().cells);
+        //console.log(newBoard2.getBoard().cells);
 
-        //TODO error here??
-        const boardNums1 = newBoard.board.cells.map((cell) =>
-          Number(cell.toBigInt()),
-        );
-        const seedNums1 = newBoard.seed.toBigInt();
-        console.debug(boardNums1);
-        console.debug(seedNums1);
+        const boardNums1 = initBoard
+          .getBoard() // breaks
+          .cells.map((cell) => Number(cell.toBigInt()));
+        const seedNum1 = initBoard2.getSeed().toBigInt();
 
-        const [proof, proofJSON] = await this.remoteApi.baseCaseAux(
-          boardNums0,
-          seedNums0,
-          boardNums1,
-          seedNums1,
-          moves,
-        );
+        const boardNums2 = newBoard
+          .getBoard() // breaks
+          .cells.map((cell) => Number(cell.toBigInt()));
+        const seedNum2 = newBoard2.getSeed().toBigInt();
+
+        const [proof, proofJSON]: [SelfProof<void, BoardArray>, string] =
+          await this.remoteApi.baseCaseAux(
+            boardNums1,
+            seedNum1,
+            boardNums2,
+            seedNum2,
+            moves,
+          );
 
         this.proofQueue.push(proof);
+
+        console.log("Pushed proof:");
+        console.log(proof);
 
         //send proof
         this.dispatch({
@@ -255,34 +253,9 @@ export default class ZkClient3 {
 
         const proof0 = proofs[0];
         const proof1 = proofs[1];
-        //these will be the returned boards
-        let board0 = proof0.publicOutput.value[0];
-        let board1 = proof1.publicOutput.value[1];
 
-        console.log("board0:\n");
-        console.debug(board0);
-        console.log("board1:\n");
-        console.debug(board1);
-
-        const boardNums0 = board0.board.cells.map((cell) =>
-          Number(cell.toBigInt()),
-        );
-        const seedNums0 = board0.seed.toBigInt();
-
-        const boardNums1 = board1.board.cells.map((cell) =>
-          Number(cell.toBigInt()),
-        );
-        const seedNums1 = board1.seed.toBigInt();
-
-        //TODO fix the inductive step breaking
-        const [proof, proofJSON] = await this.remoteApi.inductiveStepAux(
-          proofs[0],
-          boardNums0,
-          seedNums0,
-          proofs[1],
-          boardNums1,
-          seedNums1,
-        );
+        const [proof, proofJSON]: [SelfProof<void, BoardArray>, string] =
+          await this.remoteApi.inductiveStepAux2(proofs[0], proofs[1]);
 
         await this.proofQueue.push(proof);
 
@@ -351,14 +324,48 @@ export default class ZkClient3 {
     console.log("Active worker count", this.workersProcessing);
     await this.moveQueue.push(move);
     await this.boardQueue.push(zkBoard);
-    console.log("Move added to queue: ", this.moveQueue.length);
-    console.log("Board added to queue: ", this.boardQueue.length);
+    console.log("Move added to queue: ", move);
+    console.log("Board added to queue: ", zkBoard);
   }
   //Adds the initial board to the boardQueue.
   async addBoard(zkBoard: GameBoardWithSeed) {
+    this.initialising = true;
+
+    while (!this.compiled) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+
+    console.log("Initializing ZK proof", zkBoard);
+
     console.log("Adding initial board to queue", zkBoard);
     console.log("Active worker count", this.workersProcessing);
-    await this.boardQueue.push(zkBoard);
+
+    console.log(zkBoard.board);
+    const boardNums = zkBoard
+      .getBoard()
+      .cells.map((cell) => Number(cell.toBigInt()));
+    const seedNum = zkBoard.getSeed().toBigInt();
+
+    const [proof, proofJSON]: [SelfProof<void, BoardArray>, string] =
+      await this.remoteApi.initialise(boardNums, seedNum);
+
+    console.log("hi");
+
+    await this.proofQueue.push(proof);
+
+    console.log("Returned arrays from zk program initialisation:");
+    console.log(proof.publicOutput.value[0]);
+    console.log(proof.publicOutput.value[1]);
+
+    //send proof
+    this.dispatch({
+      type: "SEND_PROOF",
+      payload: {
+        proof: proofJSON,
+      },
+    });
+    await this.boardQueue.unshift(zkBoard);
     console.log("Board added to queue: ", this.boardQueue.length);
+    this.initialising = false;
   }
 }

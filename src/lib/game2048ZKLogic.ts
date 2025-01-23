@@ -587,5 +587,5 @@ export function printBoard(board: GameBoard) {
     }
     console.log(rowVals.join("\t"));
   }
-  console.log("--------------");
+  //console.log("--------------");
 }

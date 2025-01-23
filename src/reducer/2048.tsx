@@ -10,7 +10,7 @@ import {
 } from "react";
 import { Bool, Field, UInt64 } from "o1js";
 
-import ZkClient3 from "../workers3/zkClient3";
+import ZkClient4 from "../workers3/zkClient4";
 import {
   addRandomTile,
   applyOneMoveCircuit,
@@ -19,7 +19,7 @@ import {
   printBoard,
 } from "@/lib2/game2048ZKLogic2";
 import { DirectionMap, MoveType } from "@/utils/constants";
-import { queueMove, zkClient3 } from "../workers3/zkQueue3";
+import { queueMove, zkClient4 } from "../workers3/zkQueue3";
 import { gridsAreEqual, getGameState } from "@/utils/helper";
 
 export type Direction = "up" | "down" | "left" | "right";
@@ -437,8 +437,8 @@ const game2048Reducer = (
   switch (action.type) {
     case "MOVE":
       if (!state.isFinished[action.peerId]) {
-        console.log("Payload on MOVE", action);
-        console.log("State on MOVE", state);
+        //console.log("Payload on MOVE", action);
+        //console.log("State on MOVE", state);
         const newBoards = { ...state.board };
         const newScores = { ...state.score };
         const newZkBoards = { ...state.zkBoard };
@@ -456,7 +456,7 @@ const game2048Reducer = (
           // Ensure GameBoard type
           let currentZkBoard = oldZkBoard;
           let currentZkSeed = Field.from(state.zkBoard[boardKey].seed);
-          console.log("currentZkSeed old", currentZkSeed);
+          // console.log("currentZkSeed old", currentZkSeed);
           const newZkBoard = applyOneMoveCircuit(currentZkBoard, dir);
           const equalBool = newZkBoard
             .hash()
@@ -464,7 +464,7 @@ const game2048Reducer = (
             .not();
 
           if (!equalBool.toBoolean()) {
-            console.log("------No change state with this move");
+            // console.log("------No change state with this move");
 
             return state;
           }
@@ -475,13 +475,13 @@ const game2048Reducer = (
             currentZkSeed,
             equalBool,
           );
-          console.log("Old ZK Board");
-          printBoard(oldZkBoard);
-          console.log("New ZK Board");
-          printBoard(newZkBoard);
-          console.log("Current ZK Board");
-          printBoard(currentZkBoard);
-          console.log("Current ZK Seed 2", currentZkSeed);
+          // console.log("Old ZK Board");
+          // printBoard(oldZkBoard);
+          // console.log("New ZK Board");
+          // printBoard(newZkBoard);
+          // console.log("Current ZK Board");
+          //printBoard(currentZkBoard);
+          // console.log("Current ZK Seed 2", currentZkSeed);
           let idxNew = -1;
 
           for (let i = 0; i < newZkBoard.cells.length; i++) {
@@ -501,8 +501,8 @@ const game2048Reducer = (
             action.payload,
           );
 
-          console.log("New Board");
-          console.log(newGrid);
+          // console.log("New Board");
+          // console.log(newGrid);
 
           if (idxNew != -1) {
             const i = Math.floor(idxNew / GRID_SIZE);
@@ -547,14 +547,14 @@ const game2048Reducer = (
         };
       } else return { ...state };
     case "JOIN":
-      console.log("Payload on JOIN", action.payload);
+      // console.log("Payload on JOIN", action.payload);
 
       const payloadBoard = new GameBoardWithSeed({
         board: new GameBoard(action.payload.zkBoard.board.cells.map(Field)),
         seed: Field.from(action.payload.zkBoard.seed),
       });
 
-      printBoard(payloadBoard.board);
+      //printBoard(payloadBoard.board);
 
       const newState = state;
       let newNumPlayers = action.payload.numPlayers;
@@ -589,8 +589,8 @@ const game2048Reducer = (
 
     case "LEAVE":
       //error("Not implemented yet");
-      console.log("Player " + action.peerId! + " is leaving the game.");
-      console.log(state);
+      // console.log("Player " + action.peerId! + " is leaving the game.");
+      // console.log(state);
       const leaveState = state;
       leaveState.playersCount -= 1;
       //leaveState.totalPlayers -= 1;
@@ -607,12 +607,12 @@ const game2048Reducer = (
 
       //TODO: add code to check for all but 1 surrendered and set their allfinished to true if so.
 
-      console.log(leaveState);
+      // console.log(leaveState);
       return { ...leaveState };
 
     case "SEND_PROOF":
       let receivedProof = JSON.stringify(action.payload);
-      console.log(`Payload received: ${receivedProof} from ${action.peerId}`);
+      // console.log(`Payload received: ${receivedProof} from ${action.peerId}`);
       const proofState = state;
       proofState.compiledProof = receivedProof;
       return { ...proofState };
@@ -636,7 +636,7 @@ const game2048Reducer = (
         for (var p in timerState.playerId) {
           timerState.isFinished[timerState.playerId[p]] = true;
         }
-        console.log("set state to true");
+        // console.log("set state to true");
         //no, clock starting!
       } else {
         timerState.timer = action.payload.time;
@@ -648,7 +648,7 @@ const game2048Reducer = (
       for (var p in resetState.playerId) {
         resetState.isFinished[resetState.playerId[p]] = false;
       }
-      console.log("reset states!");
+      // console.log("reset states!");
       return { ...resetState };
 
     default:
@@ -664,7 +664,7 @@ const Game2048Context = createContext<
       boolean,
       string,
       Dispatch<SetStateAction<string>>,
-      ZkClient3,
+      ZkClient4,
     ]
   | null
 >(null);
@@ -698,7 +698,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <Game2048Context.Provider
-      value={[state, dispatch, connected, room, setRoom, zkClient3]}
+      value={[state, dispatch, connected, room, setRoom, zkClient4]}
     >
       {children}
     </Game2048Context.Provider>
