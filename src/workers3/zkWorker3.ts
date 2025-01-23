@@ -23,7 +23,7 @@ export const zkWorkerAPI3 = {
     return result;
   },
 
-  async initialise(
+  /*async initialise(
     boardNums: Number[],
     seedNum: bigint,
   ): Promise<[SelfProof<void, BoardArray>, string]> {
@@ -48,7 +48,7 @@ export const zkWorkerAPI3 = {
     console.log(result.proof);
 
     return [result.proof, JSON.stringify(result.proof.toJSON())];
-  },
+  },*/
 
   async baseCase(
     initBoard: GameBoardWithSeed,
@@ -102,7 +102,7 @@ export const zkWorkerAPI3 = {
     console.debug(zkBoardWithSeed0);
     console.debug(zkBoardWithSeed1);
 
-    return this.baseCase(zkBoardWithSeed0, zkBoardWithSeed1, moves);
+    return await this.baseCase(zkBoardWithSeed0, zkBoardWithSeed1, moves);
   },
 
   auxSub(boardNums: Number[], seedNum: bigint) {
@@ -131,6 +131,26 @@ export const zkWorkerAPI3 = {
     return [result.proof, JSON.stringify(result.proof.toJSON())];
   },
   */
+  //function to fully reconstruct a deserialised proof
+  async reconstructProof(brokenproof: SelfProof<void, BoardArray>) {
+    let maxproofs = brokenproof.maxProofsVerified;
+    let proofval = brokenproof.proof;
+    let publicinput = undefined;
+
+    let brokenboard1 = brokenproof.publicOutput.value[0];
+    let brokenboard2 = brokenproof.publicOutput.value[1];
+    let board1 = await this.reconstruct(brokenboard1);
+    let board2 = await this.reconstruct(brokenboard2);
+    let publicoutput = new BoardArray([board1, board2]);
+
+    const proof = new SelfProof({
+      proof: proofval,
+      maxProofsVerified: maxproofs,
+      publicInput: publicinput,
+      publicOutput: publicoutput,
+    });
+    return proof;
+  },
 
   async inductiveStep(
     proof1: SelfProof<void, BoardArray>,
@@ -146,17 +166,56 @@ export const zkWorkerAPI3 = {
     console.log(proof2);
     console.log(board21);
     console.log(board22);
-    //Make call to function
-    const result = await Game2048ZKProgram3.inductiveStep(
-      proof1,
-      board11,
-      board12,
-      proof2,
-      board21,
-      board22,
-    );
 
-    //Return the result
+    const proof1a = await this.reconstructProof(proof1);
+    const proof2a = await this.reconstructProof(proof2);
+
+    console.log(proof1);
+    console.log(proof2);
+
+    console.log(proof1a);
+    console.log(proof2a);
+
+    const retArray = new BoardArray([board11, board22]);
+    console.log(retArray);
+
+    let result;
+    //Make call to function
+    try {
+      console.log(
+        await Game2048ZKProgram3.inductiveStep(proof1a, proof2a, retArray),
+      );
+      console.log("att 2");
+      result = await Game2048ZKProgram3.inductiveStep(
+        proof1a,
+        //board11,
+        //board12,
+        proof2a,
+        //board21,
+        //board22,
+        retArray,
+      );
+
+      console.log(result);
+
+      console.log("Received result at worker.");
+
+      //Return the result
+      return [result.proof, JSON.stringify(result.proof.toJSON())];
+    } catch (e) {
+      console.log(e);
+
+      console.log(result);
+    }
+    result = await Game2048ZKProgram3.inductiveStep(
+      proof1a,
+      //board11,
+      //board12,
+      proof2a,
+      //board21,
+      //board22,
+      retArray,
+    );
     return [result.proof, JSON.stringify(result.proof.toJSON())];
   },
 
@@ -223,7 +282,7 @@ export const zkWorkerAPI3 = {
     const seedNum22 = board22.getSeed().toBigInt();
 
     //Make call to function
-    const result = this.inductiveStepAux(
+    const result = await this.inductiveStepAux(
       proof1,
       boardNums11,
       seedNum11,
@@ -257,7 +316,7 @@ export const zkWorkerAPI3 = {
     const board21 = this.auxSub(board21nums, seed21nums);
     const board22 = this.auxSub(board22nums, seed22nums);
 
-    return this.inductiveStep(
+    return await this.inductiveStep(
       proof1,
       board11,
       board12,

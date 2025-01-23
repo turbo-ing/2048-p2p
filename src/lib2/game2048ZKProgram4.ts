@@ -11,9 +11,10 @@ import {
   ProofArray,
 } from "./game2048ZKLogic2";
 
-export const Game2048ZKProgram3 = ZkProgram({
-  name: "Game2048ZKProgram3",
-  publicOutput: BoardArray,
+export const Game2048ZKProgram4 = ZkProgram({
+  name: "Game2048ZKProgram4",
+  publicInput: Provable.Array(GameBoardWithSeed, 2),
+  //publicOutput: BoardArray,
 
   methods: {
     /*baseistCase: {
@@ -31,15 +32,19 @@ export const Game2048ZKProgram3 = ZkProgram({
      * board states, given a list of direction and the two states in question.
      */
     baseCase: {
-      privateInputs: [BoardArray, Direction],
+      privateInputs: [Direction],
 
-      async method(boards: BoardArray, directions: Direction) {
+      async method(
+        boards: [GameBoardWithSeed, GameBoardWithSeed],
+        //newBoard: GameBoardWithSeed,
+        directions: Direction,
+      ) {
         //Provable.log("Start:");
         //Provable.log(boards);
 
         //Provable.log("30");
-        let initBoard = boards.value[0];
-        let newBoard = boards.value[1];
+        let initBoard = boards[0];
+        let newBoard = boards[1];
         //Provable.log("33");
         let currentBoard = initBoard.getBoard();
         let currentSeed = initBoard.getSeed();
@@ -78,26 +83,11 @@ export const Game2048ZKProgram3 = ZkProgram({
           Provable.log("Index " + j + ":");
           Provable.log(currentBoard);
           Provable.log(newBoard.board);
-          //Provable.log("Cells debugging:");
-          //Provable.log(j);
-          //Provable.log(directions.value);
-          //Provable.log(boards.value);
-          //Provable.log(newBoard.board.cells);
-          //Provable.log(currentBoard.cells);
-          //Provable.log(currentBoard.cells[j]);
-          //Provable.log(newBoard.board.cells[j]);
+
           currentBoard.cells[j].assertEquals(newBoard.board.cells[j]);
         }
         //console.debug("52");
         newBoard.seed.assertEquals(currentSeed);
-        // console.log(newBoard.seed);
-        // console.log(currentSeed);
-        //console.debug("54");
-        //Provable.log("End.");
-        //Provable.log(boards);
-        //Provable.log(boards.value[0]);
-        //Provable.log(boards.value[1]);
-        return { publicOutput: boards };
       },
     },
     /**
@@ -106,26 +96,18 @@ export const Game2048ZKProgram3 = ZkProgram({
      * between them (eg A->E, E->I. We compare E, E and return proof that A->I).
      */
     inductiveStep: {
-      privateInputs: [
-        SelfProof,
-        //GameBoardWithSeed,
-        //GameBoardWithSeed,
-        SelfProof,
-        //GameBoardWithSeed,
-        //GameBoardWithSeed,
-        BoardArray,
-      ],
+      privateInputs: [SelfProof, SelfProof],
 
       async method(
-        proof1: SelfProof<void, BoardArray>,
+        boards: [GameBoardWithSeed, GameBoardWithSeed],
+        proof1: SelfProof<[GameBoardWithSeed, GameBoardWithSeed], void>,
         //proof1board1: GameBoardWithSeed,
         //proof1board2: GameBoardWithSeed,
-        proof2: SelfProof<void, BoardArray>,
+        proof2: SelfProof<[GameBoardWithSeed, GameBoardWithSeed], void>,
         //proof2board1: GameBoardWithSeed,
         //proof2board2: GameBoardWithSeed,
-        ra: BoardArray,
       ) {
-        return { publicOutput: ra };
+        //return { publicOutput: ra };
         Provable.log(proof1);
         Provable.log(proof2);
         //verify both earlier proofs
@@ -134,10 +116,10 @@ export const Game2048ZKProgram3 = ZkProgram({
 
         Provable.log("Verified both proofs.");
 
-        const proof1board1 = proof1.publicOutput.value[0];
-        const proof1board2 = proof1.publicOutput.value[1];
-        const proof2board1 = proof2.publicOutput.value[0];
-        const proof2board2 = proof2.publicOutput.value[1];
+        const proof1board1 = proof1.publicInput[0];
+        const proof1board2 = proof1.publicInput[1];
+        const proof2board1 = proof2.publicInput[0];
+        const proof2board2 = proof2.publicInput[1];
 
         //console.debug(proof1board1.seed);
         //console.debug(proof1board2.seed);
@@ -168,8 +150,6 @@ export const Game2048ZKProgram3 = ZkProgram({
 
         Provable.log("Created return array.");
         Provable.log(retArray);
-
-        return { publicOutput: ra };
       },
     },
   },

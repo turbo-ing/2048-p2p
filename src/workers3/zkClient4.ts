@@ -62,6 +62,51 @@ export default class ZkClient4 {
     }
   }
 
+  //function to fully reconstruct a deserialised proof
+  async reconstructProof(brokenproof: SelfProof<void, BoardArray>) {
+    let maxproofs = brokenproof.maxProofsVerified;
+    let proofval = brokenproof.proof;
+    let publicinput = undefined;
+
+    let brokenboard1 = brokenproof.publicOutput.value[0];
+    let brokenboard2 = brokenproof.publicOutput.value[1];
+    let board1 = await this.reconstruct(brokenboard1);
+    let board2 = await this.reconstruct(brokenboard2);
+    let publicoutput = new BoardArray([board1, board2]);
+
+    const proof = new SelfProof({
+      proof: proofval,
+      maxProofsVerified: maxproofs,
+      publicInput: publicinput,
+      publicOutput: publicoutput,
+    });
+    return proof;
+  }
+
+  //function to reconstruct a proof's board with seed such that it will not break
+  async reconstruct(brokenboard: GameBoardWithSeed) {
+    //structure of broken values: [0, [0, [VALUEn]]]
+    const brokencells = brokenboard.board.cells;
+    const brokenseed = brokenboard.seed;
+
+    let fixedcells = [];
+    for (let cell of brokencells) {
+      fixedcells.push(Field.from(await this.extract(cell)));
+    }
+    let fixedboard = new GameBoard(fixedcells);
+    let fixedseed = Field.from(await this.extract(brokenseed));
+    return new GameBoardWithSeed({ board: fixedboard, seed: fixedseed });
+  }
+
+  async extract(brokenseed: Field): Promise<bigint> {
+    const brokenseed1 = brokenseed.value[1];
+    const brokenseed2 = brokenseed1 as [number, bigint];
+    const bigintseed: bigint = brokenseed2[1];
+    const newField = Field.from(bigintseed);
+    //console.log(newField);
+    return bigintseed;
+  }
+
   setDispatch(dispatch: Dispatch<Action>) {
     this.dispatch = dispatch;
   }
@@ -129,7 +174,13 @@ export default class ZkClient4 {
         const [proof, proofJSON]: [SelfProof<void, BoardArray>, string] =
           await this.remoteApi.inductiveStepAux2(proofs[0], proofs[1]);
 
-        this.proofQueue.push(proof);
+        console.log("made it to client");
+
+        const reconstructedProof = await this.reconstructProof(proof);
+        this.proofQueue.push(reconstructedProof);
+
+        console.log("Pushed reconstructed proof:");
+        console.log(reconstructedProof);
 
         //send proof
         this.dispatch({
@@ -227,10 +278,18 @@ export default class ZkClient4 {
             moves,
           );
 
-        this.proofQueue.push(proof);
+        //this.proofQueue.push(proof);
 
-        console.log("Pushed proof:");
-        console.log(proof);
+        //console.log("Pushed proof:");
+        //console.log(proof);
+        //console.log("Prototype proof:");
+        //console.log(Object.getPrototypeOf(proof));
+
+        const reconstructedProof = await this.reconstructProof(proof);
+        this.proofQueue.push(reconstructedProof);
+
+        console.log("Pushed reconstructed proof:");
+        console.log(reconstructedProof);
 
         //send proof
         this.dispatch({
@@ -257,7 +316,13 @@ export default class ZkClient4 {
         const [proof, proofJSON]: [SelfProof<void, BoardArray>, string] =
           await this.remoteApi.inductiveStepAux2(proofs[0], proofs[1]);
 
-        await this.proofQueue.push(proof);
+        console.log("made it to client");
+
+        const reconstructedProof = await this.reconstructProof(proof);
+        this.proofQueue.push(reconstructedProof);
+
+        console.log("Pushed reconstructed proof:");
+        console.log(reconstructedProof);
 
         console.log("Returned arrays from zk program:");
         console.log(proof.publicOutput.value[0]);
@@ -340,6 +405,7 @@ export default class ZkClient4 {
     console.log("Adding initial board to queue", zkBoard);
     console.log("Active worker count", this.workersProcessing);
 
+    /*
     console.log(zkBoard.board);
     const boardNums = zkBoard
       .getBoard()
@@ -351,7 +417,11 @@ export default class ZkClient4 {
 
     console.log("hi");
 
-    await this.proofQueue.push(proof);
+    const reconstructedProof = await this.reconstructProof(proof);
+    this.proofQueue.push(reconstructedProof);
+
+    console.log("Pushed reconstructed proof:");
+    console.log(reconstructedProof);
 
     console.log("Returned arrays from zk program initialisation:");
     console.log(proof.publicOutput.value[0]);
@@ -363,7 +433,7 @@ export default class ZkClient4 {
       payload: {
         proof: proofJSON,
       },
-    });
+    });*/
     await this.boardQueue.unshift(zkBoard);
     console.log("Board added to queue: ", this.boardQueue.length);
     this.initialising = false;
