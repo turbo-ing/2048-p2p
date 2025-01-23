@@ -1,8 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
-
+@import url("https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap");
+/* @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"); */
+/* 
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -17,11 +18,11 @@
   }
 }
 
-body {
+/* body {
   color: var(--foreground);
   background: white;
-  font-family: "Inter", sans-serif;
-}
+  font-family: "Rubik", sans-serif;
+} */
 
 @layer utilities {
   .text-balance {
@@ -37,7 +38,7 @@ body {
   }
 }
 
-.bg-gradient {
+/* .bg-gradient {
   background: linear-gradient(
     224deg,
     rgba(0, 0, 0, 0) 17.67%,
@@ -53,25 +54,4 @@ body {
       rgba(0, 0, 0, 0.7) 100%
     );
   }
-}
-
-.grid-container {
-  display: grid;
-  grid-template-columns: 30px auto auto auto auto auto auto auto auto;
-  grid-template-rows: auto auto auto auto auto auto auto auto 30px;
-}
-
-ul.counter-list {
-  list-style: none; /* Removes default bullet points */
-  counter-reset: list-counter; /* Initializes the counter */
-}
-
-ul.counter-list li::before {
-  content: counter(list-counter) ". "; /* Adds the counter before each list item */
-  counter-increment: list-counter; /* Increments the counter for each item */
-  font-weight: bold;
-  font-size: 16px;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
+} */

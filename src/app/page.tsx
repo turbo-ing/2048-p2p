@@ -1,11 +1,12 @@
 "use client";
 
-import FullPageSlides from "./components/Fullpage";
+// import { PlayNow } from "./components/PlayNow";
+import HomePage from "./components/HomePage";
 
 export default function Home() {
   return (
     <>
-      <FullPageSlides />
+      <HomePage />
     </>
   );
 }

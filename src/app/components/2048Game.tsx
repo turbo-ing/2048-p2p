@@ -8,16 +8,18 @@ import { WaitingModal } from "@/app/components/WaitingModal";
 import useArrowKeyPress from "@/app/hooks/useArrowKeyPress";
 import useSwipe from "@/app/hooks/useSwipe";
 import { gridsAreEqual, getGameState, hasValidMoves } from "@/utils/helper";
-import { Tile } from "./Tile";
-import { MergePreview } from "./MergePreview";
 import { BASE_ANIMATION_SPEED } from "../../../tailwind.config";
+import { GridBoard } from "./GridBoard";
+import ExitButton from "./ExitButton";
+import Modal from "./Modal";
+import Button from "./Button";
 
 // --- Constants ---
 const NUM_CELLS = 4;
-const DEFAULT_GAP = 10;
+const DEFAULT_GAP = 8;
 
 interface Game2048Props {
-  timer: number;
+  timer?: number;
   rematch: () => void;
   rem: number;
   remProcessing: boolean;
@@ -30,7 +32,6 @@ interface Game2048Props {
   rankingData: Player[];
   className?: string;
   dispatchDirection: (dir: Direction) => void;
-  leave: () => void;
   width: number;
   height: number;
   isFinished: { [playerId: string]: boolean };
@@ -57,7 +58,6 @@ const Game2048: React.FC<Game2048Props> = ({
   rankingData,
   className,
   dispatchDirection,
-  leave,
   isFinished,
   allFinished,
   setAllFinished,
@@ -67,7 +67,7 @@ const Game2048: React.FC<Game2048Props> = ({
   totalPlayers,
   clock,
 }) => {
-  const { grid, merges } = board;
+  const { grid, merges } = board || { grid: [], merges: [] };
 
   const [currentGrid, setCurrentGrid] = useState<Grid>(grid);
   const previousGridRef = useRef<Grid | null>(null);
@@ -75,31 +75,9 @@ const Game2048: React.FC<Game2048Props> = ({
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
 
-  const boardRef = useRef<HTMLDivElement>(null);
-  const [cellSize, setCellSize] = useState<number>(0);
-  const [gap, setGap] = useState(DEFAULT_GAP);
-
   const [mergeTiles, setMergeTiles] = useState<MergeEvent[]>([]);
 
-  /**
-   * Observe board resize and recalculate `cellSize`.
-   */
-  useEffect(() => {
-    if (!boardRef.current) return;
-
-    const observer = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        const width = entry.contentRect.width;
-        const totalGaps = NUM_CELLS - 1;
-        const newGap = gap; // Replace with any dynamic logic for gap if desired
-        const newCellSize = (width - totalGaps * newGap) / NUM_CELLS;
-        setCellSize(newCellSize);
-      }
-    });
-
-    observer.observe(boardRef.current);
-    return () => observer.disconnect();
-  }, [gap]);
+  const [exitModalOpen, setExitModalOpen] = useState<boolean>(false);
 
   /**
    * Updates the grid with prevX/prevY data for animations.
@@ -220,7 +198,6 @@ const Game2048: React.FC<Game2048Props> = ({
           surrendered={surrendered}
           allSurrendered={allSurrendered}
           frontSurrendered={frontSurrendered}
-          leave={leave}
           player={trueid}
           isWinner={gameWon}
           open={true}
@@ -231,16 +208,13 @@ const Game2048: React.FC<Game2048Props> = ({
       )}
 
       {/* Scoreboard */}
-      <div className="flex justify-center mb-6 w-full">
-        <ScoreBoard title="Score:" total={score} />
-        {timer !== 0 && <ScoreBoard title="Time left:" total={clock} />}
+      <div className="flex justify-evenly mb-6 w-full">
+        <ScoreBoard title="SCORE" total={score} />
+        {timer !== 0 && <ScoreBoard title="TIMER" total={clock} />}
       </div>
 
       {/* Board */}
-      <div
-        ref={boardRef}
-        className="relative w-full aspect-square bg-boardBackground rounded-md"
-      >
+      <div className="relative w-full aspect-square bg-board">
         {/* Waiting Modal */}
         {(gameOver || gameWon) &&
           !allFinished &&
@@ -257,63 +231,26 @@ const Game2048: React.FC<Game2048Props> = ({
           (gameOver && !allFinished && player !== trueid) ||
           (clock !== 0 && timer !== 0) ||
           timer === 0) && (
-          <div className="relative w-full aspect-square bg-boardBackground rounded-md">
-            {/* Grid background blocks */}
-            <div
-              className="absolute inset-0 grid"
-              style={{
-                gridTemplateColumns: `repeat(${NUM_CELLS}, 1fr)`,
-                gridTemplateRows: `repeat(${NUM_CELLS}, 1fr)`,
-                gap: `${gap}px`,
-                pointerEvents: "none",
-              }}
-            >
-              {Array.from({ length: NUM_CELLS * NUM_CELLS }, (_, i) => (
-                <div
-                  key={i}
-                  className="bg-[#cdc1b4] rounded-md w-full h-full"
-                />
-              ))}
-            </div>
-
-            {/* Actual tiles + merge preview */}
-            <div className="absolute top-0 left-0 w-full h-full">
-              {currentGrid.map((row) =>
-                row.map((tile) => {
-                  if (!tile) return null;
-                  return (
-                    <Tile
-                      key={tile.id}
-                      tile={tile}
-                      cellSize={cellSize}
-                      gap={gap}
-                    />
-                  );
-                }),
-              )}
-              <MergePreview merges={mergeTiles} cellSize={cellSize} gap={gap} />
-            </div>
-          </div>
+          <>
+            <GridBoard grid={currentGrid} merges={mergeTiles} />
+          </>
         )}
       </div>
 
       {/* Player info */}
       {rankingData.length > 1 && (
-        <div className="border-b border-white pb-3 mt-6 w-full">
-          <p className={`text-center text-white ${className}`}>
-            Player: {player}
-          </p>
+        <div className="border-b border-text pb-3 mt-6 w-full">
+          <p className={`text-center ${className}`}>Player: {player}</p>
         </div>
       )}
       {/* surrender button */}
-      {player === trueid && (
-        <button
-          className="rounded-full mt-5 py-2.5 px-4 border border-[#D0D5DD] bg-white text-[#344054] text-base font-semibold gap-1.5 flex items-center justify-center w-1/3"
-          onClick={() => leave()}
-        >
-          {totalPlayers > 1 && "Surrender"} {totalPlayers < 2 && "Leave"}
-        </button>
-      )}
+      {/* {player === trueid && (
+        <Button className="mt-6 text-base" onClick={() => leave()}>
+          <p>
+            {totalPlayers > 1 && "Surrender"} {totalPlayers < 2 && "Leave"}
+          </p>
+        </Button>
+      )} */}
     </div>
   );
 };

@@ -30,10 +30,17 @@ interface TileProps {
   isEphemeral?: boolean;
   cellSize: number;
   gap: number;
+  fontSize?: number; // Add fontSize as a prop
   style?: React.CSSProperties;
 }
 
-export const Tile: React.FC<TileProps> = ({ tile, cellSize, gap, style }) => {
+export const Tile: React.FC<TileProps> = ({
+  tile,
+  cellSize,
+  gap,
+  fontSize,
+  style,
+}) => {
   const tileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -77,13 +84,16 @@ export const Tile: React.FC<TileProps> = ({ tile, cellSize, gap, style }) => {
     >
       <div
         className={classNames(
-          "rounded-md w-full h-full flex items-center justify-center z-10",
+          "rounded-md w-full h-full flex items-center justify-center z-10 font-semibold",
           {
             "animate-newTile": tile.isNew,
             "animate-mergeTile": tile.isMerging,
           },
         )}
-        style={getTileStyle(tile)}
+        style={{
+          ...getTileStyle(tile),
+          fontSize: `${fontSize}px`, // Use the dynamic font size here
+        }}
       >
         <span>{tile.value}</span>
       </div>
