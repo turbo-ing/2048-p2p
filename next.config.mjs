@@ -29,12 +29,19 @@ const nextConfig = {
         source: "/(.*)",
         headers: [
           {
-            key: "Cross-Origin-Opener-Policy",
-            value: "same-origin",
+            key: "Content-Security-Policy",
+            value: "frame-src 'self' https://explorer.turbo.ing/;",
           },
           {
+            // Relax Cross-Origin-Opener-Policy for iframe compatibility
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin-allow-popups",
+          },
+          {
+            // Relax Cross-Origin-Embedder-Policy for iframe compatibility
             key: "Cross-Origin-Embedder-Policy",
-            value: "require-corp",
+            value: "unsafe-none",
+
           },
         ],
       },

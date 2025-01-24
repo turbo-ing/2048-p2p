@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
+import { useTurboEdgeV0, Explorer } from "@turbo-ing/edge-v0";
 import { useRouter } from "next/navigation";
 
 import Game2048 from "@/app/components/2048Game";
@@ -231,6 +231,7 @@ export default function Game2048Page() {
   if (!state || state.playersCount < 1) return router.push("/");
 
   return (
+    <Explorer gameId="turbo-2048">
     <div className="flex">
       {/* <ThemeProvider theme={themeValue}> */}
       {/* <Navbar
@@ -341,5 +342,6 @@ export default function Game2048Page() {
       </main>
       {/* </ThemeProvider> */}
     </div>
+    </Explorer>
   );
 }
