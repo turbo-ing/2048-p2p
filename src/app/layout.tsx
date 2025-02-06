@@ -10,7 +10,7 @@ const rubik = Rubik({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Turbo 2048",
   description:
-    "Experience Turbo 2048, the revolutionary serverless game powered by Turbo Edge’s cutting-edge peer-to-peer technology. Enjoy a secure, decentralized gaming experience with zero-knowledge protocols that protect your privacy and prevent cheating.",
+    "Experience Turbo 2048, the revolutionary serverless game powered by Turbo Edge's cutting-edge peer-to-peer technology. Enjoy a secure, decentralized gaming experience with zero-knowledge protocols that protect your privacy and prevent cheating.",
 };
 
 export default function RootLayout({
