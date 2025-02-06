@@ -6,7 +6,7 @@ import Link from "next/link";
 import { use2048 } from "@/reducer/2048";
 
 export default function LeaveGameModal() {
-  const [state, dispatch, connected, room, setRoom, zkClient] = use2048();
+  const [state, dispatch, connected, room, setRoom, zkClient4] = use2048();
   const [exitModalOpen, setExitModalOpen] = useState<boolean>(false);
 
   const handleLeave = () => {

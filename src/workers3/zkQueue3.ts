@@ -9,7 +9,7 @@ export const zkClient4: ZkClient4 = new ZkClient4();
 //Start compiling the ZK program if we have a window.
 if (typeof window !== "undefined") {
   zkClient4.compileZKProgram().then((result) => {
-    //console.log("Verification Key:", result);
+    console.log("Verification Key:", result);
   });
 }
 

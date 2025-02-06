@@ -13,6 +13,7 @@ import {
 
 export const Game2048ZKProgram3 = ZkProgram({
   name: "Game2048ZKProgram3",
+  publicInput: BoardArray,
   publicOutput: BoardArray,
 
   methods: {
@@ -31,7 +32,7 @@ export const Game2048ZKProgram3 = ZkProgram({
      * board states, given a list of direction and the two states in question.
      */
     baseCase: {
-      privateInputs: [BoardArray, Direction],
+      privateInputs: [Direction],
 
       async method(boards: BoardArray, directions: Direction) {
         //Provable.log("Start:");
@@ -75,9 +76,9 @@ export const Game2048ZKProgram3 = ZkProgram({
         //Provable.log("60");
         Provable.log("What's the square it's failing on?");
         for (let j = 0; j < 16; j++) {
-          Provable.log("Index " + j + ":");
-          Provable.log(currentBoard);
-          Provable.log(newBoard.board);
+          //Provable.log("Index " + j + ":");
+          //Provable.log(currentBoard);
+          //Provable.log(newBoard.board);
           //Provable.log("Cells debugging:");
           //Provable.log(j);
           //Provable.log(directions.value);
@@ -113,17 +114,16 @@ export const Game2048ZKProgram3 = ZkProgram({
         SelfProof,
         //GameBoardWithSeed,
         //GameBoardWithSeed,
-        BoardArray,
       ],
 
       async method(
-        proof1: SelfProof<void, BoardArray>,
+        ra: BoardArray,
+        proof1: SelfProof<BoardArray, BoardArray>,
         //proof1board1: GameBoardWithSeed,
         //proof1board2: GameBoardWithSeed,
-        proof2: SelfProof<void, BoardArray>,
+        proof2: SelfProof<BoardArray, BoardArray>,
         //proof2board1: GameBoardWithSeed,
         //proof2board2: GameBoardWithSeed,
-        ra: BoardArray,
       ) {
         return { publicOutput: ra };
         Provable.log(proof1);
@@ -134,10 +134,10 @@ export const Game2048ZKProgram3 = ZkProgram({
 
         Provable.log("Verified both proofs.");
 
-        const proof1board1 = proof1.publicOutput.value[0];
-        const proof1board2 = proof1.publicOutput.value[1];
-        const proof2board1 = proof2.publicOutput.value[0];
-        const proof2board2 = proof2.publicOutput.value[1];
+        const proof1board1 = proof1.publicInput.value[0];
+        const proof1board2 = proof1.publicInput.value[1];
+        const proof2board1 = proof2.publicInput.value[0];
+        const proof2board2 = proof2.publicInput.value[1];
 
         //console.debug(proof1board1.seed);
         //console.debug(proof1board2.seed);

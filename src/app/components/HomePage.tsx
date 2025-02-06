@@ -5,8 +5,8 @@ import { use2048, generateRoomCode } from "@/reducer/2048";
 import MultiplayerModal from "./MultiplayerModal";
 import Mock2048 from "./Mock2048";
 import { TurboEdgeContext, useTurboEdgeV0 } from "@turbo-ing/edge-v0";
-import ZkClient from "@/workers/zkClient";
-import { assignMyPeerId, zkClient } from "@/workers/zkQueue";
+import ZkClient4 from "@/workers3/zkClient4";
+import { assignMyPeerId, zkClient4 } from "@/workers3/zkQueue3";
 import { useRouter } from "next/navigation";
 import SinglePlayer from "./icon/Singleplayer";
 import Versus from "./icon/Versus";
@@ -41,8 +41,8 @@ export default function HomePage() {
   const joinRoom = useJoin(handleJoin);
 
   // If you're compiling a ZK program on startup, you'd do that here.
-  const compileZKProgram = async (zkClient: ZkClient) => {
-    const result = await zkClient?.compileZKProgram();
+  const compileZKProgram = async (zkClient4: ZkClient4) => {
+    const result = await zkClient4?.compileZKProgram();
     console.log("Verification Key", result?.verificationKey);
   };
 
@@ -56,7 +56,7 @@ export default function HomePage() {
   // Set the reducer's dispatch into the ZK client once connected
   useEffect(() => {
     if (connected) {
-      zkClient?.setDispatch(dispatch);
+      zkClient4?.setDispatch(dispatch);
     }
   }, [connected, dispatch]);
 

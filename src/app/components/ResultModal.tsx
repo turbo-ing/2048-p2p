@@ -15,7 +15,7 @@ export interface Player {
 interface ResultModalProps {
   rematch: () => void;
   rem: number;
-  remProcessing: boolean;
+  remProcessing: number;
   surrendered: { [playerId: string]: boolean };
   frontSurrendered: { [name: string]: boolean };
   allSurrendered: boolean;
@@ -45,13 +45,13 @@ export const ResultModal = ({
   rankingData,
   totalPlayers,
 }: ResultModalProps) => {
-  const [state, dispatch, connected, room, setRoom, zkClient] = use2048();
+  const [state, dispatch, connected, room, setRoom, zkClient4] = use2048();
   const [ranking, setRanking] = useState<Player[]>(rankingData);
   const [isZKModalOpen, setIsZKModalOpen] = useState<boolean>(false);
   const [isRematchRequested, setIsRematchRequested] = useState<boolean>(false);
 
   useEffect(() => {
-    if (isRematchRequested && lenQueue === 0 && !remProcessing) {
+    if (isRematchRequested && lenQueue === 0 && remProcessing === 0) {
       setIsRematchRequested(false);
       rematch();
     }
@@ -140,7 +140,7 @@ export const ResultModal = ({
 
   const renderZKModalContent = () => (
     <div>
-      {lenQueue === 0 && !remProcessing ? (
+      {lenQueue === 0 && remProcessing === 0 ? (
         <>
           <h2 className="font-semibold text-2xl md:text-4xl text-center">
             Download ZK Proof

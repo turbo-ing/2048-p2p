@@ -54,7 +54,7 @@ export const zkWorkerAPI3 = {
     initBoard: GameBoardWithSeed,
     newBoard: GameBoardWithSeed,
     moves: string[],
-  ): Promise<[SelfProof<void, BoardArray>, string]> {
+  ): Promise<[SelfProof<BoardArray, BoardArray>, string]> {
     //Generate the BoardArray for newBoard.
     let boardArr: BoardArray = new BoardArray([initBoard, newBoard]);
 
@@ -92,7 +92,7 @@ export const zkWorkerAPI3 = {
     boardNums1: Number[],
     seedNum1: bigint,
     moves: string[],
-  ): Promise<[SelfProof<void, BoardArray>, string]> {
+  ): Promise<[SelfProof<BoardArray, BoardArray>, string]> {
     console.log("on worker [aux]");
     console.log(boardNums0);
     console.log(boardNums1);
@@ -132,10 +132,15 @@ export const zkWorkerAPI3 = {
   },
   */
   //function to fully reconstruct a deserialised proof
-  async reconstructProof(brokenproof: SelfProof<void, BoardArray>) {
+  async reconstructProof(brokenproof: SelfProof<BoardArray, BoardArray>) {
     let maxproofs = brokenproof.maxProofsVerified;
     let proofval = brokenproof.proof;
-    let publicinput = undefined;
+
+    let brokenboarda = brokenproof.publicOutput.value[0];
+    let brokenboardb = brokenproof.publicOutput.value[1];
+    let boarda = await this.reconstruct(brokenboardb);
+    let boardb = await this.reconstruct(brokenboarda);
+    let publicinput = new BoardArray([boarda, boardb]);
 
     let brokenboard1 = brokenproof.publicOutput.value[0];
     let brokenboard2 = brokenproof.publicOutput.value[1];
@@ -153,13 +158,13 @@ export const zkWorkerAPI3 = {
   },
 
   async inductiveStep(
-    proof1: SelfProof<void, BoardArray>,
+    proof1: SelfProof<BoardArray, BoardArray>,
     board11: GameBoardWithSeed,
     board12: GameBoardWithSeed,
-    proof2: SelfProof<void, BoardArray>,
+    proof2: SelfProof<BoardArray, BoardArray>,
     board21: GameBoardWithSeed,
     board22: GameBoardWithSeed,
-  ): Promise<[SelfProof<void, BoardArray>, string]> {
+  ): Promise<[SelfProof<BoardArray, BoardArray>, string]> {
     console.log(proof1);
     console.log(board11);
     console.log(board12);
@@ -182,18 +187,18 @@ export const zkWorkerAPI3 = {
     let result;
     //Make call to function
     try {
-      console.log(
-        await Game2048ZKProgram3.inductiveStep(proof1a, proof2a, retArray),
+      console.trace(
+        await Game2048ZKProgram3.inductiveStep(retArray, proof1a, proof2a),
       );
       console.log("att 2");
       result = await Game2048ZKProgram3.inductiveStep(
+        retArray,
         proof1a,
         //board11,
         //board12,
         proof2a,
         //board21,
         //board22,
-        retArray,
       );
 
       console.log(result);
@@ -208,13 +213,13 @@ export const zkWorkerAPI3 = {
       console.log(result);
     }
     result = await Game2048ZKProgram3.inductiveStep(
+      retArray,
       proof1a,
       //board11,
       //board12,
       proof2a,
       //board21,
       //board22,
-      retArray,
     );
     return [result.proof, JSON.stringify(result.proof.toJSON())];
   },
@@ -244,9 +249,9 @@ export const zkWorkerAPI3 = {
   },
 
   async inductiveStepAux2(
-    proof1: SelfProof<void, BoardArray>,
-    proof2: SelfProof<void, BoardArray>,
-  ): Promise<[SelfProof<void, BoardArray>, string]> {
+    proof1: SelfProof<BoardArray, BoardArray>,
+    proof2: SelfProof<BoardArray, BoardArray>,
+  ): Promise<[SelfProof<BoardArray, BoardArray>, string]> {
     //get 4 boards from 2 proofs
     const board11 = await this.reconstruct(proof1.publicOutput.value[0]);
     const board12 = await this.reconstruct(proof1.publicOutput.value[1]);
@@ -300,17 +305,17 @@ export const zkWorkerAPI3 = {
   },
 
   async inductiveStepAux(
-    proof1: SelfProof<void, BoardArray>,
+    proof1: SelfProof<BoardArray, BoardArray>,
     board11nums: Number[],
     seed11nums: bigint,
     board12nums: Number[],
     seed12nums: bigint,
-    proof2: SelfProof<void, BoardArray>,
+    proof2: SelfProof<BoardArray, BoardArray>,
     board21nums: Number[],
     seed21nums: bigint,
     board22nums: Number[],
     seed22nums: bigint,
-  ): Promise<[SelfProof<void, BoardArray>, string]> {
+  ): Promise<[SelfProof<BoardArray, BoardArray>, string]> {
     const board11 = this.auxSub(board11nums, seed11nums);
     const board12 = this.auxSub(board12nums, seed12nums);
     const board21 = this.auxSub(board21nums, seed21nums);

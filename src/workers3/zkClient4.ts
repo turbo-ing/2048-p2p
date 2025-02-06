@@ -28,7 +28,7 @@ export default class ZkClient4 {
   initialising = true;
   workersProcessing = 0;
   moveQueue: string[] = [];
-  proofQueue: myProof[] = [];
+  proofQueue: SelfProof<BoardArray, BoardArray>[] = [];
 
   //TODO: How to handle board storage?
   //    - Might be a good idea to store a boardQueue. That way, I can
@@ -63,10 +63,15 @@ export default class ZkClient4 {
   }
 
   //function to fully reconstruct a deserialised proof
-  async reconstructProof(brokenproof: SelfProof<void, BoardArray>) {
+  async reconstructProof(brokenproof: SelfProof<BoardArray, BoardArray>) {
     let maxproofs = brokenproof.maxProofsVerified;
     let proofval = brokenproof.proof;
-    let publicinput = undefined;
+
+    let brokenboarda = brokenproof.publicOutput.value[0];
+    let brokenboardb = brokenproof.publicOutput.value[1];
+    let boarda = await this.reconstruct(brokenboardb);
+    let boardb = await this.reconstruct(brokenboarda);
+    let publicinput = new BoardArray([boarda, boardb]);
 
     let brokenboard1 = brokenproof.publicOutput.value[0];
     let brokenboard2 = brokenproof.publicOutput.value[1];
@@ -74,7 +79,7 @@ export default class ZkClient4 {
     let board2 = await this.reconstruct(brokenboard2);
     let publicoutput = new BoardArray([board1, board2]);
 
-    const proof = new SelfProof({
+    const proof = new SelfProof<BoardArray, BoardArray>({
       proof: proofval,
       maxProofsVerified: maxproofs,
       publicInput: publicinput,
@@ -171,7 +176,7 @@ export default class ZkClient4 {
         const proofs = this.proofQueue.slice(0, 2);
         this.proofQueue = this.proofQueue.slice(2);
 
-        const [proof, proofJSON]: [SelfProof<void, BoardArray>, string] =
+        const [proof, proofJSON]: [SelfProof<BoardArray, BoardArray>, string] =
           await this.remoteApi.inductiveStepAux2(proofs[0], proofs[1]);
 
         console.log("made it to client");
@@ -269,7 +274,16 @@ export default class ZkClient4 {
           .cells.map((cell) => Number(cell.toBigInt()));
         const seedNum2 = newBoard2.getSeed().toBigInt();
 
-        const [proof, proofJSON]: [SelfProof<void, BoardArray>, string] =
+        /*const [proof, proofJSON]: [SelfProof<void, BoardArray>, string] =
+          await this.remoteApi.baseCaseAux(
+            boardNums1,
+            seedNum1,
+            boardNums2,
+            seedNum2,
+            moves,
+          );*/
+
+        const [proof, proofJSON]: [SelfProof<BoardArray, BoardArray>, string] =
           await this.remoteApi.baseCaseAux(
             boardNums1,
             seedNum1,
@@ -313,7 +327,7 @@ export default class ZkClient4 {
         const proof0 = proofs[0];
         const proof1 = proofs[1];
 
-        const [proof, proofJSON]: [SelfProof<void, BoardArray>, string] =
+        const [proof, proofJSON]: [SelfProof<BoardArray, BoardArray>, string] =
           await this.remoteApi.inductiveStepAux2(proofs[0], proofs[1]);
 
         console.log("made it to client");

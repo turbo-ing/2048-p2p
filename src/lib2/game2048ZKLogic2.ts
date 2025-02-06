@@ -134,10 +134,10 @@ export class BoardArray extends Struct({
   }
 }
 
-export class myProof extends SelfProof<void, BoardArray> {}
+export class myProof extends SelfProof<BoardArray, BoardArray> {}
 
 export class ProofWrapper extends Struct({ proof: SelfProof }) {
-  constructor(proof: SelfProof<void, BoardArray>) {
+  constructor(proof: SelfProof<BoardArray, BoardArray>) {
     super({ proof });
   }
 }
