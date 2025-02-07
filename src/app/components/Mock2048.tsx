@@ -161,7 +161,11 @@ export default function Mock2048() {
   return (
     <div className="transition-all">
       {grid && (
-        <GridBoard grid={grid} merges={merges} className="animate-fadeIn" />
+        <GridBoard
+          grid={grid}
+          merges={merges}
+          className="animate-fadeIn select-none"
+        />
       )}
     </div>
   );
