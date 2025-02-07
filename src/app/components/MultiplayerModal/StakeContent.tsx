@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import keccak256 from "keccak256";
 import {
   type BaseError,
@@ -24,7 +24,7 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
   /**
    * Fetch user's balance to check if < 10
    */
-  const { data: balance } = useBalance({
+  const { data: balance, refetch: refetchBalance } = useBalance({
     address,
     token: contracts.erc20Token.address,
   });
@@ -73,6 +73,13 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
    */
   const turboEdge = useTurboEdgeV0();
   const [state, dispatch, connected, room] = use2048();
+
+  /**
+   * Local state for faucet request
+   */
+  const [faucetLoading, setFaucetLoading] = useState(false);
+  const [faucetError, setFaucetError] = useState<string | null>(null);
+  const [faucetSuccess, setFaucetSuccess] = useState<string | null>(null);
 
   /**
    * Console-log any approve or stake hashes
@@ -152,9 +159,48 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
     }
   }
 
+  /**
+   * Enhanced faucet handling
+   */
   const handleFaucet = async () => {
-    // TODO: Implement faucet functionality
-    console.log("Faucet clicked. Implement faucet functionality here.");
+    setFaucetLoading(true);
+    setFaucetError(null);
+    setFaucetSuccess(null);
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/requestFaucet`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ walletAddress: address }),
+        },
+      );
+
+      if (!response.ok) {
+        // Attempt to parse server error message
+        const errorData = await response.json().catch(() => null);
+        const errorMsg =
+          errorData?.message ||
+          "Something went wrong. Please check the faucet service.";
+        throw new Error(errorMsg);
+      }
+
+      // In case the server returns a success message or any data
+      const data = await response.json().catch(() => ({}));
+      console.log("Faucet response:", data);
+
+      setFaucetSuccess("Successfully received faucet tokens!");
+      // Refresh balance to reflect updated funds
+      await refetchBalance();
+    } catch (err: any) {
+      console.error("Faucet call failed:", err);
+      setFaucetError(err?.message ?? "Faucet call failed. Try again later.");
+    } finally {
+      setFaucetLoading(false);
+    }
   };
 
   return (
@@ -166,9 +212,22 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
       </p>
 
       {insufficientBalance ? (
-        <Button onClick={handleFaucet} className="w-full">
-          <p className="text-base px-0.5">Receive 10 Turbo</p>
-        </Button>
+        <>
+          <Button
+            onClick={handleFaucet}
+            className="w-full"
+            disabled={faucetLoading}
+          >
+            {faucetLoading ? "Requesting Faucet..." : "Receive 10 Turbo"}
+          </Button>
+
+          {faucetSuccess && (
+            <div className="mt-2 text-green-500 text-sm">{faucetSuccess}</div>
+          )}
+          {faucetError && (
+            <div className="mt-2 text-red-500 text-sm">{faucetError}</div>
+          )}
+        </>
       ) : (
         <Button
           onClick={handleStake}
@@ -192,20 +251,20 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
         </Button>
       )}
 
-      {/* Display errors only (if any) */}
+      {/* Display transaction errors (if any) */}
       {(approveError || stakeError) && (
         <div className="mt-2 text-red-500">
           {approveError && (
             <div>
               Approve error:{" "}
-              {(approveError as BaseError)?.shortMessage ||
+              {(approveError as BaseError)?.shortMessage ??
                 approveError.message}
             </div>
           )}
           {stakeError && (
             <div>
               Stake error:{" "}
-              {(stakeError as BaseError)?.shortMessage || stakeError.message}
+              {(stakeError as BaseError)?.shortMessage ?? stakeError.message}
             </div>
           )}
         </div>

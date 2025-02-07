@@ -1,6 +1,4 @@
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { QueryClient } from "@tanstack/react-query";
-import { Chain } from "@rainbow-me/rainbowkit";
 import { createConfig, http, injected } from "wagmi";
 import { optimismSepolia } from "wagmi/chains";
 
