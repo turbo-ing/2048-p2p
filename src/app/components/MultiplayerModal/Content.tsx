@@ -4,6 +4,9 @@ import JoinRoom from "../icon/JoinRoom";
 import Input from "../Input";
 import { useMultiplayerContext } from "./context";
 
+import StakeContent from "./StakeContent";
+export { StakeContent };
+
 export const InviteContent = () => {
   const { joinRoom, createNewRoom } = useMultiplayerContext();
 

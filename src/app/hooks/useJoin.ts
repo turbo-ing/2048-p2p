@@ -15,22 +15,6 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
   const turboEdge = useTurboEdgeV0();
   const turboEdgeConnected = turboEdge?.connected ?? false;
 
-  // Debugging: Initial state
-  useEffect(() => {
-    console.log("Initial States: ", {
-      waitingToJoin,
-      sentTimer,
-      name,
-      numberOfPlayers,
-      gameTimer,
-      gameStarted,
-      room,
-      state,
-      connected,
-      turboEdgeConnected,
-    });
-  }, []);
-
   // Join Room Logic
   useEffect(() => {
     if (waitingToJoin && connected) {
@@ -119,6 +103,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     sentTimer,
     dispatch,
     gameStarted,
+    handleJoinGame,
   ]);
 
   // Join Room Function

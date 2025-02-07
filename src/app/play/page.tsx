@@ -133,61 +133,57 @@ export default function Game2048Page() {
 
   //State updater for move cache display
   useEffect(() => {
-    // only trigger once
-    if (!triggered) {
-      //initialise timer
-      //timeCounter = 0;
-      //set the timer
-      if (state.timer > 0) {
-        setInterval(() => {
-          if (timeCounter.current !== state.timer) {
-            setCounter((counter) => counter + 1);
-            timeCounter.current += 1;
-            //console.log(state.timer - timeCounter);
-          }
-        }, 1000);
-      }
-
-      //also just initialise surrenderedfront too, why not
+    //initialise timer
+    //timeCounter = 0;
+    //set the timer
+    if (state.timer > 0) {
       setInterval(() => {
-        //console.log("updating frontsurrendered");
-        let f2 = frontSurrendered;
-        for (var key in state.surrendered) {
-          let name = state.players[key];
-          let value = state.surrendered[key];
-          f2[name] = value;
+        if (timeCounter.current !== state.timer) {
+          setCounter((counter) => counter + 1);
+          timeCounter.current += 1;
+          //console.log(state.timer - timeCounter);
         }
-        setFrontSurrendered({ ...f2 });
+      }, 1000);
+    }
 
-        //console.log("updating lenqueue");
-        let len = zkClient.moveCache.length;
-        setLenQueue(len);
+    //also just initialise surrenderedfront too, why not
+    setInterval(() => {
+      //console.log("updating frontsurrendered");
+      let f2 = frontSurrendered;
+      for (var key in state.surrendered) {
+        let name = state.players[key];
+        let value = state.surrendered[key];
+        f2[name] = value;
+      }
+      setFrontSurrendered({ ...f2 });
 
-        let surr = state.surrendered;
-        //console.log("surr:");
-        //console.log(surr);
-        let allSurr = 0;
+      //console.log("updating lenqueue");
+      let len = zkClient.moveCache.length;
+      setLenQueue(len);
 
-        //check if everyone else has surrendered
-        for (var key in surr) {
-          //count surrenders
-          if (state.players[key] !== peerId && surr[key]) {
-            allSurr++;
-            /*console.log(
+      let surr = state.surrendered;
+      //console.log("surr:");
+      //console.log(surr);
+      let allSurr = 0;
+
+      //check if everyone else has surrendered
+      for (var key in surr) {
+        //count surrenders
+        if (state.players[key] !== peerId && surr[key]) {
+          allSurr++;
+          /*console.log(
               "detected surrender from player " +
                 state.players[key] +
                 " id: " +
                 key,
             );*/
-          }
         }
-        if (allSurr === state.playersCount - 1 && state.totalPlayers > 1) {
-          setAllSurrendered(true);
-        }
-      }, 1000);
-      setTriggered(true);
-    }
-  });
+      }
+      if (allSurr === state.playersCount - 1 && state.totalPlayers > 1) {
+        setAllSurrendered(true);
+      }
+    }, 1000);
+  }, []);
 
   //handle rem for rematch
   useEffect(() => {
@@ -210,7 +206,7 @@ export default function Game2048Page() {
       }
       router.push("/");
     } else setRem(counter);
-  }, [state.rematch, reset, dispatch, router]);
+  }, [state.rematch, reset, dispatch, router, connected]);
 
   useEffect(() => {
     const sortedScores = Object.entries(state.score) // Convert to array of [playerId, score]
@@ -221,7 +217,7 @@ export default function Game2048Page() {
     }));
 
     setRanking(sortedPlayers);
-  }, [state]);
+  }, [state.score, state.players]);
 
   useEffect(() => {
     if (!connected) return;

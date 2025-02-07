@@ -22,8 +22,6 @@ export default function HomePage() {
   const isMobile = useIsMobile();
 
   const turboEdge = useTurboEdgeV0();
-  const peerId = turboEdge?.node.peerId.toString();
-
   const [gameTimerInput, setGameTimerInput] = useState(0);
   const [sentTimer, setSentTimer] = useState(false);
 
