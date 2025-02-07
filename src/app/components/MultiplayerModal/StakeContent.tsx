@@ -169,7 +169,7 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/requestFaucet`,
+        `${process.env.NEXT_PUBLIC_BACKEND_CONTRACT_PROXY_URL}/requestFaucet`,
         {
           method: "POST",
           headers: {
