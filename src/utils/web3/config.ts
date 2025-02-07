@@ -8,8 +8,12 @@ import { backendStakePoolABI } from "./abi/backendStakePoolABI";
 import { erc20MintABI } from "./abi/ERC20ABI";
 import { walletConnect } from "wagmi/connectors";
 
-const BACKEND_ADDRESS = "0xc9cF049a0F8B60a2d591e309aECF412F8E6Bd9b6";
-const TOKEN_ADDRESS = "0xFB91F3c29F0be7A997eb4950Ea19De94C6c8D704";
+const BACKEND_ADDRESS = process.env.NEXT_PUBLIC_BACKEND_ADDRESS;
+const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_ERC20_TOKEN;
+
+if (!BACKEND_ADDRESS || !TOKEN_ADDRESS) {
+  throw new Error("Missing Contract Addresses");
+}
 
 export const contracts = {
   backendStakePool: {
@@ -22,23 +26,29 @@ export const contracts = {
   },
 };
 
+if (!process.env.NEXT_PUBLIC_RPC_URL) {
+  throw new Error("Missing RPC URL");
+}
+
 const optimismSepoliaCustom = {
   ...optimismSepolia,
   rpcUrls: {
     default: {
-      http: [
-        "https://dimensional-purple-mountain.optimism-sepolia.quiknode.pro/44f0d61844a6b6e40d2c2408aef2a4dd4df22f83/",
-      ],
+      http: [process.env.NEXT_PUBLIC_RPC_URL || "https://sepolia.optimism.io"],
     },
   },
 };
+
+if (!process.env.NEXT_PUBLIC_PROJECT_ID) {
+  throw new Error("Missing RainbowKit Project ID");
+}
 
 export const config = createConfig({
   chains: [optimismSepoliaCustom],
   connectors: [
     injected(),
     walletConnect({
-      projectId: "14fa4fb1d6df770d7d743a38c4c10ac9",
+      projectId: process.env.NEXT_PUBLIC_PROJECT_ID || "",
     }),
   ],
   transports: {
