@@ -6,7 +6,7 @@ import { backendStakePoolABI } from "./abi/backendStakePoolABI";
 import { erc20MintABI } from "./abi/ERC20ABI";
 import { walletConnect } from "wagmi/connectors";
 
-const BACKEND_ADDRESS = process.env.NEXT_PUBLIC_BACKEND_ADDRESS;
+const BACKEND_ADDRESS = process.env.NEXT_PUBLIC_BACKEND_STAKE_POOL;
 const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_ERC20_TOKEN;
 
 if (!BACKEND_ADDRESS || !TOKEN_ADDRESS) {
