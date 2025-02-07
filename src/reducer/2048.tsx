@@ -1,6 +1,10 @@
 "use client";
 
-import { EdgeAction, useEdgeReducerV0 } from "@turbo-ing/edge-v0";
+import {
+  EdgeAction,
+  useEdgeReducerV0,
+  useTurboEdgeV0,
+} from "@turbo-ing/edge-v0";
 import {
   createContext,
   Dispatch,
@@ -21,6 +25,8 @@ import {
 import { DirectionMap, MoveType } from "@/utils/constants";
 import { queueMove, zkClient } from "@/workers/zkQueue";
 import { gridsAreEqual, getGameState } from "@/utils/helper";
+import { useAccount } from "wagmi";
+import keccak256 from "keccak256";
 
 export type Direction = "up" | "down" | "left" | "right";
 
@@ -642,6 +648,34 @@ const game2048Reducer = (
       console.log(`Payload received: ${receivedProof} from ${action.peerId}`);
       const proofState = state;
       proofState.compiledProof = receivedProof;
+
+      //TODO:
+      // proofJSON is zk proof to send to the server
+      const { address } = useAccount();
+      const turboEdge = useTurboEdgeV0();
+      const [_, __, ___, room] = use2048();
+
+      if (!turboEdge || !address || !room) {
+        console.error("TurboEdge or address not found");
+        return { ...proofState };
+      }
+
+      const namespace = room + turboEdge?.sessionId;
+      const hashedNamespace = "0x" + keccak256(namespace).toString("hex");
+
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_CONTRACT_PROXY_URL}/sendProof`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          zkProof: receivedProof,
+          topic: hashedNamespace,
+          sessionId: turboEdge?.sessionId,
+          walletAddress: address,
+        }),
+      });
+
       return { ...proofState };
 
     case "REMATCH":
