@@ -30,7 +30,7 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
   });
 
   const insufficientBalance =
-    Number(balance?.value) / (balance?.decimals ?? 1) < 10;
+    Number(balance?.value) / (balance?.decimals ?? 18) < 10;
 
   /**
    * Approve transaction
@@ -72,7 +72,7 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
    * Access 2048 + TurboEdge state
    */
   const turboEdge = useTurboEdgeV0();
-  const [state, dispatch, connected, room] = use2048();
+  const [_, __, ___, room] = use2048();
 
   /**
    * Local state for faucet request
@@ -80,6 +80,12 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
   const [faucetLoading, setFaucetLoading] = useState(false);
   const [faucetError, setFaucetError] = useState<string | null>(null);
   const [faucetSuccess, setFaucetSuccess] = useState<string | null>(null);
+
+  /**
+   * Local states for addPlayerToPool
+   */
+  const [addPlayerError, setAddPlayerError] = useState<string | null>(null);
+  const [addPlayerLoading, setAddPlayerLoading] = useState(false);
 
   /**
    * Console-log any approve or stake hashes
@@ -128,13 +134,59 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
   }, [isApproveConfirmed, turboEdge, room, writeStake]);
 
   /**
-   * Once staking is confirmed, invoke callback
+   * Helper function to add player to the stake pool
+   */
+  async function attemptAddPlayerToPool() {
+    try {
+      setAddPlayerLoading(true);
+      setAddPlayerError(null);
+
+      const namespace = room + turboEdge?.sessionId;
+      const hashedNamespace = "0x" + keccak256(namespace).toString("hex");
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_CONTRACT_PROXY_URL}/addPlayerToPool`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            topic: hashedNamespace,
+            sessionId: turboEdge?.sessionId,
+            walletAddress: address,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        const errorMsg = errorData?.message || "Failed to add player to pool.";
+        throw new Error(errorMsg);
+      }
+
+      // If successful, invoke callback so parent can proceed
+      onSubmitStake?.();
+    } catch (err: any) {
+      console.error("Error in addPlayerToPool call:", err);
+      setAddPlayerError(
+        err?.message || "Something went wrong adding you to the stake pool.",
+      );
+    } finally {
+      setAddPlayerLoading(false);
+    }
+  }
+
+  /**
+   * Once staking is confirmed, attempt addPlayerToPool
    */
   useEffect(() => {
     if (isStakeConfirmed) {
-      onSubmitStake?.();
+      refetchBalance();
+      attemptAddPlayerToPool();
     }
-  }, [isStakeConfirmed, onSubmitStake]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStakeConfirmed]);
 
   /**
    * Click handler for approving 10 tokens
@@ -220,7 +272,6 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
           >
             {faucetLoading ? "Requesting Faucet..." : "Receive 10 Turbo"}
           </Button>
-
           {faucetSuccess && (
             <div className="mt-2 text-green-500 text-sm">{faucetSuccess}</div>
           )}
@@ -267,6 +318,16 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
               {(stakeError as BaseError)?.shortMessage ?? stakeError.message}
             </div>
           )}
+        </div>
+      )}
+
+      {/* If adding player to stake pool failed, show the error and a "Try Again" button */}
+      {addPlayerError && (
+        <div className="mt-4">
+          <div className="text-red-500 text-sm mb-2">{addPlayerError}</div>
+          <Button onClick={attemptAddPlayerToPool} disabled={addPlayerLoading}>
+            {addPlayerLoading ? "Retrying..." : "Try Again"}
+          </Button>
         </div>
       )}
     </div>
