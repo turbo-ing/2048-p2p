@@ -45,8 +45,6 @@ export default function MultiplayerModal({
   const [gameTimerInput, setGameTimerInput] = useState<string>("");
   const [numOfPlayers, setNumOfPlayers] = useState<string>("");
   const [roomIdInput, setRoomIdInput] = useState<string>("");
-  const [address, setAddress] = useState<string | null>(null);
-  const [balance, setBalance] = useState<string | null>(null);
 
   const handleJoining = (loading: boolean) => {
     if (loading) {
@@ -90,26 +88,7 @@ export default function MultiplayerModal({
   };
 
   const onSubmitStake = async () => {
-    try {
-      // Instantiate a Wallet Client and a Public Client
-      const walletClient = await ConnectWalletClient();
-      const publicClient = ConnectPublicClient();
-
-      // Retrieve the wallet address using the Wallet Client
-      const [address] = await walletClient.requestAddresses();
-      // const [address] = await walletClient.getAddresses();
-
-      // Retrieve the balance of the address using the Public Client
-      const balance = formatEther(await publicClient.getBalance({ address }));
-
-      // Update the state variables with the retrieved address and balance
-      setAddress(address);
-      setBalance(balance);
-      setSelectedMode(SelectedMode.SHOW_ROOM_CODE);
-    } catch (error) {
-      // Error handling: Display an alert if the transaction fails
-      console.error(`Transaction failed: ${error}`);
-    }
+    setSelectedMode(SelectedMode.SHOW_ROOM_CODE);
   };
 
   return (
