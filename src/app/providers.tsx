@@ -18,17 +18,17 @@ const Disclaimer: DisclaimerComponent = ({ Text, Link }) => (
   </Text>
 );
 
+const appInfo = {
+  appName: "Turbo",
+  learnMoreUrl: "https://turbo.ing",
+  disclaimer: Disclaimer,
+};
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
-          appInfo={{
-            appName: "Turbo",
-            learnMoreUrl: "https://turbo.ing",
-            disclaimer: Disclaimer,
-          }}
-        >
+        <RainbowKitProvider appInfo={appInfo}>
           <TurboEdgeProviderV0 gameId="turbo-2048">
             <Game2048Provider>{children}</Game2048Provider>
           </TurboEdgeProviderV0>

@@ -5,8 +5,6 @@ import { Rubik } from "next/font/google";
 
 import "./globals.css";
 import { Providers } from "./providers";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-// import CustomTokenComponent from "@/utils/walletAbi";
 import { Connect } from "./components/Connect";
 const rubik = Rubik({ subsets: ["latin"] });
 
@@ -21,10 +19,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // const { data, isLoading, isError, error } = useBalance({
-  //   token: contracts.erc20Token.address,
-  // });
-
   return (
     <html className="dark text-text bg-background" lang="en">
       <body
