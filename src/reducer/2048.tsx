@@ -27,6 +27,7 @@ import { queueMove, zkClient } from "@/workers/zkQueue";
 import { gridsAreEqual, getGameState } from "@/utils/helper";
 import { useAccount } from "wagmi";
 import keccak256 from "keccak256";
+import ProofSideEffectHandler from "./ProofSideEffectHandler";
 
 export type Direction = "up" | "down" | "left" | "right";
 
@@ -57,6 +58,7 @@ export type Game2048State = {
   surrendered: { [playerId: string]: boolean };
   playersCount: number;
   totalPlayers: number;
+  // TODO: figure out if one of these is needed for each player
   compiledProof: string;
   actionPeerId?: string;
   actionDirection?: MoveType;
@@ -649,33 +651,6 @@ const game2048Reducer = (
       const proofState = state;
       proofState.compiledProof = receivedProof;
 
-      //TODO:
-      // proofJSON is zk proof to send to the server
-      const { address } = useAccount();
-      const turboEdge = useTurboEdgeV0();
-      const [_, __, ___, room] = use2048();
-
-      if (!turboEdge || !address || !room) {
-        console.error("TurboEdge or address not found");
-        return { ...proofState };
-      }
-
-      const namespace = room + turboEdge?.sessionId;
-      const hashedNamespace = "0x" + keccak256(namespace).toString("hex");
-
-      fetch(`${process.env.NEXT_PUBLIC_BACKEND_CONTRACT_PROXY_URL}/sendProof`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          zkProof: receivedProof,
-          topic: hashedNamespace,
-          sessionId: turboEdge?.sessionId,
-          walletAddress: address,
-        }),
-      });
-
       return { ...proofState };
 
     case "REMATCH":
@@ -761,6 +736,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     <Game2048Context.Provider
       value={[state, dispatch, connected, room, setRoom, zkClient]}
     >
+      <ProofSideEffectHandler />
       {children}
     </Game2048Context.Provider>
   );

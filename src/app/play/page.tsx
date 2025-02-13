@@ -183,7 +183,16 @@ export default function Game2048Page() {
         setAllSurrendered(true);
       }
     }, 1000);
-  }, []);
+  }, [
+    frontSurrendered,
+    peerId,
+    state.players,
+    state.playersCount,
+    state.surrendered,
+    state.timer,
+    state.totalPlayers,
+    zkClient.moveCache.length,
+  ]);
 
   //handle rem for rematch
   useEffect(() => {
