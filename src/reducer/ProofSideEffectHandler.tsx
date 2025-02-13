@@ -18,18 +18,21 @@ const Game2048SideEffectHandler: React.FC = () => {
       const namespace = room + turboEdge.sessionId;
       const hashedNamespace = "0x" + keccak256(namespace).toString("hex");
 
-      fetch(`${process.env.NEXT_PUBLIC_BACKEND_CONTRACT_PROXY_URL}/sendProof`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_CONTRACT_PROXY_URL}submitVerification`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            zkProof: state.compiledProof,
+            topic: hashedNamespace,
+            sessionId: turboEdge.sessionId,
+            walletAddress: address,
+          }),
         },
-        body: JSON.stringify({
-          zkProof: state.compiledProof,
-          topic: hashedNamespace,
-          sessionId: turboEdge.sessionId,
-          walletAddress: address,
-        }),
-      }).catch((err) => console.error(err));
+      ).catch((err) => console.error(err));
     }
   }, [state.compiledProof, turboEdge, address, room]);
 

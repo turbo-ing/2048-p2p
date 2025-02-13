@@ -145,7 +145,7 @@ export default function StakeContent({ onSubmitStake }: StakeContentProps) {
       const hashedNamespace = "0x" + keccak256(namespace).toString("hex");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_CONTRACT_PROXY_URL}/addPlayerToPool`,
+        `${process.env.NEXT_PUBLIC_BACKEND_CONTRACT_PROXY_URL}addPlayerToPool`,
         {
           method: "POST",
           headers: {
