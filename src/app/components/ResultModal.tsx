@@ -45,7 +45,7 @@ export const ResultModal = ({
   rankingData,
   totalPlayers,
 }: ResultModalProps) => {
-  const [, dispatch] = use2048();
+  const [state, dispatch, connected, room, setRoom, zkClient] = use2048();
   const [ranking, setRanking] = useState<Player[]>(rankingData);
   const [isZKModalOpen, setIsZKModalOpen] = useState<boolean>(false);
   const [isRematchRequested, setIsRematchRequested] = useState<boolean>(false);
@@ -103,10 +103,12 @@ export const ResultModal = ({
   );
 
   const handleLeave = () => {
+    setRoom("");
     dispatch({
       type: "LEAVE",
     });
   };
+
   const renderButtons = () => (
     <div className="mt-8 space-y-2 text-white transition-all sm:space-y-0 sm:flex sm:justify-center sm:gap-4 text-base">
       <Link href={""} passHref>

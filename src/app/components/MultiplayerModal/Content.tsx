@@ -62,15 +62,20 @@ export const CreateRoomContent = () => {
         placeholder={"Enter number of players"}
         id={"number-of-players"}
         type="number"
+        min={1}
       />
       <Input
-        labelText={"Game timer"}
+        labelText={"Time Limit"}
         value={gameTimerInput}
         onChange={setGameTimerInput}
-        placeholder={"Enter Game Timer"}
+        placeholder={"Enter Time Limit"}
         id={"gametimer"}
         type="number"
+        min={0}
       />
+      <p className="text-sm text-left mt-1 text-muted-text">
+        Leave blank for no limit.
+      </p>
       <div className="mt-8 space-y-2 text-white transition-all">
         <Button onClick={onCreateNewGame}>
           <JoinRoom />

@@ -8,9 +8,9 @@ import { Providers } from "./providers";
 const rubik = Rubik({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Turbo 2048 - BlockKnight",
+  title: "Turbo 2048",
   description:
-    "Serverless P2P 2048 in Decentralized Web3 Era! BlockKnight is powered by Turbo Edge’s peer-to-peer technology offers a decentralized, secure, and thrilling chess experience—right in your browser with zero servers!",
+    "Experience Turbo 2048, the revolutionary serverless game powered by Turbo Edge's cutting-edge peer-to-peer technology. Enjoy a secure, decentralized gaming experience with zero-knowledge protocols that protect your privacy and prevent cheating.",
 };
 
 export default function RootLayout({
