@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { http, injected } from "wagmi";
-import { createConfig } from "@privy-io/wagmi";
+import { createConfig } from "wagmi";
 import { optimismSepolia } from "wagmi/chains";
 
 import { backendStakePoolABI } from "./abi/backendStakePoolABI";
@@ -44,32 +44,30 @@ const optimismSepoliaCustom = {
 if (!process.env.NEXT_PUBLIC_PROJECT_ID) {
   throw new Error("Missing RainbowKit Project ID");
 }
-
-const connectors = [
-  injected(),
+/*injected(),
   walletConnect({
     projectId: process.env.NEXT_PUBLIC_PROJECT_ID || "",
   }),
-  connectorsForWallets(
-    [
-      {
-        groupName: "Recommended",
-        wallets: [
-          toPrivyWallet({
-            id: "cm6a9um83004rl2fofswzt8sp", //process.env.NEXT_PUBLIC_PRIVY_APP_ID
-            name: "Turbo 2048",
-            iconUrl:
-              "https://upload.wikimedia.org/wikipedia/en/5/5f/Original_Doge_meme.jpg",
-          }),
-        ],
-      },
-    ],
+  */
+const connectors = connectorsForWallets(
+  [
     {
-      appName: "Privy",
-      projectId: "Demo",
+      groupName: "Recommended",
+      wallets: [
+        toPrivyWallet({
+          id: "cm6a9um83004rl2fofswzt8sp", //process.env.NEXT_PUBLIC_PRIVY_APP_ID
+          name: "Turbo 2048",
+          iconUrl:
+            "https://upload.wikimedia.org/wikipedia/en/5/5f/Original_Doge_meme.jpg",
+        }),
+      ],
     },
-  ),
-];
+  ],
+  {
+    appName: "Privy",
+    projectId: "Demo",
+  },
+);
 
 export const config = createConfig({
   chains: [optimismSepoliaCustom],
