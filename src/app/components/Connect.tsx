@@ -1,9 +1,13 @@
 "use client";
 import { contracts } from "@/utils/web3/config";
+import { usePrivy } from "@privy-io/react-auth";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useBalance } from "wagmi";
 
+export const CB = () => {};
+
 export const Connect = () => {
+  const privy = usePrivy();
   const { address } = useAccount();
   const { data, isLoading, isError, error } = useBalance({
     address: address,
@@ -18,7 +22,7 @@ export const Connect = () => {
           </p>
         </div>
       )}
-      <ConnectButton showBalance={false} />
+      <button onClick={privy.connectOrCreateWallet}>connect wallet :D</button>
     </>
   );
 };

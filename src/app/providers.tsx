@@ -29,15 +29,17 @@ const appInfo = {
 export function Providers({ children }: { children: React.ReactNode }) {
   //ignore the appId error haha it has no clue
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider appInfo={appInfo}>
-          <TurboEdgeProviderV0 gameId="turbo-2048">
-            <Game2048Provider>{children}</Game2048Provider>
-          </TurboEdgeProviderV0>
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <PrivyProvider appId="cm6a9um83004rl2fofswzt8sp">
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
+          <RainbowKitProvider appInfo={appInfo}>
+            <TurboEdgeProviderV0 gameId="turbo-2048">
+              <Game2048Provider>{children}</Game2048Provider>
+            </TurboEdgeProviderV0>
+          </RainbowKitProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </PrivyProvider>
   );
 }
 
