@@ -1,10 +1,33 @@
 "use client";
 import { contracts } from "@/utils/web3/config";
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivy, PrivyInterface } from "@privy-io/react-auth";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useBalance } from "wagmi";
+import Button from "./Button";
+import SinglePlayer from "./icon/Singleplayer";
 
-export const CB = () => {};
+export const CB = (privy: PrivyInterface) => {
+  const { address } = useAccount();
+  const { data, isLoading, isError, error } = useBalance({
+    address: address,
+    token: contracts.erc20Token.address,
+  });
+  if (!data?.value) {
+    //if not logged in
+    return (
+      <Button onClick={privy.connectOrCreateWallet}>
+        <div className="text-left flex flex-row items-center hover:text-text">
+          <SinglePlayer size={28} />
+          <div>
+            <div className="ml-2 text-[clamp(1rem, 2.5vw, 2rem)]">
+              Connect Wallet
+            </div>
+          </div>
+        </div>
+      </Button>
+    );
+  } else return <ConnectButton showBalance={false} />;
+};
 
 export const Connect = () => {
   const privy = usePrivy();
@@ -22,7 +45,7 @@ export const Connect = () => {
           </p>
         </div>
       )}
-      <button onClick={privy.connectOrCreateWallet}>connect wallet :D</button>
+      {CB(privy)}
     </>
   );
 };
