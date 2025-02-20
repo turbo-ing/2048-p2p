@@ -45,25 +45,31 @@ if (!process.env.NEXT_PUBLIC_PROJECT_ID) {
   throw new Error("Missing RainbowKit Project ID");
 }
 
-const connectors = connectorsForWallets(
-  [
+const connectors = [
+  injected(),
+  walletConnect({
+    projectId: process.env.NEXT_PUBLIC_PROJECT_ID || "",
+  }),
+  connectorsForWallets(
+    [
+      {
+        groupName: "Recommended",
+        wallets: [
+          toPrivyWallet({
+            id: "cm6a9um83004rl2fofswzt8sp", //process.env.NEXT_PUBLIC_PRIVY_APP_ID
+            name: "Turbo 2048",
+            iconUrl:
+              "https://upload.wikimedia.org/wikipedia/en/5/5f/Original_Doge_meme.jpg",
+          }),
+        ],
+      },
+    ],
     {
-      groupName: "Recommended",
-      wallets: [
-        toPrivyWallet({
-          id: "cm6a9um83004rl2fofswzt8sp", //process.env.NEXT_PUBLIC_PRIVY_APP_ID
-          name: "Turbo 2048",
-          iconUrl:
-            "https://upload.wikimedia.org/wikipedia/en/5/5f/Original_Doge_meme.jpg",
-        }),
-      ],
+      appName: "Privy",
+      projectId: "Demo",
     },
-  ],
-  {
-    appName: "Privy",
-    projectId: "Demo",
-  },
-);
+  ),
+];
 
 export const config = createConfig({
   chains: [optimismSepoliaCustom],
