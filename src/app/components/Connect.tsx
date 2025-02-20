@@ -14,17 +14,31 @@ export const CB = (privy: PrivyInterface) => {
   });
   if (!data?.value) {
     //if not logged in
+    // There's a hook function to do this.
+    //privy.login();
     return (
-      <Button onClick={privy.connectOrCreateWallet}>
-        <div className="text-left flex flex-row items-center hover:text-text">
-          <SinglePlayer size={28} />
-          <div>
-            <div className="ml-2 text-[clamp(1rem, 2.5vw, 2rem)]">
-              Connect Wallet
+      <div>
+        <Button onClick={privy.login}>
+          <div className="text-left flex flex-row items-center hover:text-text">
+            <SinglePlayer size={28} />
+            <div>
+              <div className="ml-2 text-[clamp(1rem, 2.5vw, 2rem)]">
+                Connect Wallet
+              </div>
             </div>
           </div>
-        </div>
-      </Button>
+        </Button>
+        {/*
+        <Button onClick={privy.connectOrCreateWallet}>
+          <div className="text-left flex flex-row items-center hover:text-text">
+            <SinglePlayer size={28} />
+            <div>
+              <div className="ml-2 text-[clamp(1rem, 2.5vw, 2rem)]">Login</div>
+            </div>
+          </div>
+        </Button>
+        */}
+      </div>
     );
   } else return <ConnectButton showBalance={false} />;
 };
