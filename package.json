@@ -69,5 +69,9 @@
     "ts-proto": "^2.2.0",
     "typescript": "^5"
   },
-  "packageManager": "yarn@4.6.0"
+  "packageManager": "yarn@4.6.0",
+  "resolutions": {
+    "@types/react": "17.0.14",
+    "@types/react-dom": "17.0.14"
+  }
 }
