@@ -5,6 +5,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useBalance } from "wagmi";
 import Button from "./Button";
 import SinglePlayer from "./icon/Singleplayer";
+import { useEffect } from "react";
 
 export const CB = (privy: PrivyInterface) => {
   const { address } = useAccount();
@@ -12,7 +13,18 @@ export const CB = (privy: PrivyInterface) => {
     address: address,
     token: contracts.erc20Token.address,
   });
-  if (!data?.value) {
+
+  useEffect(() => {
+    const logout = async () => {
+      await privy.logout();
+    };
+    if (privy.authenticated && !data?.value) {
+      //if logged in but no wallet connected
+      logout();
+    }
+  });
+
+  if (!privy.authenticated || !data?.value) {
     //if not logged in
     // There's a hook function to do this.
     //privy.login();
@@ -52,7 +64,7 @@ export const Connect = () => {
   });
   return (
     <>
-      {data?.value && (
+      {privy.authenticated && data?.value && (
         <div className=" bg-red-500 text-white rounded-[12px] rounded-r-none translate-x-3 px-4 align-middle flex items-center">
           <p className="mr-2 flex-inline flex items-center space-x-2">
             <b>{data?.formatted}</b> <span className="text-xs"> Turbo</span>
