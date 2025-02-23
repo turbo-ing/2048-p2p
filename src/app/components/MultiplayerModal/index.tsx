@@ -29,7 +29,7 @@ export default function MultiplayerModal({
   onClose,
   pushPlay,
 }: MultiplayerModalProps) {
-  const [state, dispatch, connected, roomId, setRoomId, zkClient4] = use2048();
+  const [state, dispatch, connected, roomId, setRoomId, zkClient] = use2048();
   const [selectedMode, setSelectedMode] = useState<SelectedMode>(
     SelectedMode.INVITE_CHOICE,
   );

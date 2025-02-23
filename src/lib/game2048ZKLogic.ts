@@ -1,6 +1,16 @@
-import { Bool, Field, Poseidon, Provable, Struct, UInt64 } from "o1js";
+import {
+  Bool,
+  Field,
+  Poseidon,
+  Provable,
+  Struct,
+  UInt64,
+  Proof,
+  SelfProof,
+} from "o1js";
 
-export const MAX_MOVES = 20;
+export const MAX_MOVES2 = 20;
+export const MAX_PARALLEL = 1;
 /* -------------------------------------------------------------------------- */
 /*                                  GameBoard                                  */
 
@@ -103,7 +113,7 @@ export enum MoveDirection {
 }
 
 export class Direction extends Struct({
-  value: Provable.Array(Field, MAX_MOVES),
+  value: Provable.Array(Field, MAX_MOVES2),
 }) {
   constructor(value: Field[]) {
     super({ value });
@@ -111,12 +121,53 @@ export class Direction extends Struct({
 }
 
 /* -------------------------------------------------------------------------- */
+/*                                Extra types                                 */
+
+/* -------------------------------------------------------------------------- */
+
+//Board array type
+export class BoardArray extends Struct({
+  value: Provable.Array(GameBoardWithSeed, 2),
+}) {
+  constructor(value: GameBoardWithSeed[]) {
+    super({ value });
+  }
+}
+
+export class myProof extends SelfProof<BoardArray, BoardArray> {}
+
+export class ProofWrapper extends Struct({ proof: SelfProof }) {
+  constructor(proof: SelfProof<BoardArray, BoardArray>) {
+    super({ proof });
+  }
+}
+
+//TODO: fix ProofArray type apparently being banned
+export class ProofArray extends Struct({
+  value: Provable.Array(ProofWrapper, MAX_PARALLEL),
+}) {
+  constructor(value: ProofWrapper[]) {
+    super({ value });
+  }
+}
+
+/*
+export class ProofArray extends Struct({
+  value: Provable.Array(myProof, MAX_PARALLEL), 
+}){
+  constructor(value: myProof[]) {
+    super({ value });
+  }
+}
+  */
+
+/* -------------------------------------------------------------------------- */
 /*                          Parsing Move Directions                           */
 
 /* -------------------------------------------------------------------------- */
 
 /**
- * Extract up to `maxMoves` directions from a single Field
+ * Extract up to `maxMoves2` directions from a single Field
  * (treated as up to 256 bits in the circuit).
  *
  * - Each direction uses 3 bits:
@@ -131,7 +182,7 @@ export class Direction extends Struct({
  */
 export function parseDirections(
   directionBitsField: Field,
-  maxMoves: number,
+  maxMoves2: number,
 ): Field[] {
   // Convert to bits (lowest index = least significant bit).
   let bits = directionBitsField.toBits();
@@ -139,7 +190,7 @@ export function parseDirections(
   // Create an array of direction Fields
   let directions: Field[] = [];
 
-  for (let i = 0; i < maxMoves; i++) {
+  for (let i = 0; i < maxMoves2; i++) {
     // bits for move i: bits[3*i .. 3*i+2]
     let chunk = bits.slice(3 * i, 3 * i + 3);
     // Convert them to a single Field integer
@@ -160,11 +211,11 @@ export function parseDirections(
 
 export function parseDirectionsOutsideCircuit(
   directionBits: bigint,
-  maxMoves: number,
+  maxMoves2: number,
 ): number[] {
   const directions: number[] = [];
 
-  for (let i = 0; i < maxMoves; i++) {
+  for (let i = 0; i < maxMoves2; i++) {
     let shift = 3n * BigInt(i);
     let mask = (1n << 3n) - 1n; // 0b111 = 7
     let dir = Number((directionBits >> shift) & mask);
@@ -370,7 +421,7 @@ function applyMoveDown(board: GameBoard): GameBoard {
  */
 function applyMoveUpDown(board: GameBoard, direction: Field): GameBoard {
   let newBoard = board.clone();
-  const isDown = direction.equals(Field(MoveDirection.Down));
+  const isDown = direction.equals(Field.from(MoveDirection.Down));
 
   for (let col = 0; col < 4; col++) {
     let colVals = [
@@ -402,7 +453,7 @@ function applyMoveUpDown(board: GameBoard, direction: Field): GameBoard {
  */
 function applyMoveLeftRight(board: GameBoard, direction: Field): GameBoard {
   let newBoard = board.clone();
-  const isRight = direction.equals(Field(MoveDirection.Right));
+  const isRight = direction.equals(Field.from(MoveDirection.Right));
 
   for (let row = 0; row < 4; row++) {
     let rowVals = [
@@ -432,8 +483,8 @@ function applyMoveLeftRight(board: GameBoard, direction: Field): GameBoard {
  */
 function applyMoveUniversal(board: GameBoard, direction: Field): GameBoard {
   let newBoard = board.clone();
-  const isDown = direction.equals(Field(MoveDirection.Down));
-  const isRight = direction.equals(Field(MoveDirection.Right));
+  const isDown = direction.equals(Field.from(MoveDirection.Down));
+  const isRight = direction.equals(Field.from(MoveDirection.Right));
   const isUpDown = direction.lessThanOrEqual(2);
   const isLeftRight = isUpDown.not();
   const isReverse = isDown.or(isRight);
@@ -489,7 +540,7 @@ export function applyOneMoveCircuit(
   const newBoard = applyMoveUniversal(board, direction);
 
   // Check which direction we're moving
-  const isNone = direction.equals(Field(MoveDirection.None));
+  const isNone = direction.equals(Field.from(MoveDirection.None));
 
   return Provable.if<GameBoard>(isNone, GameBoard, noChangeBoard, newBoard);
 }
@@ -518,11 +569,11 @@ export function applyMovesCircuit(
 export function verifyTransition(
   oldStateBoard: GameBoard,
   directionBits: Field,
-  maxMoves: number,
+  maxMoves2: number,
   claimedNewStateBoard: GameBoard,
 ) {
   // 1) parse directions from the single field
-  let dirs = parseDirections(directionBits, maxMoves);
+  let dirs = parseDirections(directionBits, maxMoves2);
   // 2) apply them
   let resultingBoard = applyMovesCircuit(oldStateBoard, dirs);
 
@@ -564,7 +615,7 @@ export function addRandomTile(
   for (let i = 0; i < 16; i++) {
     board.cells[i] = Provable.if(
       isZeroes[i].and(emptyTilesIndex[i].equals(randIndex)).and(enabled),
-      Field(2),
+      Field.from(2),
       board.cells[i],
     );
   }
@@ -587,5 +638,5 @@ export function printBoard(board: GameBoard) {
     }
     console.log(rowVals.join("\t"));
   }
-  //console.log("--------------");
+  console.log("--------------");
 }

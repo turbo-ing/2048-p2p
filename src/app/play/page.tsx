@@ -14,7 +14,7 @@ import LeaveGameModal from "../components/LeaveGameModal";
 
 export default function Game2048Page() {
   const router = useRouter();
-  const [state, dispatch, connected, , , zkClient4] = use2048();
+  const [state, dispatch, connected, , , zkClient] = use2048();
   const isMobile = useIsMobile();
   const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
@@ -160,7 +160,7 @@ export default function Game2048Page() {
         setFrontSurrendered({ ...f2 });
 
         //console.log("updating lenqueue");
-        let len = zkClient4.moveQueue.length;
+        let len = zkClient.moveQueue.length;
         setLenQueue(len);
 
         let surr = state.surrendered;
@@ -225,8 +225,8 @@ export default function Game2048Page() {
 
   useEffect(() => {
     if (!connected) return;
-    zkClient4?.setDispatch(dispatch);
-  }, [connected, dispatch, zkClient4]);
+    zkClient?.setDispatch(dispatch);
+  }, [connected, dispatch, zkClient]);
 
   if (!state || state.playersCount < 1) return router.push("/");
 
@@ -249,13 +249,13 @@ export default function Game2048Page() {
                 <div className="w-full flex lg:flex-row flex-col justify-center lg:-mx-5">
                   <div className="lg:w-1/2 mx-auto size-full ">
                     <div className="max-w-[365px] mx-auto text-3xl w-[365px] ">
-                      {/*<p>zk: {zkClient4.moveCache.length}</p>*/}
+                      {/*<p>zk: {zkClient.moveCache.length}</p>*/}
                       {/*<p>lq: {lenQueue}</p>*/}
                       <Game2048
                         timer={state.timer}
                         rematch={rematch}
                         rem={rem}
-                        remProcessing={zkClient4.workersProcessing}
+                        remProcessing={zkClient.workersProcessing}
                         downloadProof={downloadProof}
                         key={peerId}
                         className=" text-medium"
@@ -274,7 +274,7 @@ export default function Game2048Page() {
                         frontSurrendered={frontSurrendered}
                         totalPlayers={state.totalPlayers}
                         width={80}
-                        lenQueue={zkClient4.moveQueue.length}
+                        lenQueue={zkClient.moveQueue.length}
                         clock={state.timer - counter}
                       />
                     </div>
@@ -292,9 +292,9 @@ export default function Game2048Page() {
                                 <Game2048
                                   rematch={rematch}
                                   rem={rem}
-                                  remProcessing={zkClient4.workersProcessing}
+                                  remProcessing={zkClient.workersProcessing}
                                   downloadProof={downloadProof}
-                                  lenQueue={zkClient4.moveQueue.length}
+                                  lenQueue={zkClient.moveQueue.length}
                                   key={player}
                                   className="text-medium"
                                   dispatchDirection={dispatchDirection}

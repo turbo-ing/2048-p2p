@@ -45,7 +45,7 @@ export const ResultModal = ({
   rankingData,
   totalPlayers,
 }: ResultModalProps) => {
-  const [state, dispatch, connected, room, setRoom, zkClient4] = use2048();
+  const [state, dispatch, connected, room, setRoom, zkClient] = use2048();
   const [ranking, setRanking] = useState<Player[]>(rankingData);
   const [isZKModalOpen, setIsZKModalOpen] = useState<boolean>(false);
   const [isRematchRequested, setIsRematchRequested] = useState<boolean>(false);
