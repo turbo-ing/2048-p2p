@@ -1,4 +1,13 @@
-import { Bool, Field, Poseidon, Provable, Struct, UInt64 } from "o1js";
+import {
+  Bool,
+  Field,
+  Poseidon,
+  Provable,
+  Struct,
+  UInt64,
+  Proof,
+  SelfProof,
+} from "o1js";
 
 export const MAX_MOVES = 20;
 /* -------------------------------------------------------------------------- */
@@ -231,6 +240,20 @@ function mergeTwoCells(a: Field, b: Field) {
   return { mergedValue, leftover };
 }
 
+function mergeTwoCells2(a: Field, b: Field) {
+  let bothNonZero = a
+    .equals(Field.from(0))
+    .not()
+    .and(b.equals(Field.from(0)).not());
+  let areEqual = a.equals(b);
+  let canMerge = bothNonZero.and(areEqual);
+
+  let mergedValue = Provable.if(canMerge, a.add(Field.from(1)), a);
+  let leftover = Provable.if(canMerge, Field.from(0), b);
+
+  return { mergedValue, leftover };
+}
+
 /**
  * mergeRowLeft:
  * - 1) Shift zeros to the right (bubbleZerosLeft)
@@ -248,6 +271,25 @@ function mergeRowLeft(row: Field[]): Field[] {
   const pair1 = mergeTwoCells(shifted[0], shifted[1]);
   const pair2 = mergeTwoCells(pair1.leftover, shifted[2]);
   const pair3 = mergeTwoCells(pair2.leftover, shifted[3]);
+  let mergedRow = [
+    pair1.mergedValue,
+    pair2.mergedValue,
+    pair3.mergedValue,
+    pair3.leftover,
+  ];
+
+  // 3) bubble zeros again
+  return bubbleZerosLeft(mergedRow);
+}
+
+function mergeRowLeft2(row: Field[]): Field[] {
+  // 1) bubble zeros
+  const shifted = bubbleZerosLeft(row);
+
+  // 2) merge pairs
+  const pair1 = mergeTwoCells2(shifted[0], shifted[1]);
+  const pair2 = mergeTwoCells2(pair1.leftover, shifted[2]);
+  const pair3 = mergeTwoCells2(pair2.leftover, shifted[3]);
   let mergedRow = [
     pair1.mergedValue,
     pair2.mergedValue,
@@ -370,7 +412,7 @@ function applyMoveDown(board: GameBoard): GameBoard {
  */
 function applyMoveUpDown(board: GameBoard, direction: Field): GameBoard {
   let newBoard = board.clone();
-  const isDown = direction.equals(Field(MoveDirection.Down));
+  const isDown = direction.equals(Field.from(MoveDirection.Down));
 
   for (let col = 0; col < 4; col++) {
     let colVals = [
@@ -402,7 +444,7 @@ function applyMoveUpDown(board: GameBoard, direction: Field): GameBoard {
  */
 function applyMoveLeftRight(board: GameBoard, direction: Field): GameBoard {
   let newBoard = board.clone();
-  const isRight = direction.equals(Field(MoveDirection.Right));
+  const isRight = direction.equals(Field.from(MoveDirection.Right));
 
   for (let row = 0; row < 4; row++) {
     let rowVals = [
@@ -432,8 +474,8 @@ function applyMoveLeftRight(board: GameBoard, direction: Field): GameBoard {
  */
 function applyMoveUniversal(board: GameBoard, direction: Field): GameBoard {
   let newBoard = board.clone();
-  const isDown = direction.equals(Field(MoveDirection.Down));
-  const isRight = direction.equals(Field(MoveDirection.Right));
+  const isDown = direction.equals(Field.from(MoveDirection.Down));
+  const isRight = direction.equals(Field.from(MoveDirection.Right));
   const isUpDown = direction.lessThanOrEqual(2);
   const isLeftRight = isUpDown.not();
   const isReverse = isDown.or(isRight);
@@ -450,6 +492,39 @@ function applyMoveUniversal(board: GameBoard, direction: Field): GameBoard {
 
     // mergeRowLeft can still accept a normal Field[]
     let merged = mergeRowLeft(toMerge);
+
+    let finalVals = reverseIf(isReverse, merged);
+
+    // set final
+    for (let j = 0; j < 4; j++) {
+      newBoard.setCellIf(j, i, finalVals[j], isUpDown);
+      newBoard.setCellIf(i, j, finalVals[j], isLeftRight);
+    }
+  }
+
+  return newBoard;
+}
+
+function applyMoveUniversal2(board: GameBoard, direction: Field): GameBoard {
+  let newBoard = board.clone();
+  const isDown = direction.equals(Field.from(MoveDirection.Down));
+  const isRight = direction.equals(Field.from(MoveDirection.Right));
+  const isUpDown = direction.lessThanOrEqual(2);
+  const isLeftRight = isUpDown.not();
+  const isReverse = isDown.or(isRight);
+
+  for (let i = 0; i < 4; i++) {
+    let line = [
+      Provable.if(isUpDown, newBoard.getCell(0, i), newBoard.getCell(i, 0)),
+      Provable.if(isUpDown, newBoard.getCell(1, i), newBoard.getCell(i, 1)),
+      Provable.if(isUpDown, newBoard.getCell(2, i), newBoard.getCell(i, 2)),
+      Provable.if(isUpDown, newBoard.getCell(3, i), newBoard.getCell(i, 3)),
+    ];
+
+    let toMerge = reverseIf(isReverse, line);
+
+    // mergeRowLeft can still accept a normal Field[]
+    let merged = mergeRowLeft2(toMerge);
 
     let finalVals = reverseIf(isReverse, merged);
 
@@ -489,7 +564,20 @@ export function applyOneMoveCircuit(
   const newBoard = applyMoveUniversal(board, direction);
 
   // Check which direction we're moving
-  const isNone = direction.equals(Field(MoveDirection.None));
+  const isNone = direction.equals(Field.from(MoveDirection.None));
+
+  return Provable.if<GameBoard>(isNone, GameBoard, noChangeBoard, newBoard);
+}
+
+export function applyOneMoveCircuit2(
+  board: GameBoard,
+  direction: Field,
+): GameBoard {
+  let noChangeBoard = board.clone();
+  const newBoard = applyMoveUniversal2(board, direction);
+
+  // Check which direction we're moving
+  const isNone = direction.equals(Field.from(MoveDirection.None));
 
   return Provable.if<GameBoard>(isNone, GameBoard, noChangeBoard, newBoard);
 }
@@ -564,7 +652,49 @@ export function addRandomTile(
   for (let i = 0; i < 16; i++) {
     board.cells[i] = Provable.if(
       isZeroes[i].and(emptyTilesIndex[i].equals(randIndex)).and(enabled),
-      Field(2),
+      Field.from(2),
+      board.cells[i],
+    );
+  }
+
+  return [
+    board,
+    Provable.if(enabled, Field.fromBits(nextSeed.toBits().slice(200)), seed),
+  ];
+}
+
+export function addRandomTile2(
+  board: GameBoard,
+  seed: Field,
+  enabled: Bool,
+): [GameBoard, Field] {
+  board = board.clone();
+
+  const isZeroes = board.cells.map((cell) => cell.equals(0));
+  const emptyTilesIndex: UInt64[] = [new UInt64(isZeroes[0].value)];
+
+  for (let i = 1; i < 16; i++) {
+    emptyTilesIndex[i] = emptyTilesIndex[i - 1].add(
+      new UInt64(isZeroes[i].value),
+    );
+  }
+  const zeroEmptyTileIdx = emptyTilesIndex[15].equals(new UInt64(0));
+  const minEmptyTileIdx = Provable.if(
+    zeroEmptyTileIdx,
+    new UInt64(1),
+    emptyTilesIndex[15],
+  );
+
+  const nextSeed = Poseidon.hash([seed, ...board.cells]);
+  const randIndexRaw = nextSeed.toBits().slice(0, 4);
+  const randIndex = new UInt64(Field.fromBits(randIndexRaw).value)
+    .mod(minEmptyTileIdx)
+    .add(1);
+
+  for (let i = 0; i < 16; i++) {
+    board.cells[i] = Provable.if(
+      isZeroes[i].and(emptyTilesIndex[i].equals(randIndex)).and(enabled),
+      Field.from(1),
       board.cells[i],
     );
   }
