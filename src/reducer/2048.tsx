@@ -159,7 +159,7 @@ const merge = (row: (Tile | null)[], rowIndex: number): MergeResult => {
 
     // Check if we can merge
     if (tile1 && tile2 && tile1.value === tile2.value) {
-      const newValue = tile1.value * 2;
+      const newValue = tile1.value + 1;
       // Create the merged tile
       const newTile: Tile = {
         id: crypto.randomUUID(),
@@ -510,7 +510,7 @@ const game2048Reducer = (
             const j = idxNew % GRID_SIZE;
 
             newGrid[i][j] = {
-              value: 2,
+              value: 1,
               isNew: true,
               isMerging: false,
               id: crypto.randomUUID(),
