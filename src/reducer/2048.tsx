@@ -12,8 +12,8 @@ import { Bool, Field, UInt64 } from "o1js";
 
 import ZkClient from "@/workers/zkClient";
 import {
-  addRandomTile,
-  applyOneMoveCircuit,
+  addRandomTile2,
+  applyOneMoveCircuit2,
   GameBoard,
   GameBoardWithSeed,
   printBoard,
@@ -396,7 +396,7 @@ export const initBoardWithSeed = (seed: number): [Grid, GameBoardWithSeed] => {
   let seedField = zkBoard.getSeed();
 
   for (let i = 0; i < INITIAL_TILES; i++) {
-    [board, seedField] = addRandomTile(board, seedField, new Bool(true));
+    [board, seedField] = addRandomTile2(board, seedField, new Bool(true));
   }
   zkBoard.setBoard(board);
   zkBoard.setSeed(seedField);
@@ -458,7 +458,7 @@ const game2048Reducer = (
           let currentZkBoard = oldZkBoard;
           let currentZkSeed = Field.from(state.zkBoard[boardKey].seed);
           console.log("currentZkSeed old", currentZkSeed);
-          const newZkBoard = applyOneMoveCircuit(currentZkBoard, dir);
+          const newZkBoard = applyOneMoveCircuit2(currentZkBoard, dir);
           const equalBool = newZkBoard
             .hash()
             .equals(currentZkBoard.hash())
@@ -471,7 +471,7 @@ const game2048Reducer = (
           }
 
           currentZkBoard = newZkBoard;
-          [currentZkBoard, currentZkSeed] = addRandomTile(
+          [currentZkBoard, currentZkSeed] = addRandomTile2(
             currentZkBoard,
             currentZkSeed,
             equalBool,

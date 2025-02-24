@@ -22,6 +22,10 @@ export const hasWon = (grid: Grid): boolean => {
   return grid.some((row) => row.some((tile) => tile?.value === 2048));
 };
 
+export const hasWon2 = (grid: Grid): boolean => {
+  return grid.some((row) => row.some((tile) => tile?.value === 11));
+};
+
 /**
  * Checks if there are valid moves left:
  *  - If any cell is empty.
@@ -62,7 +66,7 @@ export const hasValidMoves = (grid: Grid): boolean => {
  *  - "RUNNING" otherwise
  */
 export const getGameState = (grid: Grid): "WON" | "LOST" | "RUNNING" => {
-  if (hasWon(grid)) return "WON";
+  if (hasWon2(grid)) return "WON";
   if (!hasValidMoves(grid)) return "LOST";
   return "RUNNING";
 };

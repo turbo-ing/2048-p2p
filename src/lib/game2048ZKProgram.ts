@@ -2,7 +2,9 @@ import { Provable, SelfProof, ZkProgram } from "o1js";
 
 import {
   addRandomTile,
+  addRandomTile2,
   applyOneMoveCircuit,
+  applyOneMoveCircuit2,
   Direction,
   GameBoardWithSeed,
   MAX_MOVES,
@@ -44,14 +46,14 @@ export const Game2048ZKProgram = ZkProgram({
           Provable.log("verifyTransition - currentBoard", currentBoard);
           Provable.log("verifyTransition - currentSeed", currentSeed);
           Provable.log("verifyTransition - directions", directions.value[i]);
-          let nextBoard = applyOneMoveCircuit(
+          let nextBoard = applyOneMoveCircuit2(
             currentBoard,
             directions.value[i],
           );
           let needAddTile = nextBoard.hash().equals(currentBoard.hash()).not();
 
           currentBoard = nextBoard;
-          [currentBoard, currentSeed] = addRandomTile(
+          [currentBoard, currentSeed] = addRandomTile2(
             currentBoard,
             currentSeed,
             needAddTile,
