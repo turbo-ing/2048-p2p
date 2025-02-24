@@ -22,6 +22,10 @@ export const hasWon = (grid: Grid): boolean => {
   return grid.some((row) => row.some((tile) => tile?.value === 2048));
 };
 
+export const hasWon2 = (grid: Grid): boolean => {
+  return grid.some((row) => row.some((tile) => tile?.value === 11));
+};
+
 /**
  * Checks if there are valid moves left:
  *  - If any cell is empty.

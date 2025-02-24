@@ -22,7 +22,12 @@ function getTileStyle(tile: TileType | null) {
     2048: { backgroundColor: "#edc22e", color: "#f9f6f2" },
   };
 
-  return styles[tile.value] ?? { backgroundColor: "#3c3a32", color: "#f9f6f2" };
+  return (
+    styles[Math.pow(2, tile.value)] ?? {
+      backgroundColor: "#3c3a32",
+      color: "#f9f6f2",
+    }
+  );
 }
 
 interface TileProps {
@@ -95,7 +100,7 @@ export const Tile: React.FC<TileProps> = ({
           fontSize: `${fontSize}px`, // Use the dynamic font size here
         }}
       >
-        <span>{tile.value}</span>
+        <span>{Math.pow(2, tile.value)}</span>
       </div>
     </div>
   );
