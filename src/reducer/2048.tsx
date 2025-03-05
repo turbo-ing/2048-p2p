@@ -10,7 +10,7 @@ import {
 } from "react";
 import { Bool, Field, UInt64 } from "o1js";
 
-import ZkClient from "../workers/zkClient";
+import ZkClient2 from "../workers/zkClient2";
 import {
   addRandomTile2,
   applyOneMoveCircuit2,
@@ -691,7 +691,7 @@ const Game2048Context = createContext<
       boolean,
       string,
       Dispatch<SetStateAction<string>>,
-      ZkClient,
+      ZkClient2,
     ]
   | null
 >(null);

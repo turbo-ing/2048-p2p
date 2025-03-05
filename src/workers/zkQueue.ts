@@ -2,17 +2,10 @@
 
 import { Field } from "o1js";
 import { GameBoard, GameBoardWithSeed } from "../lib/game2048ZKLogic";
-import ZkClient from "./zkClient";
+import ZkClient2 from "./zkClient2";
 
 // Global Singleton
-export const zkClient: ZkClient = new ZkClient();
-
-//Start compiling the ZK program if we have a window.
-if (typeof window !== "undefined") {
-  zkClient.compileZKProgram().then((result) => {
-    console.log("Verification Key:", result);
-  });
-}
+export const zkClient: ZkClient2 = new ZkClient2();
 
 //initialise peer ID
 let myPeerId: string = "";

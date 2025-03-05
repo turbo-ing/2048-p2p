@@ -42,9 +42,7 @@ export default class ZkClient {
   //    - When removing moves from the moveQueue, we'll do the same for the
   //      boardQueue. CRUCIAL STEP: we need to get the new base index of the
   //      boardQueue, as this will store the new final state.
-  initialBoard: GameBoardWithSeed;
   boardQueue: GameBoardWithSeed[] = [];
-
   intervalId: number | null = null;
   dispatch: Dispatch<Action>;
 
