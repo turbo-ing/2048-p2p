@@ -10,7 +10,7 @@ import {
 } from "o1js";
 
 export const MAX_MOVES2 = 20;
-export const MAX_PARALLEL = 1;
+export const MAX_PARALLEL = 5;
 /* -------------------------------------------------------------------------- */
 /*                                  GameBoard                                  */
 
