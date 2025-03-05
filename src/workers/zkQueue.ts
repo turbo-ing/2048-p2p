@@ -46,7 +46,7 @@ export async function queueMove(
 ) {
   if (peerId != myPeerId) return;
   if (move === "init") {
-    //console.log("init detected");
+    console.log("init detected");
     return zkClient.addBoard(zkBoard); //logifyBoard
   } else {
     return zkClient.addMove(zkBoard, move); //logifyBoard

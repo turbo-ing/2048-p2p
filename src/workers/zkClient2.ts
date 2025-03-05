@@ -48,7 +48,9 @@ export default class ZkClient2 {
     var score = 0;
     for (let i = 0; i < board.cells.length; i++) {
       let cellValue = Number(board.cells[i].toBigInt());
-      score += (Math.log2(cellValue) - 1) * cellValue;
+      if (cellValue !== 0) {
+        score += (cellValue - 1) * Math.pow(2, cellValue);
+      }
     }
     return score;
   }
@@ -58,10 +60,27 @@ export default class ZkClient2 {
     proof1: SelfProof<void, BoardArray>,
     proof2: SelfProof<void, BoardArray>,
   ) {
-    const board1 = proof1.publicOutput.value[0];
-    const board2 = proof2.publicOutput.value[0];
-    const score1 = this.getScore(board1.board);
-    const score2 = this.getScore(board2.board);
+    const board1 = proof1.publicOutput.value[0].getBoard();
+    const board2 = proof2.publicOutput.value[0].getBoard();
+    console.log(board1);
+    console.log(board2);
+
+    var score1 = 0;
+    for (let i = 0; i < board1.cells.length; i++) {
+      let cellValue = Number(board1.cells[i].toBigInt());
+      if (cellValue !== 0) {
+        score1 += (cellValue - 1) * Math.pow(2, cellValue);
+      }
+    }
+
+    var score2 = 0;
+    for (let i = 0; i < board2.cells.length; i++) {
+      let cellValue = Number(board2.cells[i].toBigInt());
+      if (cellValue !== 0) {
+        score2 += (cellValue - 1) * Math.pow(2, cellValue);
+      }
+    }
+
     if (score1 < score2) {
       return -1;
     }
@@ -72,7 +91,9 @@ export default class ZkClient2 {
   }
 
   constructor() {
-    this.startInterval();
+    if (typeof window !== "undefined") {
+      this.startInterval();
+    }
   }
 
   startInterval() {
@@ -107,6 +128,9 @@ export default class ZkClient2 {
       console.log("-------StateQueue:---------");
       console.log(this.stateQueue.length, this.stateQueue);
       console.log("----------------------------");
+      console.log("-------Workers processing:---------");
+      console.log(this.workersProcessing);
+      console.log("----------------------------");
       let lowPriority = false;
       let highPriority = false;
       let indexes: number[] = [];
@@ -138,14 +162,15 @@ export default class ZkClient2 {
           }
         }
       }
+      console.log("pre-ifs");
 
       if (this.initialising === true) {
-        console.debug("Still initialising, skipping interval");
+        console.log("Still initialising, skipping interval");
 
         return;
       }
       if (this.workersProcessing == MAX_PARALLEL) {
-        console.debug("All workers processing, skipping interval");
+        console.log("All workers processing, skipping interval");
 
         return;
       }
@@ -155,7 +180,7 @@ export default class ZkClient2 {
         !lowPriority && //this.proofQueue.length < 2 &&
         this.workersProcessing == 0
       ) {
-        console.debug(
+        console.log(
           "No moves to process and no active workers, skipping interval",
         );
 
@@ -317,9 +342,9 @@ export default class ZkClient2 {
           // Adding body or contents to send
           body: JSON.stringify({
             boardNums0: boardNums1,
-            seedNum0: seedNum1,
+            seedNum0: seedNum1.toString(),
             boardNums1: boardNums2,
-            seedNum1: seedNum2,
+            seedNum1: seedNum2.toString(),
             moves: moves,
           }),
 
@@ -471,6 +496,7 @@ export default class ZkClient2 {
         //console.log("queued proofs: "+this.proofQueue.length);
         console.log("workers processing: " + this.workersProcessing);
       }
+      console.log("end");
     }, 500);
   }
 
@@ -485,11 +511,6 @@ export default class ZkClient2 {
   }
   //Adds the initial board to the boardQueue.
   async addBoard(zkBoard: GameBoardWithSeed) {
-    this.initialising = true;
-
-    while (!this.compiled) {
-      await new Promise((resolve) => setTimeout(resolve, 200));
-    }
     console.log("Initializing ZK proof", zkBoard);
 
     console.log("Adding initial board to queue", zkBoard);
