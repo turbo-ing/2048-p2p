@@ -244,7 +244,7 @@ export default class ZkClient2 {
         //this.proofQueue2[index] = this.proofQueue2[index].slice(2);
 
         console.log("Fetching proof [Inductive, priority]:");
-        fetch("http://localhost:4001/inductiveStep", {
+        fetch(`${process.env.NEXT_PUBLIC_ZK_SERVER}/inductiveStep`, {
           // Adding method type
           method: "POST",
 
@@ -335,7 +335,7 @@ export default class ZkClient2 {
         console.log(newState);*/
 
         console.log("Fetching proof: [Base]");
-        fetch("http://localhost:4001/baseCase", {
+        fetch(`${process.env.NEXT_PUBLIC_ZK_SERVER}/baseCase`, {
           // Adding method type
           method: "POST",
 
@@ -431,7 +431,7 @@ export default class ZkClient2 {
         //this.proofQueue = this.proofQueue.slice(2);
 
         console.log("Fetching proof [Inductive, regular]:");
-        fetch("http://localhost:4001/inductiveStep", {
+        fetch(`${process.env.NEXT_PUBLIC_ZK_SERVER}/inductiveStep`, {
           // Adding method type
           method: "POST",
 
