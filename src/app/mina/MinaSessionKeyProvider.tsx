@@ -1,12 +1,23 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { PrivateKey } from "o1js";
 
+const loadOrGenerateKey = () => {
+  const storedKey = sessionStorage.getItem("MINA_SESSION_KEY");
+  if (storedKey) {
+    return PrivateKey.fromBase58(storedKey);
+  } else {
+    const newKey = PrivateKey.random();
+    sessionStorage.setItem("MINA_SESSION_KEY", newKey.toBase58());
+    return newKey;
+  }
+};
+
 const MinaSessionKeyContext = createContext<{
-  privateKey: PrivateKey | null;
+  sessionKey: PrivateKey;
 }>({
-  privateKey: null,
+  sessionKey: PrivateKey.random(),
 });
 
 export function useMinaSessionKey() {
@@ -24,25 +35,10 @@ export function MinaSessionKeyProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [privateKey, setPrivateKey] = useState<PrivateKey | null>(null);
-
-  useEffect(() => {
-    const loadOrGenerateKey = () => {
-      const storedKey = sessionStorage.getItem("MINA_SESSION_KEY");
-      if (storedKey) {
-        setPrivateKey(PrivateKey.fromBase58(storedKey));
-      } else {
-        const newKey = PrivateKey.random();
-        sessionStorage.setItem("MINA_SESSION_KEY", newKey.toBase58());
-        setPrivateKey(newKey);
-      }
-    };
-
-    loadOrGenerateKey();
-  }, []);
+  const sessionKey = useMemo<PrivateKey>(() => loadOrGenerateKey(), []);
 
   return (
-    <MinaSessionKeyContext.Provider value={{ privateKey }}>
+    <MinaSessionKeyContext.Provider value={{ sessionKey }}>
       {children}
     </MinaSessionKeyContext.Provider>
   );

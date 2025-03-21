@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { use2048, initBoardWithSeed } from "@/reducer/2048";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
+import { useMinaSessionKey } from "../mina/MinaSessionKeyProvider";
+import { PublicKey } from "o1js";
 
 export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
   const [waitingToJoin, setWaitingToJoin] = useState(false);
@@ -14,6 +16,8 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
   const [state, dispatch, connected, room, setRoom] = use2048();
   const turboEdge = useTurboEdgeV0();
   const turboEdgeConnected = turboEdge?.connected ?? false;
+
+  const { sessionKey } = useMinaSessionKey();
 
   // Debugging: Initial state
   useEffect(() => {
@@ -49,6 +53,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
           grid: gridBoard,
           zkBoard,
           numPlayers: numberOfPlayers,
+          minaSessionKey: PublicKey.fromPrivateKey(sessionKey!).toBase58(),
         },
       });
 
