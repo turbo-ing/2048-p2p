@@ -8,7 +8,7 @@ import {
   useContext,
   useState,
 } from "react";
-import { Bool, Field, UInt64 } from "o1js";
+import { Bool, Field, PublicKey, UInt64 } from "o1js";
 
 import ZkClient from "@/workers/zkClient";
 import {
@@ -47,6 +47,7 @@ export type Game2048State = {
   score: { [playerId: string]: number };
   playerId: string[];
   players: { [playerId: string]: string };
+  minaSessionKeys: { [playerId: string]: PublicKey };
   isFinished: { [playerId: string]: boolean };
   surrendered: { [playerId: string]: boolean };
   playersCount: number;
@@ -73,6 +74,7 @@ interface JoinAction extends EdgeAction<Game2048State> {
     name: string;
     grid: Grid;
     zkBoard: GameBoardWithSeed;
+    minaSessionKey: string;
     numPlayers?: number;
   };
 }
@@ -567,6 +569,7 @@ const game2048Reducer = (
       const newIsFinished = { ...state.isFinished };
       const newSurrendered = { ...state.surrendered };
       const newRematch = { ...state.rematch };
+      const newMinaSessionKeys = { ...state.minaSessionKeys };
 
       // Figure out if we're adding a brand-new player
       // - If already in the list, don't increment player count
@@ -594,6 +597,9 @@ const game2048Reducer = (
       newIsFinished[action.peerId!] = false;
       newSurrendered[action.peerId!] = false;
       newRematch[action.peerId!] = false;
+      newMinaSessionKeys[action.peerId!] = PublicKey.fromBase58(
+        action.payload.minaSessionKey,
+      );
 
       // Queue the “init” move
       queueMove(action.peerId!, payloadBoard, "init");
@@ -612,6 +618,7 @@ const game2048Reducer = (
         playersCount: newPlayersCount,
         totalPlayers: newNumPlayers,
         actionPeerId: action.peerId,
+        minaSessionKeys: newMinaSessionKeys,
       };
     }
     case "LEAVE":
@@ -712,6 +719,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     surrendered: {},
     rematch: {},
     timer: 0,
+    minaSessionKeys: PublicKey.empty(),
   };
   const [room, setRoom] = useState("");
 
