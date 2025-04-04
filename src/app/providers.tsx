@@ -2,7 +2,7 @@
 import { TurboEdgeProviderV0 } from "@turbo-ing/edge-v0";
 import { Game2048Provider } from "@/reducer/2048";
 import { PrivyProvider } from "@privy-io/react-auth";
-import { WagmiProvider } from "wagmi";
+import { WagmiProvider } from "@privy-io/wagmi";
 import { QueryClientProvider } from "@tanstack/react-query";
 import {
   RainbowKitProvider,
@@ -30,15 +30,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
   //ignore the appId error haha it has no clue
   return (
     <PrivyProvider appId="cm6a9um83004rl2fofswzt8sp">
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={config}>
           <RainbowKitProvider appInfo={appInfo}>
             <TurboEdgeProviderV0 gameId="turbo-2048">
               <Game2048Provider>{children}</Game2048Provider>
             </TurboEdgeProviderV0>
           </RainbowKitProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
+        </WagmiProvider>
+      </QueryClientProvider>
     </PrivyProvider>
   );
 }
