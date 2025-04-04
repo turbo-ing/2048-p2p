@@ -14,15 +14,15 @@ export const CB = (privy: PrivyInterface) => {
     token: contracts.erc20Token.address,
   });
 
-  useEffect(() => {
-    const logout = async () => {
-      await privy.logout();
-    };
-    if (privy.authenticated && !data?.value) {
-      //if logged in but no wallet connected
-      logout();
-    }
-  });
+  // useEffect(() => {
+  //   const logout = async () => {
+  //     await privy.logout();
+  //   };
+  //   if (privy.authenticated && !data?.value) {
+  //     //if logged in but no wallet connected
+  //     logout();
+  //   }
+  // });
 
   if (!privy.authenticated || !data?.value) {
     //if not logged in
