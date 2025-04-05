@@ -42,7 +42,7 @@
 //   44 |
 
 import * as Comlink from "comlink";
-import { Field, Proof } from "o1js";
+import { Field, PrivateKey, Proof, PublicKey, Signature } from "o1js";
 
 import { Game2048ZKProgram } from "@/lib/game2048ZKProgram";
 import {
@@ -55,6 +55,7 @@ import {
 import { DirectionMap, MoveType } from "@/utils/constants";
 
 let proofCache: Proof<GameBoardWithSeed, void> | null = null;
+let sessionPrivateKey: PrivateKey | null = null;
 
 export const zkWorkerAPI = {
   async compileZKProgram() {
@@ -66,17 +67,21 @@ export const zkWorkerAPI = {
   async initZKProof(
     boardNums: Number[],
     seedNum: bigint,
+    sessionPrivateKeyBase58: string,
   ): Promise<[Proof<GameBoardWithSeed, void>, string]> {
     console.log("[Worker] Initializing ZK proof", boardNums, seedNum);
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
     const zkBoard = new GameBoard(boardFields);
     const seed = Field(seedNum);
+    sessionPrivateKey = PrivateKey.fromBase58(sessionPrivateKeyBase58);
+    const sessionKey = sessionPrivateKey.toPublicKey();
 
     printBoard(zkBoard);
 
     const zkBoardWithSeed = new GameBoardWithSeed({
       board: zkBoard,
       seed,
+      sessionKey,
     });
 
     const result = await Game2048ZKProgram.initialize(zkBoardWithSeed);
@@ -89,6 +94,7 @@ export const zkWorkerAPI = {
   async generateZKProof(
     zkBoard: GameBoardWithSeed,
     moves: string[],
+    signature: Signature,
   ): Promise<[Proof<GameBoardWithSeed, void>, string]> {
     console.log("[generateZKProof] peerId");
     if (!proofCache) {
@@ -110,6 +116,7 @@ export const zkWorkerAPI = {
       zkBoard,
       proofCache,
       directions,
+      signature,
     );
 
     // Update the proof cache
@@ -124,15 +131,25 @@ export const zkWorkerAPI = {
     seedNum: bigint,
     moves: string[],
   ): Promise<[Proof<GameBoardWithSeed, void>, string]> {
+    if (!proofCache || !sessionPrivateKey) {
+      throw new Error("Proof cache is not initialized");
+    }
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
     const zkBoard = new GameBoard(boardFields);
     const seed = Field(seedNum);
     const zkBoardWithSeed = new GameBoardWithSeed({
       board: zkBoard,
       seed,
+      sessionKey: sessionPrivateKey.toPublicKey(),
     });
 
-    return this.generateZKProof(zkBoardWithSeed, moves);
+    const signature = Signature.create(sessionPrivateKey, [
+      seed,
+      ...proofCache.publicInput.board.cells,
+      ...moves.map((move) => Field(DirectionMap[move as MoveType] ?? 0)),
+    ]);
+
+    return this.generateZKProof(zkBoardWithSeed, moves, signature);
   },
 };
 

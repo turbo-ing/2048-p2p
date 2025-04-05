@@ -1,4 +1,4 @@
-import { Provable, SelfProof, ZkProgram } from "o1js";
+import { Provable, SelfProof, Signature, ZkProgram } from "o1js";
 
 import {
   addRandomTile,
@@ -26,14 +26,16 @@ export const Game2048ZKProgram = ZkProgram({
      *   is correct under the 2048 move logic.
      */
     verifyTransition: {
-      privateInputs: [SelfProof, Direction],
+      privateInputs: [SelfProof, Direction, Signature],
 
       async method(
         newBoard: GameBoardWithSeed,
         earlierProof: SelfProof<GameBoardWithSeed, void>,
         directions: Direction,
+        signature: Signature,
       ) {
         earlierProof.verify();
+        earlierProof.publicInput.verifySignature(signature, directions);
 
         let currentBoard = earlierProof.publicInput.board;
         let currentSeed = earlierProof.publicInput.seed;
@@ -67,6 +69,7 @@ export const Game2048ZKProgram = ZkProgram({
         }
         Provable.log("verifyTransition - newBoard-seed", newBoard.seed);
         newBoard.seed.assertEquals(currentSeed);
+        newBoard.sessionKey.assertEquals(earlierProof.publicInput.sessionKey);
       },
     },
   },

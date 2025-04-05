@@ -21,6 +21,7 @@ import {
 import { DirectionMap, MoveType } from "@/utils/constants";
 import { queueMove, zkClient } from "@/workers/zkQueue";
 import { gridsAreEqual, getGameState } from "@/utils/helper";
+import { minaSessionKey } from "@/app/mina/MinaSessionKeyProvider";
 
 export type Direction = "up" | "down" | "left" | "right";
 
@@ -392,6 +393,7 @@ export const initBoardWithSeed = (seed: number): [Grid, GameBoardWithSeed] => {
   const zkBoard = new GameBoardWithSeed({
     board: new GameBoard(new Array(16).fill(Field.from(0))),
     seed: Field.from(seed),
+    sessionKey: minaSessionKey().toPublicKey(),
   });
 
   let board = zkBoard.getBoard();
@@ -528,6 +530,7 @@ const game2048Reducer = (
           newZkBoards[boardKey] = new GameBoardWithSeed({
             board: currentZkBoard,
             seed: currentZkSeed,
+            sessionKey: state.minaSessionKeys[boardKey],
           });
           newScores[boardKey] = state.score[boardKey] + score;
 
@@ -556,6 +559,7 @@ const game2048Reducer = (
       const payloadBoard = new GameBoardWithSeed({
         board: new GameBoard(action.payload.zkBoard.board.cells.map(Field)),
         seed: Field.from(action.payload.zkBoard.seed),
+        sessionKey: PublicKey.fromBase58(action.payload.minaSessionKey),
       });
 
       printBoard(payloadBoard.board);
@@ -600,6 +604,8 @@ const game2048Reducer = (
       newMinaSessionKeys[action.peerId!] = PublicKey.fromBase58(
         action.payload.minaSessionKey,
       );
+
+      console.log("Payload Board Session Key", payloadBoard.sessionKey);
 
       // Queue the “init” move
       queueMove(action.peerId!, payloadBoard, "init");

@@ -9,6 +9,9 @@ import {
   printBoard,
 } from "@/lib/game2048ZKLogic";
 import { Action } from "@/reducer/2048";
+import { Field, PrivateKey, Signature } from "o1js";
+import { minaSessionKey } from "@/app/mina/MinaSessionKeyProvider";
+import { DirectionMap, MoveType } from "@/utils/constants";
 
 export default class ZkClient {
   worker: Worker;
@@ -21,6 +24,7 @@ export default class ZkClient {
   boardCache: GameBoardWithSeed[] = [];
   intervalId: number | null = null;
   dispatch: Dispatch<Action>;
+  sessionKey: PrivateKey;
 
   constructor() {
     // Initialize the worker from the zkWorker module
@@ -31,6 +35,7 @@ export default class ZkClient {
 
       // Wrap the worker with Comlink to enable direct method invocation
       this.remoteApi = Comlink.wrap(this.worker);
+      this.sessionKey = minaSessionKey();
       this.startInterval();
     }
   }
@@ -115,6 +120,7 @@ export default class ZkClient {
     const [proof, proofJSON] = await this.remoteApi.initZKProof(
       boardNums,
       seedNums,
+      this.sessionKey.toBase58(),
     );
 
     if (this.dispatch) {

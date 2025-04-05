@@ -1,4 +1,13 @@
-import { Bool, Field, Poseidon, Provable, Struct, UInt64 } from "o1js";
+import {
+  Bool,
+  Field,
+  Poseidon,
+  Provable,
+  PublicKey,
+  Signature,
+  Struct,
+  UInt64,
+} from "o1js";
 
 export const MAX_MOVES = 20;
 /* -------------------------------------------------------------------------- */
@@ -61,6 +70,7 @@ export class GameBoard extends Struct({
 export class GameBoardWithSeed extends Struct({
   board: GameBoard,
   seed: Field,
+  sessionKey: PublicKey,
 }) {
   getBoard(): GameBoard {
     return this.board;
@@ -76,6 +86,22 @@ export class GameBoardWithSeed extends Struct({
 
   setSeed(seed: Field): void {
     this.seed = seed;
+  }
+
+  getSessionKey(): PublicKey {
+    return this.sessionKey;
+  }
+
+  setSessionKey(sessionKey: PublicKey): void {
+    this.sessionKey = sessionKey;
+  }
+
+  verifySignature(signature: Signature, moves: Direction): Bool {
+    return signature.verify(this.sessionKey, [
+      this.seed,
+      ...this.board.cells,
+      ...moves.value,
+    ]);
   }
 }
 
