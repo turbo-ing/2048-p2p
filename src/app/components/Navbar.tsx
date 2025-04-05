@@ -4,6 +4,7 @@ import { useAuroWallet } from "@/app/mina/useAuroWallet";
 import Button from "./Button";
 import { shortAddress } from "@/utils/helper";
 import Wallet from "./icon/Wallet";
+
 export default function Navbar() {
   const { address, connected, connect } = useAuroWallet();
 
