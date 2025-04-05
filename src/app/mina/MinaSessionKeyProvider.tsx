@@ -4,12 +4,16 @@ import { createContext, useContext, useMemo } from "react";
 import { PrivateKey } from "o1js";
 
 const loadOrGenerateKey = () => {
-  const storedKey = sessionStorage.getItem("MINA_SESSION_KEY");
+  if (typeof window === "undefined") {
+    return PrivateKey.random();
+  }
+
+  const storedKey = window.sessionStorage.getItem("MINA_SESSION_KEY");
   if (storedKey) {
     return PrivateKey.fromBase58(storedKey);
   } else {
     const newKey = PrivateKey.random();
-    sessionStorage.setItem("MINA_SESSION_KEY", newKey.toBase58());
+    window.sessionStorage.setItem("MINA_SESSION_KEY", newKey.toBase58());
     return newKey;
   }
 };
