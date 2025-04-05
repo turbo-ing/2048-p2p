@@ -12,6 +12,7 @@ export const minaSessionKey = () => {
 
   if (typeof window === "undefined") {
     sessionKey = PrivateKey.random();
+    return sessionKey;
   }
 
   const storedKey = window.sessionStorage.getItem("MINA_SESSION_KEY");

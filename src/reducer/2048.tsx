@@ -10,7 +10,7 @@ import {
 } from "react";
 import { Bool, Field, PublicKey, UInt64 } from "o1js";
 
-import ZkClient from "@/workers/zkClient";
+import { zkClient, ZkClient } from "@/workers/zkClient";
 import {
   addRandomTile,
   applyOneMoveCircuit,
@@ -19,7 +19,7 @@ import {
   printBoard,
 } from "@/lib/game2048ZKLogic";
 import { DirectionMap, MoveType } from "@/utils/constants";
-import { queueMove, zkClient } from "@/workers/zkQueue";
+import { queueMove } from "@/workers/zkQueue";
 import { gridsAreEqual, getGameState } from "@/utils/helper";
 import { minaSessionKey } from "@/app/mina/MinaSessionKeyProvider";
 

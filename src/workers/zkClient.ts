@@ -13,7 +13,7 @@ import { Field, PrivateKey, Signature } from "o1js";
 import { minaSessionKey } from "@/app/mina/MinaSessionKeyProvider";
 import { DirectionMap, MoveType } from "@/utils/constants";
 
-export default class ZkClient {
+export class ZkClient {
   worker: Worker;
   // Proxy to interact with the worker's methods as if they were local
   remoteApi: Comlink.Remote<typeof import("./zkWorker").zkWorkerAPI>;
@@ -144,4 +144,15 @@ export default class ZkClient {
     this.boardCache.push(zkBoard);
     console.log("Move added to cache: ", this.moveCache.length);
   }
+
+  async fetchAccount(publicKey58: string) {
+    return await this.remoteApi.fetchAccount(publicKey58);
+  }
+
+  async loadContracts(publicKey58: string) {
+    await this.remoteApi.loadContracts(publicKey58);
+  }
 }
+
+// Global Singleton
+export const zkClient = new ZkClient();

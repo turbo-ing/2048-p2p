@@ -5,8 +5,8 @@ import { use2048, generateRoomCode } from "@/reducer/2048";
 import MultiplayerModal from "./MultiplayerModal";
 import Mock2048 from "./Mock2048";
 import { TurboEdgeContext, useTurboEdgeV0 } from "@turbo-ing/edge-v0";
-import ZkClient from "@/workers/zkClient";
-import { assignMyPeerId, zkClient } from "@/workers/zkQueue";
+import { zkClient, ZkClient } from "@/workers/zkClient";
+import { assignMyPeerId } from "@/workers/zkQueue";
 import { useRouter } from "next/navigation";
 import SinglePlayer from "./icon/Singleplayer";
 import Versus from "./icon/Versus";
@@ -14,6 +14,7 @@ import TurboEdgeNotification from "./TurboEdgeNotifcation";
 import useIsMobile from "../hooks/useIsMobile";
 import { useJoin } from "../hooks/useJoin";
 import React from "react";
+import Navbar from "./Navbar";
 
 const LazyMock2048 = React.lazy(() => import("./Mock2048"));
 
@@ -91,6 +92,8 @@ export default function HomePage() {
         onClose={() => setModalOpen(false)}
         pushPlay={() => handleJoin(true)}
       />
+
+      <Navbar />
 
       <ResponsiveContainer
         top={

@@ -42,7 +42,14 @@
 //   44 |
 
 import * as Comlink from "comlink";
-import { Field, PrivateKey, Proof, PublicKey, Signature } from "o1js";
+import {
+  fetchAccount,
+  Field,
+  PrivateKey,
+  Proof,
+  PublicKey,
+  Signature,
+} from "o1js";
 
 import { Game2048ZKProgram } from "@/lib/game2048ZKProgram";
 import {
@@ -150,6 +157,17 @@ export const zkWorkerAPI = {
     ]);
 
     return this.generateZKProof(zkBoardWithSeed, moves, signature);
+  },
+
+  async fetchAccount(publicKey58: string) {
+    const publicKey = PublicKey.fromBase58(publicKey58);
+    return fetchAccount({ publicKey });
+  },
+
+  async loadContracts(publicKey58: string) {
+    // const { Add } = await import('../../contracts/build/src/Add.js');
+    // await Add.compile();
+    // contract = new Add(publicKey);
   },
 };
 

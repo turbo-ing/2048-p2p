@@ -66,3 +66,7 @@ export const getGameState = (grid: Grid): "WON" | "LOST" | "RUNNING" => {
   if (!hasValidMoves(grid)) return "LOST";
   return "RUNNING";
 };
+
+export const shortAddress = (address: string): string => {
+  return address.slice(0, 6) + "..." + address.slice(-6);
+};

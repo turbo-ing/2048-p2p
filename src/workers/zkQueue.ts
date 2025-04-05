@@ -1,10 +1,7 @@
 "use client";
 
 import { GameBoardWithSeed } from "@/lib/game2048ZKLogic";
-import ZkClient from "./zkClient";
-
-// Global Singleton
-export const zkClient: ZkClient = new ZkClient();
+import { zkClient } from "./zkClient";
 
 if (typeof window !== "undefined") {
   zkClient.compileZKProgram().then((result) => {
