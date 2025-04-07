@@ -628,16 +628,9 @@ const game2048Reducer = (
       };
     }
     case "LEAVE":
-      //error("Not implemented yet");
       console.log("Player " + action.peerId! + " is leaving the game.");
       console.log(state);
       const leaveState = state;
-      leaveState.playersCount -= 1;
-      //leaveState.totalPlayers -= 1;
-      delete leaveState.board[action.peerId!];
-      leaveState.score[action.peerId!] = 0;
-      //delete leaveState.players[action.peerId!];
-      //delete leaveState.playerId[leaveState.playerId.indexOf(action.peerId!)];
 
       //Player left before finishing. They surrendered.
       if (!leaveState.isFinished[action.peerId!]) {
@@ -645,9 +638,6 @@ const game2048Reducer = (
         leaveState.isFinished[action.peerId!] = true;
       }
 
-      //TODO: add code to check for all but 1 surrendered and set their allfinished to true if so.
-
-      console.log(leaveState);
       return { ...leaveState };
 
     case "SEND_PROOF":

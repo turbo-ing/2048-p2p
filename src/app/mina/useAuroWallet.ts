@@ -7,6 +7,10 @@ export const useAuroWallet = () => {
   const hasBeenSetup = useRef(false);
   const [accountExists, setAccountExists] = useState(false);
 
+  const [compiled, setCompiled] = useState<boolean>(false);
+  const [scoreExists, setScoreExists] = useState<boolean>(false);
+  const [highScore, setHighScore] = useState<number>(0);
+
   const refreshWallet = useCallback(async () => {
     const mina = (window as any).mina;
     if (mina == null) {
@@ -39,10 +43,9 @@ export const useAuroWallet = () => {
         await new Promise((resolve) => setTimeout(resolve, 3000));
 
         const res = await zkClient.fetchAccount(publicKeyBase58);
-        const accountExists = res.error === null;
+        const accountExists = !res.error;
+        console.log("accountRes", res);
         setAccountExists(accountExists);
-
-        await zkClient.loadContracts(publicKeyBase58);
 
         hasBeenSetup.current = true;
       }
@@ -50,6 +53,17 @@ export const useAuroWallet = () => {
       console.error(`Error during setup: ${error.message}`);
     }
   }, []);
+
+  useEffect(() => {
+    if (compiled && accountExists && address && connected) {
+      zkClient.fetch2048Score(address).then((scoreRes) => {
+        const scoreExists = !scoreRes.error;
+        console.log("scoreRes", scoreRes);
+        setScoreExists(scoreExists);
+        setHighScore(Number(scoreRes.balance));
+      });
+    }
+  }, [compiled, accountExists, address, connected]);
 
   useEffect(() => {
     connect();
@@ -65,5 +79,16 @@ export const useAuroWallet = () => {
     };
   }, [connect]);
 
-  return { address, connected, accountExists, connect };
+  useEffect(() => {
+    zkClient.compileZKProgram().then((result) => {
+      console.log("Verification Key:", result);
+
+      zkClient.loadContracts().then(() => {
+        console.log("Contracts loaded");
+        setCompiled(true);
+      });
+    });
+  }, []);
+
+  return { address, connected, accountExists, connect, scoreExists, highScore };
 };

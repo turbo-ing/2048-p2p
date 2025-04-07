@@ -45,6 +45,7 @@ import * as Comlink from "comlink";
 import {
   fetchAccount,
   Field,
+  Mina,
   PrivateKey,
   Proof,
   PublicKey,
@@ -60,14 +61,31 @@ import {
   printBoard,
 } from "@/lib/game2048ZKLogic";
 import { DirectionMap, MoveType } from "@/utils/constants";
+import { Score2048 } from "@/app/mina/contracts/Score2048";
+
+const SCORE_2048_ADDRESS =
+  "B62qicZ8Ei7uViQzZJvpZKbyhVp8dLiG4hWswQAcDM2xhnqZ5b53Kef";
 
 let proofCache: Proof<GameBoardWithSeed, void> | null = null;
 let sessionPrivateKey: PrivateKey | null = null;
+let score2048: Score2048 | null = null;
+
+let zkProgramCompiling = false;
+let contractsLoading = false;
 
 export const zkWorkerAPI = {
+  async setActiveNetwork(network: string) {
+    const Network = Mina.Network(network);
+    console.log("Network instance configured", network);
+    Mina.setActiveInstance(Network);
+  },
   async compileZKProgram() {
+    if (zkProgramCompiling) return;
+    zkProgramCompiling = true;
+
     const result = await Game2048ZKProgram.compile();
     console.log("Compiled ZK program");
+
     return result;
   },
 
@@ -161,13 +179,32 @@ export const zkWorkerAPI = {
 
   async fetchAccount(publicKey58: string) {
     const publicKey = PublicKey.fromBase58(publicKey58);
-    return fetchAccount({ publicKey });
+    const account = await fetchAccount({ publicKey });
+    return {
+      error: account.error,
+      balance: account.account?.balance.toBigInt() ?? 0n,
+    };
   },
 
-  async loadContracts(publicKey58: string) {
-    // const { Add } = await import('../../contracts/build/src/Add.js');
-    // await Add.compile();
-    // contract = new Add(publicKey);
+  async fetch2048Score(publicKey58: string) {
+    const publicKey = PublicKey.fromBase58(publicKey58);
+    const account = await fetchAccount({
+      publicKey,
+      tokenId: score2048!.deriveTokenId(),
+    });
+    return {
+      error: account.error,
+      balance: account.account?.balance.toBigInt() ?? 0n,
+    };
+  },
+
+  async loadContracts() {
+    if (contractsLoading) return;
+    contractsLoading = true;
+
+    const { Score2048 } = await import("../app/mina/contracts/Score2048.ts");
+    await Score2048.compile();
+    score2048 = new Score2048(PublicKey.fromBase58(SCORE_2048_ADDRESS));
   },
 };
 

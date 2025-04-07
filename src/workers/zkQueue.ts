@@ -4,9 +4,8 @@ import { GameBoardWithSeed } from "@/lib/game2048ZKLogic";
 import { zkClient } from "./zkClient";
 
 if (typeof window !== "undefined") {
-  zkClient.compileZKProgram().then((result) => {
-    console.log("Verification Key:", result);
-  });
+  // Set active instance to devnet
+  zkClient.setActiveNetwork("https://api.minascan.io/node/devnet/v1/graphql");
 }
 
 let myPeerId: string = "";

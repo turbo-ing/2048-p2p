@@ -44,6 +44,10 @@ export class ZkClient {
     this.dispatch = dispatch;
   }
 
+  async setActiveNetwork(network: string) {
+    return this.remoteApi.setActiveNetwork(network);
+  }
+
   async compileZKProgram() {
     if (this.compiled) {
       return;
@@ -149,8 +153,12 @@ export class ZkClient {
     return await this.remoteApi.fetchAccount(publicKey58);
   }
 
-  async loadContracts(publicKey58: string) {
-    await this.remoteApi.loadContracts(publicKey58);
+  async fetch2048Score(publicKey58: string) {
+    return await this.remoteApi.fetch2048Score(publicKey58);
+  }
+
+  async loadContracts() {
+    await this.remoteApi.loadContracts();
   }
 }
 

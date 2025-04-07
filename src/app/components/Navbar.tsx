@@ -6,7 +6,12 @@ import { shortAddress } from "@/utils/helper";
 import Wallet from "./icon/Wallet";
 
 export default function Navbar() {
-  const { address, connected, connect } = useAuroWallet();
+  const { address, connected, connect, accountExists, scoreExists, highScore } =
+    useAuroWallet();
+
+  console.log("accountExists", accountExists);
+  console.log("scoreExists", scoreExists);
+  console.log("highScore", highScore);
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50">

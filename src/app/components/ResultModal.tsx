@@ -50,6 +50,9 @@ export const ResultModal = ({
   const [isZKModalOpen, setIsZKModalOpen] = useState<boolean>(false);
   const [isRematchRequested, setIsRematchRequested] = useState<boolean>(false);
 
+  const [scoreAccountExists, setScoreAccountExists] = useState<boolean>(false);
+  const [highScore, setHighScore] = useState<number>(0);
+
   useEffect(() => {
     if (isRematchRequested && lenQueue === 0 && !remProcessing) {
       setIsRematchRequested(false);
@@ -103,10 +106,10 @@ export const ResultModal = ({
   );
 
   const handleLeave = () => {
+    // dispatch({
+    //   type: "LEAVE",
+    // });
     setRoom("");
-    dispatch({
-      type: "LEAVE",
-    });
   };
 
   const renderButtons = () => (
@@ -122,7 +125,7 @@ export const ResultModal = ({
       >
         Download ZK Proof
       </Button>
-      <Button
+      {/* <Button
         onClick={() => {
           if (lenQueue !== 0) {
             setIsZKModalOpen(true);
@@ -134,7 +137,7 @@ export const ResultModal = ({
         className="w-full sm:w-auto"
       >
         {totalPlayers < 2 ? "Play Again" : `Rematch (${rem}/${totalPlayers})`}
-      </Button>
+      </Button> */}
     </div>
   );
 
