@@ -48,16 +48,6 @@ export class ZkClient {
     return this.remoteApi.setActiveNetwork(network);
   }
 
-  async compileZKProgram() {
-    if (this.compiled) {
-      return;
-    }
-    const result = await this.remoteApi.compileZKProgram();
-    this.compiled = true;
-    console.log("Compiled ZK program");
-    return result;
-  }
-
   startInterval() {
     this.intervalId = window.setInterval(async () => {
       if (!this.compiled) {
@@ -158,7 +148,15 @@ export class ZkClient {
   }
 
   async loadContracts() {
-    await this.remoteApi.loadContracts();
+    if (this.compiled) {
+      return;
+    }
+
+    const result = await this.remoteApi.loadContracts();
+    this.compiled = true;
+    console.log("Compiled ZK program");
+
+    return result;
   }
 }
 

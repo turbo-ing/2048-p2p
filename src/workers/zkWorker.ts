@@ -79,15 +79,6 @@ export const zkWorkerAPI = {
     console.log("Network instance configured", network);
     Mina.setActiveInstance(Network);
   },
-  async compileZKProgram() {
-    if (zkProgramCompiling) return;
-    zkProgramCompiling = true;
-
-    const result = await Game2048ZKProgram.compile();
-    console.log("Compiled ZK program");
-
-    return result;
-  },
 
   async initZKProof(
     boardNums: Number[],
@@ -202,9 +193,14 @@ export const zkWorkerAPI = {
     if (contractsLoading) return;
     contractsLoading = true;
 
+    const result = await Game2048ZKProgram.compile();
+    console.log("Compiled ZK program");
+
     const { Score2048 } = await import("../app/mina/contracts/Score2048.ts");
     await Score2048.compile();
     score2048 = new Score2048(PublicKey.fromBase58(SCORE_2048_ADDRESS));
+
+    return result;
   },
 };
 

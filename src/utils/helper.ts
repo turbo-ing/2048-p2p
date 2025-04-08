@@ -19,7 +19,9 @@ export const gridsAreEqual = (grid1: Grid, grid2: Grid): boolean => {
  * Checks if the grid contains a tile with value 2048.
  */
 export const hasWon = (grid: Grid): boolean => {
-  return grid.some((row) => row.some((tile) => tile?.value === 2048));
+  return grid.some((row) =>
+    row.some((tile) => tile?.value && tile?.value >= 2048),
+  );
 };
 
 /**

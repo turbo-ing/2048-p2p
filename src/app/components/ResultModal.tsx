@@ -6,6 +6,7 @@ import Modal from "./Modal";
 import Button from "./Button";
 import Link from "next/link";
 import { use2048 } from "@/reducer/2048";
+import { useAuroWallet } from "../mina/useAuroWallet";
 
 export interface Player {
   name: string;
@@ -28,6 +29,8 @@ interface ResultModalProps {
   totalPlayers: number;
   rankingData: Player[];
   onClose?: () => void;
+  isForceSubmit: boolean;
+  setIsForceSubmit: (isForceSubmit: boolean) => void;
 }
 
 export const ResultModal = ({
@@ -44,14 +47,15 @@ export const ResultModal = ({
   isWinner,
   rankingData,
   totalPlayers,
+  isForceSubmit,
+  setIsForceSubmit,
 }: ResultModalProps) => {
   const [state, dispatch, connected, room, setRoom, zkClient] = use2048();
   const [ranking, setRanking] = useState<Player[]>(rankingData);
   const [isZKModalOpen, setIsZKModalOpen] = useState<boolean>(false);
   const [isRematchRequested, setIsRematchRequested] = useState<boolean>(false);
 
-  const [scoreAccountExists, setScoreAccountExists] = useState<boolean>(false);
-  const [highScore, setHighScore] = useState<number>(0);
+  const { highScore, scoreExists } = useAuroWallet();
 
   useEffect(() => {
     if (isRematchRequested && lenQueue === 0 && !remProcessing) {
@@ -68,6 +72,13 @@ export const ResultModal = ({
           ? "You've won the match!"
           : "You've been beaten!";
     }
+
+    if (rankingData[0].score > highScore) {
+      return "Congratulations!";
+    } else {
+      return "Game over!";
+    }
+
     return isWinner ? "You win!" : "Game over!";
   };
 
@@ -77,6 +88,13 @@ export const ResultModal = ({
         ? "Congratulations! Your strategy and skill have prevailed. Well played!"
         : "Good effort! Learn from this match and come back stronger. Better luck next time!";
     }
+
+    if (rankingData[0].score > highScore) {
+      return "You've set a new high score!";
+    } else {
+      return "Better luck next time!";
+    }
+
     return isWinner
       ? "You're officially a 2048 master!"
       : "Better luck next time!";
@@ -106,9 +124,11 @@ export const ResultModal = ({
   );
 
   const handleLeave = () => {
-    // dispatch({
-    //   type: "LEAVE",
-    // });
+    if (isForceSubmit) {
+      dispatch({
+        type: "LEAVE",
+      });
+    }
     setRoom("");
   };
 
@@ -119,12 +139,22 @@ export const ResultModal = ({
           Home
         </Button>
       </Link>
-      <Button
-        onClick={() => setIsZKModalOpen(true)}
-        className="w-full sm:w-auto"
-      >
-        Download ZK Proof
-      </Button>
+      {rankingData[0].score > highScore && (
+        <Button
+          onClick={() => setIsZKModalOpen(true)}
+          className="w-full sm:w-auto"
+        >
+          Submit Score
+        </Button>
+      )}
+      {isForceSubmit && rankingData[0].score <= highScore && (
+        <Button
+          onClick={() => setIsForceSubmit(false)}
+          className="w-full sm:w-auto"
+        >
+          Continue
+        </Button>
+      )}
       {/* <Button
         onClick={() => {
           if (lenQueue !== 0) {
