@@ -41,12 +41,6 @@ export default function HomePage() {
 
   const joinRoom = useJoin(handleJoin);
 
-  // If you're compiling a ZK program on startup, you'd do that here.
-  const compileZKProgram = async (zkClient: ZkClient) => {
-    const result = await zkClient?.compileZKProgram();
-    console.log("Verification Key", result?.verificationKey);
-  };
-
   // Assign the peer ID once we have a turboEdge instance
   useEffect(() => {
     if (turboEdge) {
