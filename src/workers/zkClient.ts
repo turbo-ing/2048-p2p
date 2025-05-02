@@ -40,6 +40,18 @@ export class ZkClient {
     }
   }
 
+  async loadContracts() {
+    if (this.compiled) {
+      return;
+    }
+
+    const result = await this.remoteApi.loadContracts();
+    this.compiled = true;
+    console.log("Compiled ZK program");
+
+    return result;
+  }
+
   setDispatch(dispatch: Dispatch<Action>) {
     this.dispatch = dispatch;
   }
@@ -101,8 +113,15 @@ export class ZkClient {
     console.log("Initializing ZK proof", zkBoard);
     this.isProcessing = true;
 
+    let isNotCompiledAtFirst = false;
+
     while (!this.compiled) {
+      isNotCompiledAtFirst = true;
       await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+
+    if (isNotCompiledAtFirst) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
 
     printBoard(zkBoard.getBoard());
@@ -147,16 +166,11 @@ export class ZkClient {
     return await this.remoteApi.fetch2048Score(publicKey58);
   }
 
-  async loadContracts() {
-    if (this.compiled) {
-      return;
+  async submitScore(publicKey58: string) {
+    if (!this.compiled) {
+      throw new Error("ZK program is not compiled");
     }
-
-    const result = await this.remoteApi.loadContracts();
-    this.compiled = true;
-    console.log("Compiled ZK program");
-
-    return result;
+    return await this.remoteApi.submitScore(publicKey58);
   }
 }
 

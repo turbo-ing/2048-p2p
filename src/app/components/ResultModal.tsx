@@ -50,12 +50,13 @@ export const ResultModal = ({
   isForceSubmit,
   setIsForceSubmit,
 }: ResultModalProps) => {
-  const [state, dispatch, connected, room, setRoom, zkClient] = use2048();
+  const [state, dispatch, _, room, setRoom, zkClient] = use2048();
   const [ranking, setRanking] = useState<Player[]>(rankingData);
   const [isZKModalOpen, setIsZKModalOpen] = useState<boolean>(false);
   const [isRematchRequested, setIsRematchRequested] = useState<boolean>(false);
 
-  const { highScore, scoreExists } = useAuroWallet();
+  const { address, highScore, scoreExists, connect, connected } =
+    useAuroWallet();
 
   useEffect(() => {
     if (isRematchRequested && lenQueue === 0 && !remProcessing) {
@@ -171,18 +172,41 @@ export const ResultModal = ({
     </div>
   );
 
+  const submitScore = async () => {
+    if (!address) {
+      connect();
+    } else {
+      const tx = await zkClient.submitScore(address);
+
+      const { hash } = await (window as any).mina.sendTransaction({
+        transaction: tx,
+        feePayer: {
+          fee: 0.1,
+          memo: "",
+        },
+      });
+
+      console.log("Transaction submitted", tx);
+    }
+  };
+
   const renderZKModalContent = () => (
     <div>
       {lenQueue === 0 && !remProcessing ? (
         <>
           <h2 className="font-semibold text-2xl md:text-4xl text-center">
-            Download ZK Proof
+            Submit your score
           </h2>
+          <p className="mt-2 text-lg">Score: {ranking[0].score}</p>
           <p className="mt-3 text-center text-base">
-            Click the button below to download your ZK Proof.
+            Click the button below to submit your score.
           </p>
           <div className="flex justify-center gap-4 mt-6 text-base">
-            <Button onClick={downloadProof}>Download Proof</Button>
+            {ranking[0].score > 0 && (
+              <Button onClick={submitScore}>
+                {connected ? "Submit Score" : "Connect Auro Wallet"}
+              </Button>
+            )}
             <Button onClick={() => setIsZKModalOpen(false)}>
               Back to Results
             </Button>
@@ -193,6 +217,7 @@ export const ResultModal = ({
           <h2 className="font-semibold text-2xl md:text-4xl text-center">
             Generating ZK Proof...
           </h2>
+          <p className="mt-2 text-lg">Score: {ranking[0].score}</p>
           <p className="mt-3 text-center text-base">
             Moves left to process: {lenQueue}
           </p>

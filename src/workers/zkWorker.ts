@@ -43,6 +43,7 @@
 
 import * as Comlink from "comlink";
 import {
+  AccountUpdate,
   fetchAccount,
   Field,
   Mina,
@@ -52,7 +53,10 @@ import {
   Signature,
 } from "o1js";
 
-import { Game2048ZKProgram } from "@/lib/game2048ZKProgram";
+import {
+  Game2048ZKProgram,
+  Game2048ZKProgramProof,
+} from "@/lib/game2048ZKProgram";
 import {
   Direction,
   GameBoard,
@@ -64,9 +68,9 @@ import { DirectionMap, MoveType } from "@/utils/constants";
 import { Score2048 } from "@/app/mina/contracts/Score2048";
 
 const SCORE_2048_ADDRESS =
-  "B62qicZ8Ei7uViQzZJvpZKbyhVp8dLiG4hWswQAcDM2xhnqZ5b53Kef";
+  "B62qkpcs7FKVtfcVFBnxgtSXJKACRRvjnHAtw54qyvbNwygaDVjwiAm";
 
-let proofCache: Proof<GameBoardWithSeed, void> | null = null;
+let proofCache: Game2048ZKProgramProof | null = null;
 let sessionPrivateKey: PrivateKey | null = null;
 let score2048: Score2048 | null = null;
 
@@ -178,20 +182,22 @@ export const zkWorkerAPI = {
   },
 
   async fetch2048Score(publicKey58: string) {
-    const publicKey = PublicKey.fromBase58(publicKey58);
-    const account = await fetchAccount({
-      publicKey,
-      tokenId: score2048!.deriveTokenId(),
-    });
+    // const publicKey = PublicKey.fromBase58(publicKey58);
+    // const account = await fetchAccount({
+    //   publicKey,
+    //   tokenId: score2048!.deriveTokenId(),
+    // });
     return {
-      error: account.error,
-      balance: account.account?.balance.toBigInt() ?? 0n,
+      error: null,
+      balance: 0n,
     };
   },
 
   async loadContracts() {
     if (contractsLoading) return;
     contractsLoading = true;
+
+    console.log("Score 2048 address", SCORE_2048_ADDRESS);
 
     const result = await Game2048ZKProgram.compile();
     console.log("Compiled ZK program");
@@ -201,6 +207,36 @@ export const zkWorkerAPI = {
     score2048 = new Score2048(PublicKey.fromBase58(SCORE_2048_ADDRESS));
 
     return result;
+  },
+
+  async submitScore(publicKey58: string) {
+    if (!sessionPrivateKey) {
+      throw new Error("Session private key is not initialized");
+    }
+
+    if (!proofCache) {
+      throw new Error("Proof cache is not initialized");
+    }
+
+    const publicKey = PublicKey.fromBase58(publicKey58);
+
+    const signature = Signature.create(sessionPrivateKey!, [
+      proofCache.publicInput.seed,
+      ...proofCache.publicInput.board.cells,
+      ...publicKey.toFields(),
+    ]);
+
+    const tx = await Mina.transaction(async () => {
+      await score2048!.submit(proofCache!, publicKey, signature);
+    });
+
+    console.log("Generating proof for submitting score");
+
+    await tx.prove();
+
+    console.log("Proof generated... submitting score");
+
+    return tx.toJSON();
   },
 };
 

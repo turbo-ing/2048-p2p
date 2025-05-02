@@ -20,11 +20,8 @@ import {
 } from "o1js";
 import { Game2048ZKProgramProof } from "@/lib/game2048ZKProgram";
 
-export class Score2048 extends TokenContract {
-  async deploy(args?: DeployArgs) {
-    await super.deploy(args);
-    this.account.tokenSymbol.set("2048-S");
-
+export class Score2048 extends SmartContract {
+  async deploy() {
     // make account non-upgradable forever
     this.account.permissions.set({
       ...Permissions.default(),
@@ -32,24 +29,6 @@ export class Score2048 extends TokenContract {
         Permissions.VerificationKey.impossibleDuringCurrentVersion(),
       setPermissions: Permissions.impossible(),
       access: Permissions.proofOrSignature(),
-    });
-  }
-
-  async name() {
-    return CircuitString.fromString("2048 Score");
-  }
-
-  async symbol() {
-    return CircuitString.fromString("2048-S");
-  }
-
-  @method async approveBase(forest: AccountUpdateForest): Promise<void> {
-    // Soulbound token, prevent any transfers from the user
-    this.forEachUpdate(forest, (accountUpdate, usesToken) => {
-      accountUpdate.balanceChange
-        .equals(Int64.zero)
-        .or(usesToken.not())
-        .assertTrue();
     });
   }
 
@@ -119,22 +98,8 @@ export class Score2048 extends TokenContract {
     return log2minus1.mul(cell);
   }
 
-  async getAccountUpdate(owner: PublicKey | AccountUpdate) {
-    let update =
-      owner instanceof PublicKey
-        ? AccountUpdate.create(owner, this.deriveTokenId())
-        : owner;
-    await this.approveAccountUpdate(update);
-    return update;
-  }
-
-  async balanceOf(owner: PublicKey | AccountUpdate) {
-    let update = await this.getAccountUpdate(owner);
-    return update.account.balance.getAndRequireEquals();
-  }
-
   events = {
-    SubmitScore: Struct({ to: PublicKey, score: UInt64 }),
+    SubmitScore: Struct({ to: PublicKey, score: Field }),
   };
 
   @method async submit(
@@ -155,15 +120,6 @@ export class Score2048 extends TokenContract {
       score = score.add(this.singleCellScore(proof.publicInput.board.cells[i]));
     }
 
-    let accountUpdate = await this.getAccountUpdate(to);
-
-    let scoreUInt64 = new UInt64(score.value);
-    let balanceUInt64 = accountUpdate.account.balance.getAndRequireEquals();
-
-    scoreUInt64.assertGreaterThan(balanceUInt64);
-    accountUpdate.balance.addInPlace(
-      scoreUInt64.sub(balanceUInt64).mul(1_000_000_000),
-    );
-    accountUpdate.label = "Submit 2048 Score";
+    this.emitEvent("SubmitScore", { to, score });
   }
 }
