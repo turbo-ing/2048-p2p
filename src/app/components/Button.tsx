@@ -7,6 +7,7 @@ interface ButtonProps {
   children?: ReactNode;
   variant?: "default" | "inverted";
   className?: string;
+  disabled?: boolean;
 }
 
 const Button = ({
@@ -14,6 +15,7 @@ const Button = ({
   children,
   className,
   variant = "default",
+  disabled = false,
 }: ButtonProps) => {
   const baseClasses =
     "py-2.5 px-4 rounded-lg w-full flex items-center justify-center gap-1 border-1 transition-all text-base";
@@ -27,11 +29,12 @@ const Button = ({
   const buttonClasses = classNames(
     baseClasses,
     variant === "inverted" ? invertedClasses : defaultClasses,
+    disabled ? "opacity-50 pointer-events-none" : "",
     className,
   );
 
   return (
-    <button className={buttonClasses} onClick={onClick}>
+    <button className={buttonClasses} onClick={onClick} disabled={disabled}>
       {children}
     </button>
   );

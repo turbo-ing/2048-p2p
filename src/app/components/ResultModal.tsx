@@ -52,8 +52,10 @@ export const ResultModal = ({
 }: ResultModalProps) => {
   const [state, dispatch, _, room, setRoom, zkClient] = use2048();
   const [ranking, setRanking] = useState<Player[]>(rankingData);
-  const [isZKModalOpen, setIsZKModalOpen] = useState<boolean>(false);
+  const [isZKModalOpen, setIsZKModalOpen] = useState<boolean>(true);
   const [isRematchRequested, setIsRematchRequested] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [submitted, setSubmitted] = useState<boolean>(false);
 
   const { address, highScore, scoreExists, connect, connected } =
     useAuroWallet();
@@ -140,22 +142,23 @@ export const ResultModal = ({
           Home
         </Button>
       </Link>
-      {rankingData[0].score > highScore && (
+      {(true || rankingData[0].score > highScore) && (
         <Button
           onClick={() => setIsZKModalOpen(true)}
           className="w-full sm:w-auto"
+          disabled={submitted || submitting}
         >
           Submit Score
         </Button>
       )}
-      {isForceSubmit && rankingData[0].score <= highScore && (
+      {/* {isForceSubmit && rankingData[0].score <= highScore && (
         <Button
           onClick={() => setIsForceSubmit(false)}
           className="w-full sm:w-auto"
         >
           Continue
         </Button>
-      )}
+      )} */}
       {/* <Button
         onClick={() => {
           if (lenQueue !== 0) {
@@ -176,17 +179,24 @@ export const ResultModal = ({
     if (!address) {
       connect();
     } else {
-      const tx = await zkClient.submitScore(address);
+      try {
+        setSubmitting(true);
 
-      const { hash } = await (window as any).mina.sendTransaction({
-        transaction: tx,
-        feePayer: {
-          fee: 0.1,
-          memo: "",
-        },
-      });
+        const tx = await zkClient.submitScore(address);
 
-      console.log("Transaction submitted", tx);
+        const { hash } = await (window as any).mina.sendTransaction({
+          transaction: tx,
+          feePayer: {
+            fee: 0.1,
+            memo: "",
+          },
+        });
+
+        console.log("Transaction submitted", tx);
+        setSubmitted(true);
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -199,17 +209,28 @@ export const ResultModal = ({
           </h2>
           <p className="mt-2 text-lg">Score: {ranking[0].score}</p>
           <p className="mt-3 text-center text-base">
-            Click the button below to submit your score.
+            {submitted
+              ? "Wait 3 minutes for your score to show in the leaderboard."
+              : "Click the button below to submit your score."}
           </p>
           <div className="flex justify-center gap-4 mt-6 text-base">
             {ranking[0].score > 0 && (
-              <Button onClick={submitScore}>
-                {connected ? "Submit Score" : "Connect Auro Wallet"}
+              <Button
+                onClick={submitted ? handleLeave : submitScore}
+                disabled={submitting}
+              >
+                {submitted
+                  ? "New Game"
+                  : submitting
+                    ? "Submitting..."
+                    : connected
+                      ? "Submit Score"
+                      : "Connect Auro Wallet"}
               </Button>
             )}
-            <Button onClick={() => setIsZKModalOpen(false)}>
+            {/* <Button onClick={() => setIsZKModalOpen(false)}>
               Back to Results
-            </Button>
+            </Button> */}
           </div>
         </>
       ) : (
@@ -217,14 +238,20 @@ export const ResultModal = ({
           <h2 className="font-semibold text-2xl md:text-4xl text-center">
             Generating ZK Proof...
           </h2>
-          <p className="mt-2 text-lg">Score: {ranking[0].score}</p>
+          {/* <p className="mt-2 text-lg">Score: {ranking[0].score}</p> */}
           <p className="mt-3 text-center text-base">
             Moves left to process: {lenQueue}
           </p>
           {renderRanking()}
-          <div className="mt-8 flex justify-center text-base">
+          {/* <div className="mt-8 flex justify-center text-base">
             <Button onClick={() => setIsZKModalOpen(false)}>
               Back to Results
+            </Button>
+          </div> */}
+
+          <div className="mt-8 flex justify-center text-base">
+            <Button onClick={() => {}} disabled>
+              Please wait...
             </Button>
           </div>
         </>

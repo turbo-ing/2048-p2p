@@ -66,9 +66,10 @@ import {
 } from "@/lib/game2048ZKLogic";
 import { DirectionMap, MoveType } from "@/utils/constants";
 import { Score2048 } from "@/app/mina/contracts/Score2048";
+import { LeaderboardScore } from "@/utils/types.ts";
 
 const SCORE_2048_ADDRESS =
-  "B62qkpcs7FKVtfcVFBnxgtSXJKACRRvjnHAtw54qyvbNwygaDVjwiAm";
+  "B62qpKD5UKqYG4fNmYioioK6Lh2o3q1TqrvMeiKqwedcxr5AMhdmFw1";
 
 let proofCache: Game2048ZKProgramProof | null = null;
 let sessionPrivateKey: PrivateKey | null = null;
@@ -237,6 +238,67 @@ export const zkWorkerAPI = {
     console.log("Proof generated... submitting score");
 
     return tx.toJSON();
+  },
+
+  async fetchLeaderboard() {
+    const Network = Mina.Network({
+      mina: "https://api.minascan.io/node/devnet/v1/graphql",
+      archive: "https://api.minascan.io/archive/devnet/v1/graphql",
+    });
+    Mina.setActiveInstance(Network);
+
+    const score2048 = new Score2048(PublicKey.fromBase58(SCORE_2048_ADDRESS));
+
+    // Fetch all events for a given address
+    const fetchedEvents = await score2048.fetchEvents();
+
+    const leaderboardMap: { [address: string]: LeaderboardScore } = {};
+
+    for (const event of fetchedEvents) {
+      const { to, score, maxTile } = event.event.data as unknown as {
+        to: PublicKey;
+        score: Field;
+        maxTile: Field;
+      };
+
+      if (!leaderboardMap[to.toBase58()]) {
+        leaderboardMap[to.toBase58()] = {
+          address: to.toBase58(),
+          totalScore: 0,
+          maxScore: 0,
+          maxTile: 0,
+          playCount: 0,
+        };
+      }
+
+      const oldLeaderboardScore = leaderboardMap[to.toBase58()];
+      leaderboardMap[to.toBase58()] = {
+        address: to.toBase58(),
+        totalScore: oldLeaderboardScore.totalScore + Number(score.toBigInt()),
+        maxScore: Math.max(
+          oldLeaderboardScore.totalScore,
+          Number(score.toBigInt()),
+        ),
+        maxTile: Math.max(
+          oldLeaderboardScore.maxTile,
+          Number(maxTile.toBigInt()),
+        ),
+        playCount: oldLeaderboardScore.playCount + 1,
+      };
+    }
+
+    return Object.values(leaderboardMap).sort((a, b) => {
+      if (a.totalScore !== b.totalScore) {
+        return b.totalScore - a.totalScore;
+      }
+      if (a.maxScore !== b.maxScore) {
+        return b.maxScore - a.maxScore;
+      }
+      if (a.maxTile !== b.maxTile) {
+        return b.maxTile - a.maxTile;
+      }
+      return b.playCount - a.playCount;
+    });
   },
 };
 

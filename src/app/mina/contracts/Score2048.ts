@@ -22,6 +22,8 @@ import { Game2048ZKProgramProof } from "@/lib/game2048ZKProgram";
 
 export class Score2048 extends SmartContract {
   async deploy() {
+    super.deploy();
+
     // make account non-upgradable forever
     this.account.permissions.set({
       ...Permissions.default(),
@@ -99,7 +101,7 @@ export class Score2048 extends SmartContract {
   }
 
   events = {
-    SubmitScore: Struct({ to: PublicKey, score: Field }),
+    SubmitScore: Struct({ to: PublicKey, score: Field, maxTile: Field }),
   };
 
   @method async submit(
@@ -115,11 +117,14 @@ export class Score2048 extends SmartContract {
     ]);
 
     let score = Field(0);
+    let maxTile = Field(0);
 
     for (let i = 0; i < 16; i++) {
-      score = score.add(this.singleCellScore(proof.publicInput.board.cells[i]));
+      let cell = proof.publicInput.board.cells[i];
+      score = score.add(this.singleCellScore(cell));
+      maxTile = Provable.if(cell.greaterThan(maxTile), cell, maxTile);
     }
 
-    this.emitEvent("SubmitScore", { to, score });
+    this.emitEvent("SubmitScore", { to, score, maxTile });
   }
 }
