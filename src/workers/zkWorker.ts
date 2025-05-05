@@ -268,6 +268,7 @@ export const zkWorkerAPI = {
           maxScore: 0,
           maxTile: 0,
           playCount: 0,
+          rank: 0,
         };
       }
 
@@ -284,10 +285,11 @@ export const zkWorkerAPI = {
           Number(maxTile.toBigInt()),
         ),
         playCount: oldLeaderboardScore.playCount + 1,
+        rank: 0,
       };
     }
 
-    return Object.values(leaderboardMap).sort((a, b) => {
+    const scores = Object.values(leaderboardMap).sort((a, b) => {
       if (a.totalScore !== b.totalScore) {
         return b.totalScore - a.totalScore;
       }
@@ -299,6 +301,12 @@ export const zkWorkerAPI = {
       }
       return b.playCount - a.playCount;
     });
+
+    for (let i = 0; i < scores.length; i++) {
+      scores[i].rank = i + 1;
+    }
+
+    return scores;
   },
 };
 

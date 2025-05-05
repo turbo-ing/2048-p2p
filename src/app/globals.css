@@ -38,6 +38,12 @@
   }
 }
 
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 54px 1fr 140px 90px;
+  align-items: center;
+}
+
 /* .bg-gradient {
   background: linear-gradient(
     224deg,

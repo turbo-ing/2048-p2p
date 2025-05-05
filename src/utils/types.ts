@@ -26,4 +26,10 @@ export type LeaderboardScore = {
   maxScore: number;
   maxTile: number;
   playCount: number;
+  rank: number;
+};
+
+export type Leaderboard = {
+  myself?: LeaderboardScore;
+  scores: LeaderboardScore[];
 };

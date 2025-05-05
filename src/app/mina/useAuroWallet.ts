@@ -8,8 +8,6 @@ export const useAuroWallet = () => {
   const [accountExists, setAccountExists] = useState(false);
 
   const [compiled, setCompiled] = useState<boolean>(false);
-  const [scoreExists, setScoreExists] = useState<boolean>(false);
-  const [highScore, setHighScore] = useState<number>(0);
 
   const refreshWallet = useCallback(async () => {
     const mina = (window as any).mina;
@@ -55,17 +53,6 @@ export const useAuroWallet = () => {
   }, []);
 
   useEffect(() => {
-    if (compiled && accountExists && address && connected) {
-      zkClient.fetch2048Score(address).then((scoreRes) => {
-        const scoreExists = !scoreRes.error;
-        console.log("scoreRes", scoreRes);
-        setScoreExists(scoreExists);
-        setHighScore(Number(scoreRes.balance));
-      });
-    }
-  }, [compiled, accountExists, address, connected]);
-
-  useEffect(() => {
     connect();
 
     if (typeof window !== "undefined") {
@@ -86,5 +73,5 @@ export const useAuroWallet = () => {
     });
   }, []);
 
-  return { address, connected, accountExists, connect, scoreExists, highScore };
+  return { address, connected, accountExists, connect };
 };

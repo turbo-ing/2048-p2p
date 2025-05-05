@@ -172,6 +172,10 @@ export class ZkClient {
     }
     return await this.remoteApi.submitScore(publicKey58);
   }
+
+  async fetchLeaderboard() {
+    return await this.remoteApi.fetchLeaderboard();
+  }
 }
 
 // Global Singleton

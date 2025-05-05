@@ -7,6 +7,7 @@ import Button from "./Button";
 import Link from "next/link";
 import { use2048 } from "@/reducer/2048";
 import { useAuroWallet } from "../mina/useAuroWallet";
+import { useLeaderboard } from "../hooks/useLeaderboard";
 
 export interface Player {
   name: string;
@@ -57,8 +58,10 @@ export const ResultModal = ({
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
 
-  const { address, highScore, scoreExists, connect, connected } =
-    useAuroWallet();
+  const { address, connect, connected } = useAuroWallet();
+  const { leaderboard } = useLeaderboard();
+
+  const highScore = leaderboard?.myself?.maxScore || 0;
 
   useEffect(() => {
     if (isRematchRequested && lenQueue === 0 && !remProcessing) {
@@ -142,7 +145,7 @@ export const ResultModal = ({
           Home
         </Button>
       </Link>
-      {(true || rankingData[0].score > highScore) && (
+      {
         <Button
           onClick={() => setIsZKModalOpen(true)}
           className="w-full sm:w-auto"
@@ -150,7 +153,7 @@ export const ResultModal = ({
         >
           Submit Score
         </Button>
-      )}
+      }
       {/* {isForceSubmit && rankingData[0].score <= highScore && (
         <Button
           onClick={() => setIsForceSubmit(false)}
