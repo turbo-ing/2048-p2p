@@ -26,38 +26,47 @@ export default function LeaderboardModal({
         <h2 className="font-semibold text-2xl md:text-4xl text-center">
           Leaderboard
         </h2>
-        <div className="mt-4">
-          <div className="leaderboard-row">
-            <div></div>
-            <div></div>
-            <div className="text-right font-bold">Total</div>
-            <div className="text-right font-bold">Best</div>
-          </div>
-
-          {leaderboardSlice.map((score) => (
-            <div className="leaderboard-row -ml-3" key={score.address}>
-              <div
-                className="text-center font-bold"
-                style={{ fontSize: score.rank >= 1000 ? 14 : 16 }}
-              >
-                #{score.rank}
-              </div>
-              <div className="flex flex-row items-center">
-                <div className="mr-2">
-                  <TileMinimal
-                    tile={score.maxTile}
-                    cellSize={36}
-                    gap={2}
-                    fontSize={score.maxTile >= 1000 ? 12 : 16}
-                  ></TileMinimal>
-                </div>
-                {shortAddress(score.address)}
-              </div>
-              <div className="text-right">{score.totalScore}</div>
-              <div className="text-right">{score.maxScore}</div>
+        {leaderboard?.scores.length ? (
+          <div className="mt-4">
+            <div className="leaderboard-row">
+              <div></div>
+              <div></div>
+              <div className="text-right font-bold">Total</div>
+              <div className="text-right font-bold">Best</div>
             </div>
-          ))}
-        </div>
+
+            {leaderboardSlice.map((score) => (
+              <div className="leaderboard-row -ml-3" key={score.address}>
+                <div
+                  className="text-center font-bold"
+                  style={{ fontSize: score.rank >= 1000 ? 14 : 16 }}
+                >
+                  #{score.rank}
+                </div>
+                <div className="flex flex-row items-center">
+                  <div className="mr-2">
+                    <TileMinimal
+                      tile={score.maxTile}
+                      cellSize={36}
+                      gap={2}
+                      fontSize={score.maxTile >= 1000 ? 12 : 16}
+                    ></TileMinimal>
+                  </div>
+                  <a
+                    href={`https://minascan.io/mainnet/account/${score.address}`}
+                    target="_blank"
+                  >
+                    {shortAddress(score.address)}
+                  </a>
+                </div>
+                <div className="text-right">{score.totalScore}</div>
+                <div className="text-right">{score.maxScore}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-4 text-center">Loading...</div>
+        )}
       </div>
     </Modal>
   );
