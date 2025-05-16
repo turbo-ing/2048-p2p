@@ -35,7 +35,7 @@ export default function LeaderboardModal({
           </div>
 
           {leaderboardSlice.map((score) => (
-            <div className="leaderboard-row -ml-3">
+            <div className="leaderboard-row -ml-3" key={score.address}>
               <div
                 className="text-center font-bold"
                 style={{ fontSize: score.rank >= 1000 ? 14 : 16 }}
