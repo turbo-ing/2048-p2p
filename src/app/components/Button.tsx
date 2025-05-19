@@ -8,6 +8,7 @@ interface ButtonProps {
   variant?: "default" | "inverted";
   className?: string;
   disabled?: boolean;
+  fullWidth?: boolean;
 }
 
 const Button = ({
@@ -16,9 +17,9 @@ const Button = ({
   className,
   variant = "default",
   disabled = false,
+  fullWidth = true,
 }: ButtonProps) => {
-  const baseClasses =
-    "py-2.5 px-4 rounded-lg w-full flex items-center justify-center gap-1 border-1 transition-all text-base";
+  const baseClasses = `py-2.5 px-4 rounded-lg ${fullWidth ? "w-full" : ""} flex items-center justify-center gap-1 border-1 transition-all text-base`;
 
   const defaultClasses =
     "bg-bg-dark border-background hover:border-bg-dark hover:bg-background hover:text-bg-dark text-background";

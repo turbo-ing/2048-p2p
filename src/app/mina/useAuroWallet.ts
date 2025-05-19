@@ -69,7 +69,9 @@ export const useAuroWallet = () => {
   useEffect(() => {
     zkClient.loadContracts().then((result) => {
       console.log("Verification Key:", result);
-      setCompiled(true);
+      if (result) {
+        setCompiled(true);
+      }
     });
   }, []);
 

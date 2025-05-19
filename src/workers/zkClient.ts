@@ -46,8 +46,10 @@ export class ZkClient {
     }
 
     const result = await this.remoteApi.loadContracts();
-    this.compiled = true;
-    console.log("Compiled ZK program");
+    if (result) {
+      this.compiled = true;
+      console.log("Compiled ZK program");
+    }
 
     return result;
   }
