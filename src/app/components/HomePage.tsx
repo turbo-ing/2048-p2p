@@ -100,7 +100,7 @@ export default function HomePage() {
         top={
           <div className="size-full flex items-center justify-center md:items-end">
             <h1 className="flex-none text-8xl font-bold text-center px-2 mt-2 md:text-9xl md:pb-8">
-              Turbo
+              Mina
               <br />
               2048
             </h1>
