@@ -33,6 +33,10 @@ const nextConfig = {
             value: "same-origin",
           },
           {
+            key: "Cross-Origin-Resource-Policy",
+            value: "cross-origin",
+          },
+          {
             key: "Cross-Origin-Embedder-Policy",
             value: "require-corp",
           },
