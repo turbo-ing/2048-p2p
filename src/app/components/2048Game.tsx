@@ -42,6 +42,9 @@ interface Game2048Props {
   allSurrendered: boolean;
   totalPlayers: number;
   clock: number;
+  peerId: string;
+  isForceSubmit: boolean;
+  setIsForceSubmit: (isForceSubmit: boolean) => void;
 }
 
 const Game2048: React.FC<Game2048Props> = ({
@@ -66,6 +69,9 @@ const Game2048: React.FC<Game2048Props> = ({
   frontSurrendered,
   totalPlayers,
   clock,
+  peerId,
+  isForceSubmit,
+  setIsForceSubmit,
 }) => {
   const { grid, merges } = board || { grid: [], merges: [] };
 
@@ -183,29 +189,33 @@ const Game2048: React.FC<Game2048Props> = ({
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4">
       {/* Result Modal */}
-      {(((gameOver || gameWon) && allFinished) ||
+      {(((gameOver || gameWon || surrendered[peerId]) && allFinished) ||
         allSurrendered ||
-        (clock === 0 && timer !== 0 && allFinished)) && (
-        //|| allFinished
-        //(gameOver || gameWon) && allFinished && (
-        //if the games over and all finished, or if all opponents have surrendered
+        isForceSubmit ||
+        (clock === 0 && timer !== 0 && allFinished)) &&
+        player == trueid && (
+          //|| allFinished
+          //(gameOver || gameWon) && allFinished && (
+          //if the games over and all finished, or if all opponents have surrendered
 
-        <ResultModal
-          remProcessing={remProcessing}
-          rematch={rematch}
-          rem={rem}
-          downloadProof={downloadProof}
-          surrendered={surrendered}
-          allSurrendered={allSurrendered}
-          frontSurrendered={frontSurrendered}
-          player={trueid}
-          isWinner={gameWon}
-          open={true}
-          rankingData={rankingData}
-          lenQueue={lenQueue}
-          totalPlayers={totalPlayers}
-        />
-      )}
+          <ResultModal
+            remProcessing={remProcessing}
+            rematch={rematch}
+            rem={rem}
+            downloadProof={downloadProof}
+            surrendered={surrendered}
+            allSurrendered={allSurrendered}
+            frontSurrendered={frontSurrendered}
+            player={trueid}
+            isWinner={gameWon}
+            open={true}
+            rankingData={rankingData}
+            lenQueue={lenQueue}
+            totalPlayers={totalPlayers}
+            isForceSubmit={isForceSubmit}
+            setIsForceSubmit={setIsForceSubmit}
+          />
+        )}
 
       {/* Scoreboard */}
       <div className="flex justify-evenly mb-6 w-full">
@@ -216,7 +226,7 @@ const Game2048: React.FC<Game2048Props> = ({
       {/* Board */}
       <div className="relative w-full aspect-square bg-board">
         {/* Waiting Modal */}
-        {(gameOver || gameWon) &&
+        {(gameOver || gameWon || surrendered[peerId]) &&
           !allFinished &&
           !allSurrendered &&
           player == trueid && (

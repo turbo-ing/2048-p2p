@@ -6,7 +6,7 @@ import {
   Direction,
   GameBoardWithSeed,
   MAX_MOVES,
-} from "./game2048ZKLogic";
+} from "./game2048ZKLogic.js";
 
 export const Game2048ZKProgram = ZkProgram({
   name: "Game2048ZKProgram",

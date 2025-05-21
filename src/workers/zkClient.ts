@@ -9,8 +9,11 @@ import {
   printBoard,
 } from "@/lib/game2048ZKLogic";
 import { Action } from "@/reducer/2048";
+import { Field, PrivateKey, Signature } from "o1js";
+import { minaSessionKey } from "@/app/mina/MinaSessionKeyProvider";
+import { DirectionMap, MoveType } from "@/utils/constants";
 
-export default class ZkClient {
+export class ZkClient {
   worker: Worker;
   // Proxy to interact with the worker's methods as if they were local
   remoteApi: Comlink.Remote<typeof import("./zkWorker").zkWorkerAPI>;
@@ -21,6 +24,7 @@ export default class ZkClient {
   boardCache: GameBoardWithSeed[] = [];
   intervalId: number | null = null;
   dispatch: Dispatch<Action>;
+  sessionKey: PrivateKey;
 
   constructor() {
     // Initialize the worker from the zkWorker module
@@ -31,22 +35,31 @@ export default class ZkClient {
 
       // Wrap the worker with Comlink to enable direct method invocation
       this.remoteApi = Comlink.wrap(this.worker);
+      this.sessionKey = minaSessionKey();
       this.startInterval();
     }
+  }
+
+  async loadContracts() {
+    if (this.compiled) {
+      return;
+    }
+
+    const result = await this.remoteApi.loadContracts();
+    if (result) {
+      this.compiled = true;
+      console.log("Compiled ZK program");
+    }
+
+    return result;
   }
 
   setDispatch(dispatch: Dispatch<Action>) {
     this.dispatch = dispatch;
   }
 
-  async compileZKProgram() {
-    if (this.compiled) {
-      return;
-    }
-    const result = await this.remoteApi.compileZKProgram();
-    this.compiled = true;
-    console.log("Compiled ZK program");
-    return result;
+  async setActiveNetwork(network: string) {
+    return this.remoteApi.setActiveNetwork(network);
   }
 
   startInterval() {
@@ -102,8 +115,15 @@ export default class ZkClient {
     console.log("Initializing ZK proof", zkBoard);
     this.isProcessing = true;
 
+    let isNotCompiledAtFirst = false;
+
     while (!this.compiled) {
+      isNotCompiledAtFirst = true;
       await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+
+    if (isNotCompiledAtFirst) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
 
     printBoard(zkBoard.getBoard());
@@ -115,6 +135,7 @@ export default class ZkClient {
     const [proof, proofJSON] = await this.remoteApi.initZKProof(
       boardNums,
       seedNums,
+      this.sessionKey.toBase58(),
     );
 
     if (this.dispatch) {
@@ -138,4 +159,26 @@ export default class ZkClient {
     this.boardCache.push(zkBoard);
     console.log("Move added to cache: ", this.moveCache.length);
   }
+
+  async fetchAccount(publicKey58: string) {
+    return await this.remoteApi.fetchAccount(publicKey58);
+  }
+
+  async fetch2048Score(publicKey58: string) {
+    return await this.remoteApi.fetch2048Score(publicKey58);
+  }
+
+  async submitScore(publicKey58: string) {
+    if (!this.compiled) {
+      throw new Error("ZK program is not compiled");
+    }
+    return await this.remoteApi.submitScore(publicKey58);
+  }
+
+  async fetchLeaderboard() {
+    return await this.remoteApi.fetchLeaderboard();
+  }
 }
+
+// Global Singleton
+export const zkClient = new ZkClient();

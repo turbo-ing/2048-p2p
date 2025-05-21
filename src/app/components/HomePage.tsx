@@ -5,8 +5,8 @@ import { use2048, generateRoomCode } from "@/reducer/2048";
 import MultiplayerModal from "./MultiplayerModal";
 import Mock2048 from "./Mock2048";
 import { TurboEdgeContext, useTurboEdgeV0 } from "@turbo-ing/edge-v0";
-import ZkClient from "@/workers/zkClient";
-import { assignMyPeerId, zkClient } from "@/workers/zkQueue";
+import { zkClient, ZkClient } from "@/workers/zkClient";
+import { assignMyPeerId } from "@/workers/zkQueue";
 import { useRouter } from "next/navigation";
 import SinglePlayer from "./icon/Singleplayer";
 import Versus from "./icon/Versus";
@@ -14,6 +14,8 @@ import TurboEdgeNotification from "./TurboEdgeNotifcation";
 import useIsMobile from "../hooks/useIsMobile";
 import { useJoin } from "../hooks/useJoin";
 import React from "react";
+import Navbar from "./Navbar";
+import LeaderboardModal from "./LeaderboardModal";
 
 const LazyMock2048 = React.lazy(() => import("./Mock2048"));
 
@@ -29,6 +31,7 @@ export default function HomePage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isLeaderboardOpen, setLeaderboardOpen] = useState(false);
   const router = useRouter();
 
   const handleJoin = (joining: boolean) => {
@@ -39,12 +42,6 @@ export default function HomePage() {
   };
 
   const joinRoom = useJoin(handleJoin);
-
-  // If you're compiling a ZK program on startup, you'd do that here.
-  const compileZKProgram = async (zkClient: ZkClient) => {
-    const result = await zkClient?.compileZKProgram();
-    console.log("Verification Key", result?.verificationKey);
-  };
 
   // Assign the peer ID once we have a turboEdge instance
   useEffect(() => {
@@ -92,11 +89,18 @@ export default function HomePage() {
         pushPlay={() => handleJoin(true)}
       />
 
+      <LeaderboardModal
+        open={isLeaderboardOpen}
+        onClose={() => setLeaderboardOpen(false)}
+      />
+
+      <Navbar />
+
       <ResponsiveContainer
         top={
           <div className="size-full flex items-center justify-center md:items-end">
             <h1 className="flex-none text-8xl font-bold text-center px-2 mt-2 md:text-9xl md:pb-8">
-              Turbo
+              Mina
               <br />
               2048
             </h1>
@@ -120,29 +124,44 @@ export default function HomePage() {
               high scores, or take on the competition in Versus Mode on the
               Turbo Edge P2P network.
             </div> */}
-            <div className="flex flex-row w-full space-x-2">
+            <div>
               {!isMobile.isMobileByUserAgent ? (
                 <>
-                  <Button onClick={handleSingleplayer}>
-                    <div className="text-left flex flex-row items-center hover:text-text">
-                      <SinglePlayer size={28} />
-                      <div>
-                        <div className="ml-2 text-[clamp(1rem, 2.5vw, 2rem)]">
-                          Singleplayer
+                  <div className="flex flex-row w-full space-x-2">
+                    <Button onClick={handleSingleplayer}>
+                      <div className="text-left flex flex-row items-center hover:text-text">
+                        <SinglePlayer size={28} />
+                        <div>
+                          <div className="ml-2 text-[clamp(1rem, 2.5vw, 2rem)]">
+                            Singleplayer
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Button>
-                  <Button onClick={handleVersus}>
-                    <div className="flex flex-row items-center hover:text-text">
-                      <Versus size={28} />
-                      <div className="text-left">
-                        <div className="text-[clamp(1rem, 2.5vw, 2rem)]">
-                          Versus
+                    </Button>
+                    <Button onClick={handleVersus}>
+                      <div className="flex flex-row items-center hover:text-text">
+                        <Versus size={28} />
+                        <div className="text-left">
+                          <div className="text-[clamp(1rem, 2.5vw, 2rem)]">
+                            Versus
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Button>
+                    </Button>
+                  </div>
+
+                  <div className="flex flex-row w-full space-x-2 mt-2">
+                    <Button onClick={() => setLeaderboardOpen(true)}>
+                      <div className="text-left flex flex-row items-center hover:text-text">
+                        <SinglePlayer size={28} />
+                        <div>
+                          <div className="ml-2 text-[clamp(1rem, 2.5vw, 2rem)]">
+                            Leaderboard
+                          </div>
+                        </div>
+                      </div>
+                    </Button>
+                  </div>
                 </>
               ) : (
                 <div className="space-y-4 text-center">

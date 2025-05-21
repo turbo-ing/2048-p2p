@@ -19,7 +19,9 @@ export const gridsAreEqual = (grid1: Grid, grid2: Grid): boolean => {
  * Checks if the grid contains a tile with value 2048.
  */
 export const hasWon = (grid: Grid): boolean => {
-  return grid.some((row) => row.some((tile) => tile?.value === 2048));
+  return grid.some((row) =>
+    row.some((tile) => tile?.value && tile?.value >= 2048),
+  );
 };
 
 /**
@@ -65,4 +67,8 @@ export const getGameState = (grid: Grid): "WON" | "LOST" | "RUNNING" => {
   if (hasWon(grid)) return "WON";
   if (!hasValidMoves(grid)) return "LOST";
   return "RUNNING";
+};
+
+export const shortAddress = (address: string): string => {
+  return address.slice(0, 6) + "..." + address.slice(-6);
 };

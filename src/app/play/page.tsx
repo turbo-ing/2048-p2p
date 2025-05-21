@@ -228,6 +228,8 @@ export default function Game2048Page() {
     zkClient?.setDispatch(dispatch);
   }, [connected, dispatch, zkClient]);
 
+  const [isForceSubmit, setIsForceSubmit] = useState<boolean>(false);
+
   if (!state || state.playersCount < 1) return router.push("/");
 
   return (
@@ -238,7 +240,10 @@ export default function Game2048Page() {
           isShowButton={true}
           onClick={() => (window.location.href = "/")}
         /> */}
-      <LeaveGameModal />
+      <LeaveGameModal
+        isSinglePlayer={state.playersCount === 1}
+        setIsForceSubmit={setIsForceSubmit}
+      />
       <main className="w-full h-full text-4xl transition-opacity duration-1000">
         <div className="h-full">
           <div className="max-w-7xl mx-auto lg:px-8">
@@ -276,6 +281,9 @@ export default function Game2048Page() {
                         width={80}
                         lenQueue={zkClient.moveCache.length}
                         clock={state.timer - counter}
+                        peerId={peerId!}
+                        isForceSubmit={isForceSubmit}
+                        setIsForceSubmit={setIsForceSubmit}
                       />
                     </div>
                   </div>
@@ -313,6 +321,9 @@ export default function Game2048Page() {
                                   totalPlayers={state.totalPlayers}
                                   width={40}
                                   clock={state.timer - counter}
+                                  peerId={peerId!}
+                                  isForceSubmit={false}
+                                  setIsForceSubmit={() => {}}
                                 />
                               </div>
                             ),

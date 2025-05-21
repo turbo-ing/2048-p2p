@@ -19,3 +19,17 @@ export enum Direction {
 
 export type ArrowKeyType = keyof typeof ArrowKey;
 export type DirectionType = keyof typeof Direction;
+
+export type LeaderboardScore = {
+  address: string;
+  totalScore: number;
+  maxScore: number;
+  maxTile: number;
+  playCount: number;
+  rank: number;
+};
+
+export type Leaderboard = {
+  myself?: LeaderboardScore;
+  scores: LeaderboardScore[];
+};

@@ -1,0 +1,22 @@
+{
+  "name": "mina",
+  "packageManager": "yarn@4.6.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "deploy-score-2048": "tsc && node build/src/scripts/deploy-score-2048.js",
+    "fetch-score": "tsc && node build/src/scripts/fetch-score.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "module-alias": "^2.2.3",
+    "o1js": "^2.4.0",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "@types/module-alias": "^2"
+  },
+  "_moduleAliases": {
+    "@": "./build/src"
+  }
+}

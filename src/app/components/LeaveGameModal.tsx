@@ -5,12 +5,25 @@ import Button from "./Button";
 import Link from "next/link";
 import { use2048 } from "@/reducer/2048";
 
-export default function LeaveGameModal() {
+export default function LeaveGameModal({
+  isSinglePlayer,
+  setIsForceSubmit,
+}: {
+  isSinglePlayer: boolean;
+  setIsForceSubmit: (isForceSubmit: boolean) => void;
+}) {
   const [state, dispatch, connected, room, setRoom, zkClient] = use2048();
   const [exitModalOpen, setExitModalOpen] = useState<boolean>(false);
 
   const handleLeave = () => {
-    setRoom("");
+    if (!isSinglePlayer) {
+      dispatch({
+        type: "LEAVE",
+      });
+    } else {
+      setIsForceSubmit(true);
+    }
+    // setRoom("");
   };
 
   return (
@@ -31,9 +44,9 @@ export default function LeaveGameModal() {
             <Button variant="inverted" onClick={() => setExitModalOpen(false)}>
               Cancel
             </Button>
-            <Link href="/" passHref className="w-full">
+            <div className="w-full">
               <Button onClick={handleLeave}>Leave</Button>
-            </Link>
+            </div>
           </div>
         </div>
       </Modal>

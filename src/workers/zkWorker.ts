@@ -42,9 +42,21 @@
 //   44 |
 
 import * as Comlink from "comlink";
-import { Field, Proof } from "o1js";
+import {
+  AccountUpdate,
+  fetchAccount,
+  Field,
+  Mina,
+  PrivateKey,
+  Proof,
+  PublicKey,
+  Signature,
+} from "o1js";
 
-import { Game2048ZKProgram } from "@/lib/game2048ZKProgram";
+import {
+  Game2048ZKProgram,
+  Game2048ZKProgramProof,
+} from "@/lib/game2048ZKProgram";
 import {
   Direction,
   GameBoard,
@@ -53,30 +65,44 @@ import {
   printBoard,
 } from "@/lib/game2048ZKLogic";
 import { DirectionMap, MoveType } from "@/utils/constants";
+import { Score2048 } from "@/app/mina/contracts/Score2048";
+import { LeaderboardScore } from "@/utils/types.ts";
 
-let proofCache: Proof<GameBoardWithSeed, void> | null = null;
+const SCORE_2048_ADDRESS =
+  "B62qpKD5UKqYG4fNmYioioK6Lh2o3q1TqrvMeiKqwedcxr5AMhdmFw1";
+
+let proofCache: Game2048ZKProgramProof | null = null;
+let sessionPrivateKey: PrivateKey | null = null;
+let score2048: Score2048 | null = null;
+
+let zkProgramCompiling = false;
+let contractsLoading = false;
 
 export const zkWorkerAPI = {
-  async compileZKProgram() {
-    const result = await Game2048ZKProgram.compile();
-    console.log("Compiled ZK program");
-    return result;
+  async setActiveNetwork(network: string) {
+    const Network = Mina.Network(network);
+    console.log("Network instance configured", network);
+    Mina.setActiveInstance(Network);
   },
 
   async initZKProof(
     boardNums: Number[],
     seedNum: bigint,
+    sessionPrivateKeyBase58: string,
   ): Promise<[Proof<GameBoardWithSeed, void>, string]> {
     console.log("[Worker] Initializing ZK proof", boardNums, seedNum);
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
     const zkBoard = new GameBoard(boardFields);
     const seed = Field(seedNum);
+    sessionPrivateKey = PrivateKey.fromBase58(sessionPrivateKeyBase58);
+    const sessionKey = sessionPrivateKey.toPublicKey();
 
     printBoard(zkBoard);
 
     const zkBoardWithSeed = new GameBoardWithSeed({
       board: zkBoard,
       seed,
+      sessionKey,
     });
 
     const result = await Game2048ZKProgram.initialize(zkBoardWithSeed);
@@ -89,6 +115,7 @@ export const zkWorkerAPI = {
   async generateZKProof(
     zkBoard: GameBoardWithSeed,
     moves: string[],
+    signature: Signature,
   ): Promise<[Proof<GameBoardWithSeed, void>, string]> {
     console.log("[generateZKProof] peerId");
     if (!proofCache) {
@@ -110,6 +137,7 @@ export const zkWorkerAPI = {
       zkBoard,
       proofCache,
       directions,
+      signature,
     );
 
     // Update the proof cache
@@ -124,15 +152,161 @@ export const zkWorkerAPI = {
     seedNum: bigint,
     moves: string[],
   ): Promise<[Proof<GameBoardWithSeed, void>, string]> {
+    if (!proofCache || !sessionPrivateKey) {
+      throw new Error("Proof cache is not initialized");
+    }
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
     const zkBoard = new GameBoard(boardFields);
     const seed = Field(seedNum);
     const zkBoardWithSeed = new GameBoardWithSeed({
       board: zkBoard,
       seed,
+      sessionKey: sessionPrivateKey.toPublicKey(),
     });
 
-    return this.generateZKProof(zkBoardWithSeed, moves);
+    const signature = Signature.create(sessionPrivateKey, [
+      seed,
+      ...proofCache.publicInput.board.cells,
+      ...moves.map((move) => Field(DirectionMap[move as MoveType] ?? 0)),
+    ]);
+
+    return this.generateZKProof(zkBoardWithSeed, moves, signature);
+  },
+
+  async fetchAccount(publicKey58: string) {
+    const publicKey = PublicKey.fromBase58(publicKey58);
+    const account = await fetchAccount({ publicKey });
+    return {
+      error: account.error,
+      balance: account.account?.balance.toBigInt() ?? 0n,
+    };
+  },
+
+  async fetch2048Score(publicKey58: string) {
+    // const publicKey = PublicKey.fromBase58(publicKey58);
+    // const account = await fetchAccount({
+    //   publicKey,
+    //   tokenId: score2048!.deriveTokenId(),
+    // });
+    return {
+      error: null,
+      balance: 0n,
+    };
+  },
+
+  async loadContracts() {
+    if (contractsLoading) return;
+    contractsLoading = true;
+
+    console.log("Score 2048 address", SCORE_2048_ADDRESS);
+
+    const result = await Game2048ZKProgram.compile();
+    console.log("Compiled ZK program");
+
+    const { Score2048 } = await import("../app/mina/contracts/Score2048.ts");
+    await Score2048.compile();
+    score2048 = new Score2048(PublicKey.fromBase58(SCORE_2048_ADDRESS));
+
+    return result;
+  },
+
+  async submitScore(publicKey58: string) {
+    if (!sessionPrivateKey) {
+      throw new Error("Session private key is not initialized");
+    }
+
+    if (!proofCache) {
+      throw new Error("Proof cache is not initialized");
+    }
+
+    const publicKey = PublicKey.fromBase58(publicKey58);
+
+    const signature = Signature.create(sessionPrivateKey!, [
+      proofCache.publicInput.seed,
+      ...proofCache.publicInput.board.cells,
+      ...publicKey.toFields(),
+    ]);
+
+    const tx = await Mina.transaction(async () => {
+      await score2048!.submit(proofCache!, publicKey, signature);
+    });
+
+    console.log("Generating proof for submitting score");
+
+    await tx.prove();
+
+    console.log("Proof generated... submitting score");
+
+    return tx.toJSON();
+  },
+
+  async fetchLeaderboard() {
+    const Network = Mina.Network({
+      mina: "https://api.minascan.io/node/devnet/v1/graphql",
+      archive: "https://api.minascan.io/archive/devnet/v1/graphql",
+    });
+    Mina.setActiveInstance(Network);
+
+    const score2048 = new Score2048(PublicKey.fromBase58(SCORE_2048_ADDRESS));
+
+    // Fetch all events for a given address
+    const fetchedEvents = await score2048.fetchEvents();
+
+    const leaderboardMap: { [address: string]: LeaderboardScore } = {};
+
+    for (const event of fetchedEvents) {
+      const { to, score, maxTile } = event.event.data as unknown as {
+        to: PublicKey;
+        score: Field;
+        maxTile: Field;
+      };
+
+      if (!leaderboardMap[to.toBase58()]) {
+        leaderboardMap[to.toBase58()] = {
+          address: to.toBase58(),
+          totalScore: 0,
+          maxScore: 0,
+          maxTile: 0,
+          playCount: 0,
+          rank: 0,
+        };
+      }
+
+      const oldLeaderboardScore = leaderboardMap[to.toBase58()];
+      leaderboardMap[to.toBase58()] = {
+        address: to.toBase58(),
+        totalScore: oldLeaderboardScore.totalScore + Number(score.toBigInt()),
+        maxScore: Math.max(
+          oldLeaderboardScore.totalScore,
+          Number(score.toBigInt()),
+        ),
+        maxTile: Math.max(
+          oldLeaderboardScore.maxTile,
+          Number(maxTile.toBigInt()),
+        ),
+        playCount: oldLeaderboardScore.playCount + 1,
+        rank: 0,
+      };
+    }
+
+    const scores = Object.values(leaderboardMap).sort((a, b) => {
+      if (a.totalScore !== b.totalScore) {
+        return b.totalScore - a.totalScore;
+      }
+      if (a.maxScore !== b.maxScore) {
+        return b.maxScore - a.maxScore;
+      }
+      if (a.maxTile !== b.maxTile) {
+        return b.maxTile - a.maxTile;
+      }
+      return b.playCount - a.playCount;
+    });
+
+    for (let i = 0; i < scores.length; i++) {
+      scores[i].rank = i + 1;
+    }
+
+    return scores;
   },
 };
 

@@ -3,15 +3,26 @@
 import { createContext, useContext, useMemo } from "react";
 import { PrivateKey } from "o1js";
 
-const loadOrGenerateKey = () => {
-  const storedKey = sessionStorage.getItem("MINA_SESSION_KEY");
-  if (storedKey) {
-    return PrivateKey.fromBase58(storedKey);
-  } else {
-    const newKey = PrivateKey.random();
-    sessionStorage.setItem("MINA_SESSION_KEY", newKey.toBase58());
-    return newKey;
+let sessionKey: PrivateKey;
+
+export const minaSessionKey = () => {
+  if (sessionKey) {
+    return sessionKey;
   }
+
+  if (typeof window === "undefined") {
+    sessionKey = PrivateKey.random();
+    return sessionKey;
+  }
+
+  const storedKey = window.sessionStorage.getItem("MINA_SESSION_KEY");
+  if (storedKey) {
+    sessionKey = PrivateKey.fromBase58(storedKey);
+  } else {
+    sessionKey = PrivateKey.random();
+    window.sessionStorage.setItem("MINA_SESSION_KEY", sessionKey.toBase58());
+  }
+  return sessionKey;
 };
 
 const MinaSessionKeyContext = createContext<{
@@ -35,7 +46,7 @@ export function MinaSessionKeyProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const sessionKey = useMemo<PrivateKey>(() => loadOrGenerateKey(), []);
+  const sessionKey = useMemo<PrivateKey>(() => minaSessionKey(), []);
 
   return (
     <MinaSessionKeyContext.Provider value={{ sessionKey }}>
