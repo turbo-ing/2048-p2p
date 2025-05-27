@@ -9,6 +9,8 @@ export interface MultiplayerContextProps {
   setGameTimerInput: (value: string) => void;
   roomIdInput: string;
   setRoomIdInput: (value: string) => void;
+  minaAmount: string;
+  setMinaAmount: (value: string) => void;
   onCreateNewGame: () => void;
   onJoinGame: () => void;
   onCopyRoomCode: () => void;

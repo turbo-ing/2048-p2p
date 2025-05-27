@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Button from "../Button";
 import CreateRoom from "../icon/CreateRoom";
 import JoinRoom from "../icon/JoinRoom";
@@ -42,6 +43,13 @@ export const CreateRoomContent = () => {
     onCreateNewGame,
   } = useMultiplayerContext();
 
+  // Force 2 players
+  useEffect(() => {
+    if (numOfPlayers !== "2") {
+      setNumOfPlayers("2");
+    }
+  }, [numOfPlayers, setNumOfPlayers]);
+
   return (
     <div>
       <div className="">
@@ -63,6 +71,7 @@ export const CreateRoomContent = () => {
         id={"number-of-players"}
         type="number"
         min={1}
+        disabled
       />
       <Input
         labelText={"Time Limit"}

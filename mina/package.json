@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "deploy-score-2048": "tsc && node build/src/scripts/deploy-score-2048.js",
+    "deploy-deposit-2048": "tsc && node build/src/scripts/deploy-deposit-2048.js",
     "fetch-score": "tsc && node build/src/scripts/fetch-score.js"
   },
   "dependencies": {

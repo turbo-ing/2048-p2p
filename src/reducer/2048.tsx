@@ -58,6 +58,9 @@ export type Game2048State = {
   actionDirection?: MoveType;
   rematch: { [playerId: string]: boolean };
   timer: number;
+
+  minaAmount: number;
+  minaDeposit: string;
 };
 
 // Constants for grid size and initial tiles
@@ -77,6 +80,15 @@ interface JoinAction extends EdgeAction<Game2048State> {
     zkBoard: GameBoardWithSeed;
     minaSessionKey: string;
     numPlayers?: number;
+    minaAmount?: number;
+  };
+}
+
+interface DepositAction extends EdgeAction<Game2048State> {
+  type: "DEPOSIT";
+  payload: {
+    playerId: string;
+    minaAmount: number;
   };
 }
 
@@ -716,6 +728,9 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     rematch: {},
     timer: 0,
     minaSessionKeys: PublicKey.empty(),
+
+    minaAmount: 0,
+    minaDeposit: "",
   };
   const [room, setRoom] = useState("");
 

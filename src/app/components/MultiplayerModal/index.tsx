@@ -38,6 +38,7 @@ export default function MultiplayerModal({
   const [gameTimerInput, setGameTimerInput] = useState<string>("");
   const [numOfPlayers, setNumOfPlayers] = useState<string>("");
   const [roomIdInput, setRoomIdInput] = useState<string>("");
+  const [minaAmount, setMinaAmount] = useState<string>("");
 
   const handleJoining = (loading: boolean) => {
     if (loading) {
@@ -90,6 +91,8 @@ export default function MultiplayerModal({
       setGameTimerInput={setGameTimerInput}
       roomIdInput={roomIdInput}
       setRoomIdInput={setRoomIdInput}
+      minaAmount={minaAmount}
+      setMinaAmount={setMinaAmount}
       onCreateNewGame={newGame}
       onJoinGame={joinGame}
       onCopyRoomCode={() => navigator.clipboard.writeText(roomId)}

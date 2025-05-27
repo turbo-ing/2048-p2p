@@ -11,6 +11,7 @@ type InputProps<T extends string | number> = {
   min?: number; // for numeric inputs
   max?: number; // for numeric inputs
   step?: number; // for numeric inputs
+  disabled?: boolean;
 };
 
 const Input = <T extends string | number>({
@@ -24,6 +25,7 @@ const Input = <T extends string | number>({
   min,
   max,
   step,
+  disabled,
 }: InputProps<T>): JSX.Element => {
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,6 +69,7 @@ const Input = <T extends string | number>({
         value={value === "" ? "" : String(value)}
         onChange={handleChange}
         {...(type === "number" && { min, max, step })}
+        disabled={disabled}
       />
       {children}
     </div>
