@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { useRouter } from "next/navigation";
 
 import Game2048 from "@/app/components/2048Game";
@@ -14,9 +13,19 @@ import LeaveGameModal from "../components/LeaveGameModal";
 
 export default function Game2048Page() {
   const router = useRouter();
-  const [state, dispatch, connected, , , zkClient] = use2048();
+  const [
+    state,
+    dispatch,
+    rtc,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    getRooms,
+    rtcConfig,
+    rtcPeers,
+    zkClient,
+  ] = use2048();
   const isMobile = useIsMobile();
-  const turboEdge = useTurboEdgeV0();
   const peerId = turboEdge?.node.peerId.toString();
   const [ranking, setRanking] = useState<Player[]>([]);
   const [lenQueue, setLenQueue] = useState<number>(0);

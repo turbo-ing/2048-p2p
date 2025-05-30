@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { use2048, initBoardWithSeed } from "@/reducer/2048";
-import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { useMinaSessionKey } from "../mina/MinaSessionKeyProvider";
 import { PublicKey } from "o1js";
 
@@ -13,9 +12,20 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
   );
   const [gameTimer, setGameTimer] = useState(0);
   const [gameStarted, setGameStarted] = useState(false); // New state to prevent re-runs
-  const [state, dispatch, connected, room, setRoom] = use2048();
-  const turboEdge = useTurboEdgeV0();
-  const turboEdgeConnected = turboEdge?.connected ?? false;
+  const [
+    state,
+    dispatch,
+    rtc,
+    createRoom, //joinRoom,
+    ,
+    leaveRoom,
+    getRooms,
+    rtcConfig,
+    rtcPeers,
+    zkClient,
+  ] = use2048();
+
+  const connected = (rtc && true) ?? false;
 
   const { sessionKey } = useMinaSessionKey();
 
@@ -31,7 +41,6 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
       room,
       state,
       connected,
-      turboEdgeConnected,
     });
   }, []);
 
@@ -77,7 +86,6 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     console.log("Checking game start conditions: ", {
       isSinglePlayer,
       allPlayersReady,
-      turboEdgeConnected,
       connected,
     });
 
@@ -88,7 +96,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
       state.playersCount,
     );
 
-    if (allPlayersReady && turboEdgeConnected && connected) {
+    if (allPlayersReady && connected) {
       console.log("All players are ready, starting game...");
 
       if (!isSinglePlayer && gameTimer && gameTimer > 0 && !sentTimer) {
@@ -118,7 +126,6 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     room,
     state.totalPlayers,
     state.playersCount,
-    turboEdgeConnected,
     connected,
     gameTimer,
     sentTimer,

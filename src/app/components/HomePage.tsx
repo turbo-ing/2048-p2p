@@ -4,7 +4,6 @@ import ResponsiveContainer from "./ResponsiveContainer";
 import { use2048, generateRoomCode } from "@/reducer/2048";
 import MultiplayerModal from "./MultiplayerModal";
 import Mock2048 from "./Mock2048";
-import { TurboEdgeContext, useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { zkClient, ZkClient } from "@/workers/zkClient";
 import { assignMyPeerId } from "@/workers/zkQueue";
 import { useRouter } from "next/navigation";
@@ -20,11 +19,21 @@ import LeaderboardModal from "./LeaderboardModal";
 const LazyMock2048 = React.lazy(() => import("./Mock2048"));
 
 export default function HomePage() {
-  const [state, dispatch, connected, room, setRoom] = use2048();
+  const [
+    state,
+    dispatch,
+    rtc,
+    createRoom,
+    ,
+    leaveRoom,
+    getRooms,
+    rtcConfig,
+    rtcPeers,
+    zkClient,
+  ] = use2048();
   const isMobile = useIsMobile();
 
-  const turboEdge = useTurboEdgeV0();
-  const peerId = turboEdge?.node.peerId.toString();
+  const peerId = rtcConfig?.peer.peerIdString;
 
   const [gameTimerInput, setGameTimerInput] = useState(0);
   const [sentTimer, setSentTimer] = useState(false);
@@ -41,25 +50,18 @@ export default function HomePage() {
     }
   };
 
-  const joinRoom = useJoin(handleJoin);
-
-  // Assign the peer ID once we have a turboEdge instance
-  useEffect(() => {
-    if (turboEdge) {
-      assignMyPeerId(turboEdge.node.peerId.toString());
-    }
-  }, [turboEdge]);
+  const joinRoom2 = useJoin(handleJoin);
 
   // Set the reducer's dispatch into the ZK client once connected
   useEffect(() => {
-    if (connected) {
+    if (rtc) {
       zkClient?.setDispatch(dispatch);
     }
-  }, [connected, dispatch]);
+  }, [rtc, dispatch]);
 
   const handleSingleplayer = () => {
     setIsLoading(true);
-    joinRoom("solomode-" + generateRoomCode(), "Solo", 1);
+    joinRoom2("solomode-" + generateRoomCode(), "Solo", 1);
   };
 
   const handleVersus = () => {
@@ -81,7 +83,7 @@ export default function HomePage() {
         </div>
       )}
 
-      <TurboEdgeNotification connected={turboEdge?.connected || false} />
+      <TurboEdgeNotification connected={(rtc && true) || false} />
 
       <MultiplayerModal
         isOpen={isModalOpen}

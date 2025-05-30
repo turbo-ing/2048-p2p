@@ -1,11 +1,19 @@
 "use client";
 
-import { EdgeAction, useEdgeReducerV0 } from "@turbo-ing/edge-v0";
+import {
+  EdgeAction,
+  InputConfig,
+  RTC,
+  RTCServerConfig,
+  useEdgeReducerV0,
+} from "@turbo-ing/turbo-p2p-react";
+import { Group, Config } from "@turbo-ing/turbo-p2p";
 import {
   createContext,
   Dispatch,
   SetStateAction,
   useContext,
+  useEffect,
   useState,
 } from "react";
 import { Bool, Field, PublicKey, UInt64 } from "o1js";
@@ -703,9 +711,13 @@ const Game2048Context = createContext<
   | [
       Game2048State,
       Dispatch<Action>,
-      boolean,
-      string,
-      Dispatch<SetStateAction<string>>,
+      RTC | null,
+      (inputConfig: InputConfig) => Promise<void>,
+      (group: Group) => Promise<void>,
+      () => void,
+      (topic: string, code?: string) => Promise<Group[]>,
+      Config,
+      string[],
       ZkClient,
     ]
   | null
@@ -734,17 +746,53 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
   };
   const [room, setRoom] = useState("");
 
-  const [state, dispatch, connected] = useEdgeReducerV0(
+  let serverConfig: RTCServerConfig = {
+    httpUrl: "https://rtc-server.turbo.ing:443",
+    wsUrl: "wss://rtc-server-ws.turbo.ing:443",
+  };
+
+  const [
+    state,
+    dispatch,
+    rawDispatch,
+    initialized,
+    rtc,
+    init,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    getRooms,
+    rtcConfig,
+    rtcPeers,
+  ] = useEdgeReducerV0(
     game2048Reducer,
     initialState,
     {
-      topic: room ? `turbo-game2048-${room}` : "",
+      topic: "game2048",
     },
+    serverConfig,
   );
+
+  // Initialize game and track peer changes
+  useEffect(() => {
+    init();
+    //rawDispatch({ type: 'INIT_LOCAL_PLAYER', payload: { peerId: rtcConfig.peer.peerIdString } });
+  }, [initialized]);
 
   return (
     <Game2048Context.Provider
-      value={[state, dispatch, connected, room, setRoom, zkClient]}
+      value={[
+        state,
+        dispatch,
+        rtc,
+        createRoom,
+        joinRoom,
+        leaveRoom,
+        getRooms,
+        rtcConfig,
+        rtcPeers,
+        zkClient,
+      ]}
     >
       {children}
     </Game2048Context.Provider>

@@ -19,6 +19,8 @@
     "@noble/secp256k1": "^2.1.0",
     "@reduxjs/toolkit": "^2.2.7",
     "@turbo-ing/edge-v0": "^0.3.4",
+    "@turbo-ing/turbo-p2p": "^0.7.10",
+    "@turbo-ing/turbo-p2p-react": "^1.0.1",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",
     "classnames": "^2.5.1",
