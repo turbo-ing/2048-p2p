@@ -26,7 +26,7 @@ export default function Game2048Page() {
     zkClient,
   ] = use2048();
   const isMobile = useIsMobile();
-  const peerId = turboEdge?.node.peerId.toString();
+  const peerId = rtcConfig?.peer.peerIdString;
   const [ranking, setRanking] = useState<Player[]>([]);
   const [lenQueue, setLenQueue] = useState<number>(0);
   const [triggered, setTriggered] = useState<boolean>(false);
@@ -211,7 +211,7 @@ export default function Game2048Page() {
       setAllFinished(false);
       timeCounter.current = 0;
       //only call it once
-      if (!reset && connected) {
+      if (!reset && rtc) {
         dispatch({
           type: "RESET",
         });
@@ -233,9 +233,9 @@ export default function Game2048Page() {
   }, [state]);
 
   useEffect(() => {
-    if (!connected) return;
+    if (!rtc) return;
     zkClient?.setDispatch(dispatch);
-  }, [connected, dispatch, zkClient]);
+  }, [rtc, dispatch, zkClient]);
 
   const [isForceSubmit, setIsForceSubmit] = useState<boolean>(false);
 

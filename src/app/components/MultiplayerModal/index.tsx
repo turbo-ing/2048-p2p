@@ -10,6 +10,7 @@ import {
 } from "./Content";
 import { useJoin } from "@/app/hooks/useJoin";
 import { useRouter } from "next/router";
+import { Group, LobbyType } from "@turbo-ing/turbo-p2p";
 
 interface MultiplayerModalProps {
   isOpen: boolean;
@@ -29,7 +30,18 @@ export default function MultiplayerModal({
   onClose,
   pushPlay,
 }: MultiplayerModalProps) {
-  const [state, dispatch, connected, roomId, setRoomId, zkClient] = use2048();
+  const [
+    state,
+    dispatch,
+    rtc,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    getRooms,
+    rtcConfig,
+    rtcPeers,
+    zkClient,
+  ] = use2048();
   const [selectedMode, setSelectedMode] = useState<SelectedMode>(
     SelectedMode.INVITE_CHOICE,
   );
@@ -46,7 +58,7 @@ export default function MultiplayerModal({
     }
   };
 
-  const joinRoom = useJoin(handleJoining);
+  const startJoin = useJoin(handleJoining);
 
   useEffect(() => {
     if (!isOpen) {
@@ -66,14 +78,29 @@ export default function MultiplayerModal({
 
   const createNewRoom = () => setSelectedMode(SelectedMode.CREATE_ROOM);
   const setJoinRoom = () => setSelectedMode(SelectedMode.JOIN_ROOM);
-  const joinGame = () => {
-    joinRoom(roomIdInput, nameInput);
+  const joinGame = async (group: Group) => {
+    await joinRoom(group);
+    //wait 50 ms
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    startJoin(rtcConfig.session?.code ?? "", nameInput);
     setSelectedMode(SelectedMode.SHOW_ROOM_CODE);
   };
-  const newGame = () => {
-    const room = generateRoomCode();
-    joinRoom(
-      room,
+  const newGame = async () => {
+    await createRoom({
+      general: {
+        public: true,
+        gamespace: "game",
+        type: LobbyType.complete,
+        capacity: parseInt(numOfPlayers),
+      },
+      channel: {
+        game: {},
+      },
+      stream: {},
+    });
+    const room = rtcConfig.session?.code;
+    startJoin(
+      room ?? "",
       nameInput,
       parseInt(numOfPlayers) ?? 1,
       parseInt(gameTimerInput) ?? 0,
@@ -95,10 +122,12 @@ export default function MultiplayerModal({
       setMinaAmount={setMinaAmount}
       onCreateNewGame={newGame}
       onJoinGame={joinGame}
-      onCopyRoomCode={() => navigator.clipboard.writeText(roomId)}
+      onCopyRoomCode={() =>
+        navigator.clipboard.writeText(rtcConfig?.session?.code ?? "")
+      }
       onLeaveRoom={onClose}
       state={state}
-      roomId={roomId}
+      roomId={rtcConfig?.session?.code ?? ""}
       createNewRoom={createNewRoom}
       joinRoom={setJoinRoom}
     >

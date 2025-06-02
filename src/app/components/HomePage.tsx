@@ -11,10 +11,11 @@ import SinglePlayer from "./icon/Singleplayer";
 import Versus from "./icon/Versus";
 import TurboEdgeNotification from "./TurboEdgeNotifcation";
 import useIsMobile from "../hooks/useIsMobile";
-import { useJoin } from "../hooks/useJoin";
+//import { useJoin } from "../hooks/useJoin";
 import React from "react";
 import Navbar from "./Navbar";
 import LeaderboardModal from "./LeaderboardModal";
+import { useJoin } from "../hooks/useJoin";
 
 const LazyMock2048 = React.lazy(() => import("./Mock2048"));
 
@@ -24,7 +25,7 @@ export default function HomePage() {
     dispatch,
     rtc,
     createRoom,
-    ,
+    joinRoom,
     leaveRoom,
     getRooms,
     rtcConfig,
@@ -50,7 +51,7 @@ export default function HomePage() {
     }
   };
 
-  const joinRoom2 = useJoin(handleJoin);
+  const joinSingleplayer = useJoin(handleJoin);
 
   // Set the reducer's dispatch into the ZK client once connected
   useEffect(() => {
@@ -61,7 +62,7 @@ export default function HomePage() {
 
   const handleSingleplayer = () => {
     setIsLoading(true);
-    joinRoom2("solomode-" + generateRoomCode(), "Solo", 1);
+    joinSingleplayer("solomode-" + generateRoomCode(), "Solo", 1);
   };
 
   const handleVersus = () => {

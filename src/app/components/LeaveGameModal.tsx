@@ -12,7 +12,18 @@ export default function LeaveGameModal({
   isSinglePlayer: boolean;
   setIsForceSubmit: (isForceSubmit: boolean) => void;
 }) {
-  const [state, dispatch, connected, room, setRoom, zkClient] = use2048();
+  const [
+    state,
+    dispatch,
+    rtc,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    getRooms,
+    rtcConfig,
+    rtcPeers,
+    zkClient,
+  ] = use2048();
   const [exitModalOpen, setExitModalOpen] = useState<boolean>(false);
 
   const handleLeave = () => {

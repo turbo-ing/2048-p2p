@@ -17,7 +17,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     dispatch,
     rtc,
     createRoom, //joinRoom,
-    ,
+    joinRoom,
     leaveRoom,
     getRooms,
     rtcConfig,
@@ -38,7 +38,6 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
       numberOfPlayers,
       gameTimer,
       gameStarted,
-      room,
       state,
       connected,
     });
@@ -79,7 +78,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
 
   // Game Start Logic (Single & Multiplayer)
   useEffect(() => {
-    const isSinglePlayer = room.startsWith("solomode-");
+    const isSinglePlayer = rtc?.peers.length === 0;
     const allPlayersReady =
       state.totalPlayers > 0 && state.totalPlayers === state.playersCount;
 
@@ -123,7 +122,6 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
       handleJoinGame(false);
     }
   }, [
-    room,
     state.totalPlayers,
     state.playersCount,
     connected,
@@ -134,7 +132,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
   ]);
 
   // Join Room Function
-  const joinRoom = (
+  const joinRoom2 = (
     roomId: string,
     playerName: string,
     numPlayers?: number,
@@ -151,12 +149,10 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     setWaitingToJoin(false);
     setSentTimer(false);
     setName("");
-    setRoom("");
     setGameTimer(0);
     setNumOfPlayers(undefined);
 
     // Set new game parameters
-    setRoom(roomId);
     setName(playerName);
     setNumOfPlayers(numPlayers);
     setGameTimer(timer ?? 0);
@@ -171,5 +167,5 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     });
   };
 
-  return joinRoom;
+  return joinRoom2;
 };

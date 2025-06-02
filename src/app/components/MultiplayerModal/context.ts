@@ -1,3 +1,4 @@
+import { Group } from "@turbo-ing/turbo-p2p";
 import { createContext, useContext } from "react";
 
 export interface MultiplayerContextProps {
@@ -12,7 +13,7 @@ export interface MultiplayerContextProps {
   minaAmount: string;
   setMinaAmount: (value: string) => void;
   onCreateNewGame: () => void;
-  onJoinGame: () => void;
+  onJoinGame: (group: Group) => void;
   onCopyRoomCode: () => void;
   onLeaveRoom: () => void;
   state: { playersCount: number; totalPlayers: number };

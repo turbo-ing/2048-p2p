@@ -747,8 +747,8 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
   const [room, setRoom] = useState("");
 
   let serverConfig: RTCServerConfig = {
-    httpUrl: "https://rtc-server.turbo.ing:443",
-    wsUrl: "wss://rtc-server-ws.turbo.ing:443",
+    httpUrl: "http://localhost:4001", //"https://rtc-server.turbo.ing:443",
+    wsUrl: "ws://localhost:4002", //"wss://rtc-server-ws.turbo.ing:443",
   };
 
   const [
