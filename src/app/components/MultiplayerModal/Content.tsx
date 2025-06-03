@@ -42,15 +42,32 @@ export const CreateRoomContent = () => {
     setNumOfPlayers,
     gameTimerInput,
     setGameTimerInput,
+    isPublic,
+    setIsPublic,
     onCreateNewGame,
   } = useMultiplayerContext();
 
-  // Force 2 players
+  // Set default value to 2 if empty
   useEffect(() => {
-    if (numOfPlayers !== "2") {
+    if (!numOfPlayers || numOfPlayers === "") {
       setNumOfPlayers("2");
     }
   }, [numOfPlayers, setNumOfPlayers]);
+
+  // Ensure numOfPlayers defaults to 2 if empty
+  const playerCount = parseInt(numOfPlayers) || 2;
+
+  const incrementPlayers = () => {
+    if (playerCount < 8) {
+      setNumOfPlayers((playerCount + 1).toString());
+    }
+  };
+
+  const decrementPlayers = () => {
+    if (playerCount > 2) {
+      setNumOfPlayers((playerCount - 1).toString());
+    }
+  };
 
   return (
     <div>
@@ -65,16 +82,30 @@ export const CreateRoomContent = () => {
         placeholder={"Enter your username"}
         id={"username"}
       />
-      <Input
-        labelText={"Number of players"}
-        value={numOfPlayers}
-        onChange={setNumOfPlayers}
-        placeholder={"Enter number of players"}
-        id={"number-of-players"}
-        type="number"
-        min={1}
-        disabled
-      />
+
+      <div className="mt-5 text-left">
+        <label className="text-sm font-medium">Number of players</label>
+        <div className="border border-text bg-transparent rounded-xl shadow text-md py-2.5 px-3.5 w-full mt-1.5 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={decrementPlayers}
+            disabled={playerCount <= 2}
+            className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 flex items-center justify-center text-sm font-bold transition-colors"
+          >
+            −
+          </button>
+          <span className="text-md font-medium">{playerCount}</span>
+          <button
+            type="button"
+            onClick={incrementPlayers}
+            disabled={playerCount >= 8}
+            className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 flex items-center justify-center text-sm font-bold transition-colors"
+          >
+            +
+          </button>
+        </div>
+      </div>
+
       <Input
         labelText={"Time Limit"}
         value={gameTimerInput}
@@ -87,8 +118,48 @@ export const CreateRoomContent = () => {
       <p className="text-sm text-left mt-1 text-muted-text">
         Leave blank for no limit.
       </p>
+
+      <div className="mt-5 text-left">
+        <label className="text-sm font-medium">Room Visibility</label>
+        <div className="mt-1.5">
+          <div className="relative bg-background rounded-xl p-1 flex">
+            <div
+              className={`absolute top-1 bottom-1 w-1/2 bg-bg-dark rounded-lg shadow-sm transition-transform duration-200 ease-in-out ${
+                isPublic ? "translate-x-0" : "translate-x-full"
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setIsPublic(true)}
+              className={`relative z-10 flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-colors ${
+                isPublic ? "text-background" : "text-gray-600"
+              }`}
+            >
+              Public
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPublic(false)}
+              className={`relative z-10 flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-colors ${
+                !isPublic ? "text-background" : "text-gray-600"
+              }`}
+            >
+              Private
+            </button>
+          </div>
+        </div>
+        <p className="text-sm text-left mt-1 text-muted-text">
+          {isPublic
+            ? "Public rooms appear in the room list for anyone to join."
+            : "Private rooms require the room code to join."}
+        </p>
+      </div>
+
       <div className="mt-8 space-y-2 text-white transition-all">
-        <Button onClick={onCreateNewGame} disabled={!nameInput.trim()}>
+        <Button
+          onClick={onCreateNewGame}
+          disabled={!nameInput || nameInput.length === 0}
+        >
           <JoinRoom />
           <p className="font text-base px-0.5">Create Room</p>
         </Button>
@@ -151,18 +222,18 @@ export const JoinRoomContent = () => {
     }
   };
 
-  const handleManualJoin = () => {
+  const handleManualJoin = async () => {
     // Find the room by ID
-    const targetRoom = availableRooms.find(
-      (room) =>
-        (room as any).id === roomIdInput.trim() ||
-        (room as any).config?.code === roomIdInput.trim(),
-    );
-    if (targetRoom) {
-      onJoinGame(targetRoom);
+    const targetRoom = await getRooms("mina2048", roomIdInput);
+    if (targetRoom.length > 0) {
+      console.log("Found room", targetRoom[0]);
+      onJoinGame(targetRoom[0]);
     } else {
       // If room not found in available rooms, we could try to join anyway
-      console.error("Room not found in available rooms");
+      console.error(
+        "Room " + roomIdInput + " not found in available rooms",
+        targetRoom,
+      );
     }
   };
 
@@ -196,25 +267,24 @@ export const JoinRoomContent = () => {
       />
 
       <div className="mt-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Available Rooms</h3>
-          <div className="flex gap-2">
-            <Button
-              onClick={fetchRooms}
-              disabled={loading}
-              variant="inverted"
-              className="px-3 py-1 text-sm"
-            >
-              {loading ? "..." : "Refresh"}
-            </Button>
-            <Button
-              onClick={() => setShowManualJoin(!showManualJoin)}
-              variant="inverted"
-              className="px-3 py-1 text-sm"
-            >
-              Manual Join
-            </Button>
-          </div>
+        <h3 className="text-lg font-semibold mb-3">Available Rooms</h3>
+
+        <div className="flex gap-2 mb-4">
+          <Button
+            onClick={fetchRooms}
+            disabled={loading}
+            variant="inverted"
+            className="px-3 py-1 text-sm"
+          >
+            {loading ? "..." : "Refresh"}
+          </Button>
+          <Button
+            onClick={() => setShowManualJoin(!showManualJoin)}
+            variant="inverted"
+            className="px-3 py-1 text-sm"
+          >
+            Join by Code
+          </Button>
         </div>
 
         {loading && (

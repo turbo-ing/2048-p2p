@@ -92,6 +92,20 @@ interface JoinAction extends EdgeAction<Game2048State> {
   };
 }
 
+interface WelcomeAction extends EdgeAction<Game2048State> {
+  type: "WELCOME";
+  payload: {
+    name: string;
+    grid: Grid;
+    zkBoard: GameBoardWithSeed;
+    minaSessionKey: string;
+    score: number;
+    isFinished: boolean;
+    surrendered: boolean;
+    totalPlayers: number;
+  };
+}
+
 interface DepositAction extends EdgeAction<Game2048State> {
   type: "DEPOSIT";
   payload: {
@@ -131,6 +145,7 @@ interface ResetAction extends EdgeAction<Game2048State> {
 export type Action =
   | MoveAction
   | JoinAction
+  | WelcomeAction
   | LeaveAction
   | SendProofAction
   | RematchAction
@@ -572,7 +587,7 @@ const game2048Reducer = (
           actionDirection: action.payload,
         };
       } else return { ...state };
-    case "JOIN": {
+    case "JOIN":
       console.log("Payload on JOIN", action.payload);
 
       // Re-create the board from the payload
@@ -627,7 +642,7 @@ const game2048Reducer = (
 
       console.log("Payload Board Session Key", payloadBoard.sessionKey);
 
-      // Queue the “init” move
+      // Queue the "init" move
       queueMove(action.peerId!, payloadBoard, "init");
 
       // Now return a brand-new state object
@@ -644,6 +659,77 @@ const game2048Reducer = (
         playersCount: newPlayersCount,
         totalPlayers: newNumPlayers,
         actionPeerId: action.peerId,
+        minaSessionKeys: newMinaSessionKeys,
+      };
+    case "WELCOME": {
+      console.log("Payload on WELCOME", action.payload);
+
+      // Skip if we already have this peer in our state
+      if (state.players[action.peerId!]) {
+        console.log(
+          `Skipping WELCOME from ${action.peerId} - already in state`,
+        );
+        return state;
+      }
+
+      // Re-create the board from the payload
+      const payloadBoard = new GameBoardWithSeed({
+        board: new GameBoard(action.payload.zkBoard.board.cells.map(Field)),
+        seed: Field.from(action.payload.zkBoard.seed),
+        sessionKey: PublicKey.fromBase58(action.payload.minaSessionKey),
+      });
+
+      // Create new copies of every sub-object rather than mutate old ones
+      const newBoard = { ...state.board };
+      const newPlayers = { ...state.players };
+      const newPlayerId = [...state.playerId];
+      const newZkBoard = { ...state.zkBoard };
+      const newScore = { ...state.score };
+      const newIsFinished = { ...state.isFinished };
+      const newSurrendered = { ...state.surrendered };
+      const newRematch = { ...state.rematch };
+      const newMinaSessionKeys = { ...state.minaSessionKeys };
+
+      // Add the existing player if not already present
+      let newPlayersCount = state.playersCount;
+      if (!newPlayerId.includes(action.peerId!)) {
+        newPlayersCount += 1;
+        newPlayers[action.peerId!] = action.payload.name;
+        newPlayerId.push(action.peerId!);
+      }
+
+      // Update total players from the welcome message
+      let newTotalPlayers = Math.max(
+        action.payload.totalPlayers,
+        state.totalPlayers,
+      );
+
+      // Assign the existing player's current state
+      newBoard[action.peerId!] = {
+        grid: action.payload.grid,
+        merges: [],
+      };
+      newZkBoard[action.peerId!] = payloadBoard;
+      newScore[action.peerId!] = action.payload.score;
+      newIsFinished[action.peerId!] = action.payload.isFinished;
+      newSurrendered[action.peerId!] = action.payload.surrendered;
+      newRematch[action.peerId!] = false; // Reset rematch for consistency
+      newMinaSessionKeys[action.peerId!] = PublicKey.fromBase58(
+        action.payload.minaSessionKey,
+      );
+
+      return {
+        ...state,
+        board: newBoard,
+        zkBoard: newZkBoard,
+        players: newPlayers,
+        playerId: newPlayerId,
+        score: newScore,
+        isFinished: newIsFinished,
+        surrendered: newSurrendered,
+        rematch: newRematch,
+        playersCount: newPlayersCount,
+        totalPlayers: newTotalPlayers,
         minaSessionKeys: newMinaSessionKeys,
       };
     }
@@ -778,6 +864,41 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     init();
     //rawDispatch({ type: 'INIT_LOCAL_PLAYER', payload: { peerId: rtcConfig.peer.peerIdString } });
   }, [initialized]);
+
+  // Handle WELCOME dispatch when new players join
+  useEffect(() => {
+    const currentPeerId = rtcConfig?.peer?.peerIdString;
+
+    // If we have an actionPeerId (someone just performed an action) and it's a different peer
+    // and we are an existing player, send a WELCOME message
+    if (
+      state.actionPeerId &&
+      currentPeerId &&
+      state.actionPeerId !== currentPeerId &&
+      state.players[currentPeerId] &&
+      state.players[state.actionPeerId] // The action peer is now in our player list (they joined)
+    ) {
+      // Small delay to ensure JOIN is fully processed
+      const timer = setTimeout(() => {
+        dispatch({
+          type: "WELCOME",
+          payload: {
+            name: state.players[currentPeerId],
+            grid: state.board[currentPeerId]?.grid || getEmptyGrid(),
+            zkBoard: state.zkBoard[currentPeerId],
+            minaSessionKey:
+              state.minaSessionKeys[currentPeerId]?.toBase58() || "",
+            score: state.score[currentPeerId] || 0,
+            isFinished: state.isFinished[currentPeerId] || false,
+            surrendered: state.surrendered[currentPeerId] || false,
+            totalPlayers: state.totalPlayers,
+          },
+        });
+      }, 200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [state.actionPeerId, state.players, rtcConfig?.peer?.peerIdString]);
 
   return (
     <Game2048Context.Provider

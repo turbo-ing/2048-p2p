@@ -69,6 +69,17 @@ export default function HomePage() {
     setModalOpen(true);
   };
 
+  //make sure that we leave room if we refresh
+  window.onbeforeunload = function () {
+    if (rtc) {
+      try {
+        leaveRoom();
+      } catch (e) {
+        console.log("Error leaving room - may not be in one");
+      }
+    }
+  };
+
   return (
     <>
       {isLoading && (
@@ -88,7 +99,14 @@ export default function HomePage() {
 
       <MultiplayerModal
         isOpen={isModalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          try {
+            leaveRoom();
+          } catch (e) {
+            console.log("Error leaving room - may not be in one");
+          }
+          setModalOpen(false);
+        }}
         pushPlay={() => handleJoin(true)}
       />
 

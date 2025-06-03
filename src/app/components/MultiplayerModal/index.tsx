@@ -10,6 +10,7 @@ import {
 } from "./Content";
 import { useJoin } from "@/app/hooks/useJoin";
 import { useRouter } from "next/router";
+import { InputConfig } from "@turbo-ing/turbo-p2p";
 import { Group, LobbyType } from "@turbo-ing/turbo-p2p";
 
 interface MultiplayerModalProps {
@@ -51,6 +52,7 @@ export default function MultiplayerModal({
   const [numOfPlayers, setNumOfPlayers] = useState<string>("");
   const [roomIdInput, setRoomIdInput] = useState<string>("");
   const [minaAmount, setMinaAmount] = useState<string>("");
+  const [isPublic, setIsPublic] = useState<boolean>(true);
 
   const handleJoining = (loading: boolean) => {
     if (loading) {
@@ -67,6 +69,7 @@ export default function MultiplayerModal({
       setGameTimerInput("");
       setNumOfPlayers("");
       setRoomIdInput("");
+      setIsPublic(true);
       // if (connected) {
       //   setRoomId("");
       //   dispatch({
@@ -79,6 +82,7 @@ export default function MultiplayerModal({
   const createNewRoom = () => setSelectedMode(SelectedMode.CREATE_ROOM);
   const setJoinRoom = () => setSelectedMode(SelectedMode.JOIN_ROOM);
   const goBackToInvite = () => setSelectedMode(SelectedMode.INVITE_CHOICE);
+
   const joinGame = async (group: Group) => {
     await joinRoom(group);
     //wait 50 ms
@@ -86,10 +90,11 @@ export default function MultiplayerModal({
     startJoin(rtcConfig.session?.code ?? "", nameInput);
     setSelectedMode(SelectedMode.SHOW_ROOM_CODE);
   };
+
   const newGame = async () => {
-    await createRoom({
+    let inputConfig: InputConfig = {
       general: {
-        public: true,
+        public: isPublic,
         gamespace: "mina2048",
         type: LobbyType.complete,
         capacity: parseInt(numOfPlayers),
@@ -98,7 +103,9 @@ export default function MultiplayerModal({
         game: {},
       },
       stream: {},
-    });
+    };
+    console.log("Creating room with input config:", inputConfig);
+    await createRoom(inputConfig);
     const room = rtcConfig.session?.code;
     startJoin(
       room ?? "",
@@ -121,6 +128,8 @@ export default function MultiplayerModal({
       setRoomIdInput={setRoomIdInput}
       minaAmount={minaAmount}
       setMinaAmount={setMinaAmount}
+      isPublic={isPublic}
+      setIsPublic={setIsPublic}
       onCreateNewGame={newGame}
       onJoinGame={joinGame}
       onCopyRoomCode={() =>

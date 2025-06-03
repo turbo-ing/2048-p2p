@@ -12,6 +12,8 @@ export interface MultiplayerContextProps {
   setRoomIdInput: (value: string) => void;
   minaAmount: string;
   setMinaAmount: (value: string) => void;
+  isPublic: boolean;
+  setIsPublic: (value: boolean) => void;
   onCreateNewGame: () => void;
   onJoinGame: (group: Group) => void;
   onCopyRoomCode: () => void;

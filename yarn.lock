@@ -5498,10 +5498,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@turbo-ing/turbo-p2p-react@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "@turbo-ing/turbo-p2p-react@npm:1.0.2"
-  checksum: 10c0/2f7d57bebc77d1e67b97467f078b7a6a92507a41be6a6a68a9e2840433d55b04708773443a85449ddc1cf1e12e34334a825b3012f28325245609a49000bc4681
+"@turbo-ing/turbo-p2p-react@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "@turbo-ing/turbo-p2p-react@npm:1.0.3"
+  checksum: 10c0/f13dc25076dcff0d113611d80067b1fb37d3dd8fae9ee024f2902a4d3fb27e6ce1edf8b0d50b2c2aaf48b7a990e8b3dddc5bd6fd7cb57fbdd3ad10fada2b3575
   languageName: node
   linkType: hard
 
@@ -8199,7 +8199,7 @@ __metadata:
     "@reduxjs/toolkit": "npm:^2.2.7"
     "@turbo-ing/edge-v0": "npm:^0.3.4"
     "@turbo-ing/turbo-p2p": "npm:^0.7.10"
-    "@turbo-ing/turbo-p2p-react": "npm:^1.0.2"
+    "@turbo-ing/turbo-p2p-react": "npm:^1.0.3"
     "@types/node": "npm:^20"
     "@types/react": "npm:^18"
     "@types/react-dom": "npm:^18"
