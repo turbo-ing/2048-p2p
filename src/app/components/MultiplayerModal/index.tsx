@@ -78,10 +78,11 @@ export default function MultiplayerModal({
 
   const createNewRoom = () => setSelectedMode(SelectedMode.CREATE_ROOM);
   const setJoinRoom = () => setSelectedMode(SelectedMode.JOIN_ROOM);
+  const goBackToInvite = () => setSelectedMode(SelectedMode.INVITE_CHOICE);
   const joinGame = async (group: Group) => {
     await joinRoom(group);
     //wait 50 ms
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     startJoin(rtcConfig.session?.code ?? "", nameInput);
     setSelectedMode(SelectedMode.SHOW_ROOM_CODE);
   };
@@ -89,7 +90,7 @@ export default function MultiplayerModal({
     await createRoom({
       general: {
         public: true,
-        gamespace: "game",
+        gamespace: "mina2048",
         type: LobbyType.complete,
         capacity: parseInt(numOfPlayers),
       },
@@ -130,8 +131,14 @@ export default function MultiplayerModal({
       roomId={rtcConfig?.session?.code ?? ""}
       createNewRoom={createNewRoom}
       joinRoom={setJoinRoom}
+      goBackToInvite={goBackToInvite}
     >
-      <Modal show={isOpen} onClose={onClose}>
+      <Modal
+        show={isOpen}
+        onClose={onClose}
+        showBackButton={selectedMode !== SelectedMode.INVITE_CHOICE}
+        onBack={goBackToInvite}
+      >
         {selectedMode === SelectedMode.INVITE_CHOICE && <InviteContent />}
         {selectedMode === SelectedMode.CREATE_ROOM && <CreateRoomContent />}
         {selectedMode === SelectedMode.JOIN_ROOM && <JoinRoomContent />}

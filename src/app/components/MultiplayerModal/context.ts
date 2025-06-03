@@ -20,6 +20,7 @@ export interface MultiplayerContextProps {
   roomId: string;
   createNewRoom: () => void;
   joinRoom: () => void;
+  goBackToInvite: () => void;
 }
 
 // Create the context
