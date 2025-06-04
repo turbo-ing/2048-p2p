@@ -14,18 +14,6 @@ import {
   declareMethods,
 } from "o1js";
 
-const PublicKey2 = Provable.Array(PublicKey, 2);
-const PublicKey3 = Provable.Array(PublicKey, 3);
-const PublicKey4 = Provable.Array(PublicKey, 4);
-
-const Signature2 = Provable.Array(Signature, 2);
-const Signature3 = Provable.Array(Signature, 3);
-const Signature4 = Provable.Array(Signature, 4);
-
-const Proof2 = Provable.Array(Game2048ZKProgramProof, 2);
-const Proof3 = Provable.Array(Game2048ZKProgramProof, 3);
-const Proof4 = Provable.Array(Game2048ZKProgramProof, 4);
-
 export class Deposit2048 extends SmartContract {
   @state(PublicKey) owner = State<PublicKey>();
   @state(Field) seed = State<Field>(Field(0));
@@ -152,7 +140,7 @@ export class Deposit2048 extends SmartContract {
     }
 
     // Verify if owner and sender is one of the players
-    const owner = this.owner.get();
+    const owner = this.owner.getAndRequireEquals();
     let hasOwner = Bool(false);
     let maxScore = Field(0);
     let maxCount = UInt64.zero;
@@ -191,48 +179,29 @@ export class Deposit2048 extends SmartContract {
     this.seed.set(Field(0));
   }
 
-  async claim2(
+  @method
+  async claim(
     amount: UInt64,
-    players: PublicKey[],
-    signatures: Signature[],
-    proofs: Game2048ZKProgramProof[],
+    player1: PublicKey,
+    player2: PublicKey,
+    signature1: Signature,
+    signature2: Signature,
+    proof1: Game2048ZKProgramProof,
+    proof2: Game2048ZKProgramProof,
   ) {
-    this.claimInternal(2, amount, players, signatures, proofs);
+    this.claimInternal(
+      2,
+      amount,
+      [player1, player2],
+      [signature1, signature2],
+      [proof1, proof2],
+    );
   }
 
-  async claim3(
-    amount: UInt64,
-    players: PublicKey[],
-    signatures: Signature[],
-    proofs: Game2048ZKProgramProof[],
-  ) {
-    this.claimInternal(3, amount, players, signatures, proofs);
-  }
-
-  async claim4(
-    amount: UInt64,
-    players: PublicKey[],
-    signatures: Signature[],
-    proofs: Game2048ZKProgramProof[],
-  ) {
-    this.claimInternal(4, amount, players, signatures, proofs);
-  }
-
+  @method
   async setSeed(seed: Field) {
     let oldSeed = this.seed.getAndRequireEquals();
     oldSeed.assertEquals(0);
     this.seed.set(seed);
   }
 }
-
-// @ts-ignore
-declareMethods(Deposit2048, {
-  // @ts-ignore
-  claim2: [UInt64, PublicKey2, Signature2, Proof2],
-  // @ts-ignore
-  claim3: [UInt64, PublicKey3, Signature3, Proof3],
-  // @ts-ignore
-  claim4: [UInt64, PublicKey4, Signature4, Proof4],
-  // @ts-ignore
-  setSeed: [Field],
-});

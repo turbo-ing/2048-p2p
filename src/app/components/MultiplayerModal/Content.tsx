@@ -4,6 +4,8 @@ import CreateRoom from "../icon/CreateRoom";
 import JoinRoom from "../icon/JoinRoom";
 import Input from "../Input";
 import { useMultiplayerContext } from "./context";
+import { use2048 } from "@/reducer/2048";
+import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 
 export const InviteContent = () => {
   const { joinRoom, createNewRoom } = useMultiplayerContext();
@@ -38,6 +40,8 @@ export const CreateRoomContent = () => {
     setNameInput,
     numOfPlayers,
     setNumOfPlayers,
+    minaAmount,
+    setMinaAmount,
     gameTimerInput,
     setGameTimerInput,
     onCreateNewGame,
@@ -64,6 +68,17 @@ export const CreateRoomContent = () => {
         id={"username"}
       />
       <Input
+        labelText={"Mina Amount"}
+        value={minaAmount}
+        onChange={setMinaAmount}
+        placeholder={"Enter mina amount (Min: 1 MINA)"}
+        id={"mina-amount"}
+        min={1}
+      />
+      <p className="text-sm text-left mt-1 text-muted-text">
+        Leave blank for a free fun play match.
+      </p>
+      {/* <Input
         labelText={"Number of players"}
         value={numOfPlayers}
         onChange={setNumOfPlayers}
@@ -81,10 +96,10 @@ export const CreateRoomContent = () => {
         id={"gametimer"}
         type="number"
         min={0}
-      />
-      <p className="text-sm text-left mt-1 text-muted-text">
+      /> */}
+      {/* <p className="text-sm text-left mt-1 text-muted-text">
         Leave blank for no limit.
-      </p>
+      </p> */}
       <div className="mt-8 space-y-2 text-white transition-all">
         <Button onClick={onCreateNewGame}>
           <JoinRoom />
@@ -132,7 +147,24 @@ export const JoinRoomContent = () => {
 };
 
 export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
+  const turboEdge = useTurboEdgeV0();
+  const [state2048] = use2048();
   const { state, roomId } = useMultiplayerContext();
+
+  const minaAmount = state2048.minaAmount;
+  const minaDeposit =
+    state2048.minaDeposit[turboEdge?.node.peerId.toString() ?? ""];
+
+  const needDeposit = minaAmount > 0 && !minaDeposit;
+
+  if (needDeposit) {
+    return (
+      <div>
+        <p>Please deposit {minaAmount} Mina to join the game</p>
+        <Button onClick={() => onClose()}>Deposit</Button>
+      </div>
+    );
+  }
 
   return (
     <div>

@@ -60,7 +60,7 @@ export type Game2048State = {
   timer: number;
 
   minaAmount: number;
-  minaDeposit: string;
+  minaDeposit: { [playerId: string]: string };
 };
 
 // Constants for grid size and initial tiles
@@ -87,8 +87,7 @@ interface JoinAction extends EdgeAction<Game2048State> {
 interface DepositAction extends EdgeAction<Game2048State> {
   type: "DEPOSIT";
   payload: {
-    playerId: string;
-    minaAmount: number;
+    minaDeposit: string;
   };
 }
 
@@ -123,6 +122,7 @@ interface ResetAction extends EdgeAction<Game2048State> {
 export type Action =
   | MoveAction
   | JoinAction
+  | DepositAction
   | LeaveAction
   | SendProofAction
   | RematchAction
@@ -603,6 +603,8 @@ const game2048Reducer = (
         newNumPlayers = state.totalPlayers;
       }
 
+      let newMinaAmount = action.payload.minaAmount ?? state.minaAmount;
+
       // Assign the new player's board
       newBoard[action.peerId!] = {
         grid: action.payload.grid,
@@ -637,7 +639,14 @@ const game2048Reducer = (
         totalPlayers: newNumPlayers,
         actionPeerId: action.peerId,
         minaSessionKeys: newMinaSessionKeys,
+        minaAmount: newMinaAmount,
       };
+    }
+    case "DEPOSIT": {
+      console.log("Payload on DEPOSIT", action.payload);
+      const newMinaDeposit = { ...state.minaDeposit };
+      newMinaDeposit[action.peerId!] = action.payload.minaDeposit;
+      return { ...state, minaDeposit: newMinaDeposit };
     }
     case "LEAVE":
       console.log("Player " + action.peerId! + " is leaving the game.");
@@ -730,7 +739,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     minaSessionKeys: PublicKey.empty(),
 
     minaAmount: 0,
-    minaDeposit: "",
+    minaDeposit: {},
   };
   const [room, setRoom] = useState("");
 
