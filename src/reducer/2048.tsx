@@ -53,7 +53,7 @@ export type Game2048State = {
   surrendered: { [playerId: string]: boolean };
   playersCount: number;
   totalPlayers: number;
-  compiledProof: string;
+  compiledProof: { [playerId: string]: string };
   actionPeerId?: string;
   actionDirection?: MoveType;
   rematch: { [playerId: string]: boolean };
@@ -621,7 +621,7 @@ const game2048Reducer = (
 
       console.log("Payload Board Session Key", payloadBoard.sessionKey);
 
-      // Queue the “init” move
+      // Queue the "init" move
       queueMove(action.peerId!, payloadBoard, "init");
 
       // Now return a brand-new state object
@@ -665,7 +665,7 @@ const game2048Reducer = (
       let receivedProof = JSON.stringify(action.payload);
       console.log(`Payload received: ${receivedProof} from ${action.peerId}`);
       const proofState = state;
-      proofState.compiledProof = receivedProof;
+      proofState.compiledProof[action.peerId!] = receivedProof;
       return { ...proofState };
 
     case "REMATCH":
@@ -731,7 +731,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     playerId: [],
     playersCount: 0,
     totalPlayers: 0,
-    compiledProof: "",
+    compiledProof: {},
     isFinished: {},
     surrendered: {},
     rematch: {},

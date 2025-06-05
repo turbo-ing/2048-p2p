@@ -66,15 +66,24 @@ export default function Game2048Page() {
     }
   };
 
-  const downloadProof = () => {
-    console.log(state.compiledProof);
-    let json = JSON.parse(state.compiledProof);
+  const downloadProof = (playerId?: string) => {
+    const targetPlayerId = playerId || peerId!;
+    const proofData = state.compiledProof[targetPlayerId];
 
+    if (!proofData) {
+      console.error(`No proof found for player ${targetPlayerId}`);
+      return;
+    }
+
+    console.log(proofData);
+    let json = JSON.parse(proofData);
+
+    const playerName = state.players[targetPlayerId] || targetPlayerId;
     const dataStr =
       "data:application/json;charset=utf-8," + encodeURIComponent(json.proof);
     const download = document.createElement("a");
     download.setAttribute("href", dataStr);
-    download.setAttribute("download", "ZK_Proof" + ".json");
+    download.setAttribute("download", `ZK_Proof_${playerName}.json`);
     document.body.appendChild(download);
     download.click();
     download.remove();
