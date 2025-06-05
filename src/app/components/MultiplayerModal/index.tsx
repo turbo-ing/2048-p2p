@@ -10,6 +10,8 @@ import {
 } from "./Content";
 import { useJoin } from "@/app/hooks/useJoin";
 import { useRouter } from "next/router";
+import { InputConfig } from "@turbo-ing/turbo-p2p";
+import { Group, LobbyType } from "@turbo-ing/turbo-p2p";
 
 interface MultiplayerModalProps {
   isOpen: boolean;
@@ -29,7 +31,18 @@ export default function MultiplayerModal({
   onClose,
   pushPlay,
 }: MultiplayerModalProps) {
-  const [state, dispatch, connected, roomId, setRoomId, zkClient] = use2048();
+  const [
+    state,
+    dispatch,
+    rtc,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    getRooms,
+    rtcConfig,
+    rtcPeers,
+    zkClient,
+  ] = use2048();
   const [selectedMode, setSelectedMode] = useState<SelectedMode>(
     SelectedMode.INVITE_CHOICE,
   );
@@ -39,6 +52,7 @@ export default function MultiplayerModal({
   const [numOfPlayers, setNumOfPlayers] = useState<string>("");
   const [roomIdInput, setRoomIdInput] = useState<string>("");
   const [minaAmount, setMinaAmount] = useState<string>("");
+  const [isPublic, setIsPublic] = useState<boolean>(true);
 
   const handleJoining = (loading: boolean) => {
     if (loading) {
@@ -46,7 +60,7 @@ export default function MultiplayerModal({
     }
   };
 
-  const joinRoom = useJoin(handleJoining);
+  const startJoin = useJoin(handleJoining);
 
   useEffect(() => {
     if (!isOpen) {
@@ -55,6 +69,7 @@ export default function MultiplayerModal({
       setGameTimerInput("");
       setNumOfPlayers("");
       setRoomIdInput("");
+      setIsPublic(true);
       // if (connected) {
       //   setRoomId("");
       //   dispatch({
@@ -66,14 +81,34 @@ export default function MultiplayerModal({
 
   const createNewRoom = () => setSelectedMode(SelectedMode.CREATE_ROOM);
   const setJoinRoom = () => setSelectedMode(SelectedMode.JOIN_ROOM);
-  const joinGame = () => {
-    joinRoom(roomIdInput, nameInput);
+  const goBackToInvite = () => setSelectedMode(SelectedMode.INVITE_CHOICE);
+
+  const joinGame = async (group: Group) => {
+    await joinRoom(group);
+    //wait 50 ms
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    startJoin(rtcConfig.session?.code ?? "", nameInput);
     setSelectedMode(SelectedMode.SHOW_ROOM_CODE);
   };
-  const newGame = () => {
-    const room = generateRoomCode();
-    joinRoom(
-      room,
+
+  const newGame = async () => {
+    let inputConfig: InputConfig = {
+      general: {
+        public: isPublic,
+        gamespace: "mina2048",
+        type: LobbyType.complete,
+        capacity: parseInt(numOfPlayers),
+      },
+      channel: {
+        game: {},
+      },
+      stream: {},
+    };
+    console.log("Creating room with input config:", inputConfig);
+    await createRoom(inputConfig);
+    const room = rtcConfig.session?.code;
+    startJoin(
+      room ?? "",
       nameInput,
       parseInt(numOfPlayers) ?? 1,
       parseInt(gameTimerInput) ?? 0,
@@ -94,16 +129,26 @@ export default function MultiplayerModal({
       setRoomIdInput={setRoomIdInput}
       minaAmount={minaAmount}
       setMinaAmount={setMinaAmount}
+      isPublic={isPublic}
+      setIsPublic={setIsPublic}
       onCreateNewGame={newGame}
       onJoinGame={joinGame}
-      onCopyRoomCode={() => navigator.clipboard.writeText(roomId)}
+      onCopyRoomCode={() =>
+        navigator.clipboard.writeText(rtcConfig?.session?.code ?? "")
+      }
       onLeaveRoom={onClose}
       state={state}
-      roomId={roomId}
+      roomId={rtcConfig?.session?.code ?? ""}
       createNewRoom={createNewRoom}
       joinRoom={setJoinRoom}
+      goBackToInvite={goBackToInvite}
     >
-      <Modal show={isOpen} onClose={onClose}>
+      <Modal
+        show={isOpen}
+        onClose={onClose}
+        showBackButton={selectedMode !== SelectedMode.INVITE_CHOICE}
+        onBack={goBackToInvite}
+      >
         {selectedMode === SelectedMode.INVITE_CHOICE && <InviteContent />}
         {selectedMode === SelectedMode.CREATE_ROOM && <CreateRoomContent />}
         {selectedMode === SelectedMode.JOIN_ROOM && <JoinRoomContent />}

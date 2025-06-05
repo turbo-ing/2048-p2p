@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Button from "../Button";
 import CreateRoom from "../icon/CreateRoom";
 import JoinRoom from "../icon/JoinRoom";
@@ -6,6 +6,7 @@ import Input from "../Input";
 import { useMultiplayerContext } from "./context";
 import { use2048 } from "@/reducer/2048";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
+import { Group } from "@turbo-ing/turbo-p2p";
 
 export const InviteContent = () => {
   const { joinRoom, createNewRoom } = useMultiplayerContext();
@@ -44,15 +45,32 @@ export const CreateRoomContent = () => {
     setMinaAmount,
     gameTimerInput,
     setGameTimerInput,
+    isPublic,
+    setIsPublic,
     onCreateNewGame,
   } = useMultiplayerContext();
 
-  // Force 2 players
+  // Set default value to 2 if empty
   useEffect(() => {
-    if (numOfPlayers !== "2") {
+    if (!numOfPlayers || numOfPlayers === "") {
       setNumOfPlayers("2");
     }
   }, [numOfPlayers, setNumOfPlayers]);
+
+  // Ensure numOfPlayers defaults to 2 if empty
+  const playerCount = parseInt(numOfPlayers) || 2;
+
+  const incrementPlayers = () => {
+    if (playerCount < 8) {
+      setNumOfPlayers((playerCount + 1).toString());
+    }
+  };
+
+  const decrementPlayers = () => {
+    if (playerCount > 2) {
+      setNumOfPlayers((playerCount - 1).toString());
+    }
+  };
 
   return (
     <div>
@@ -67,6 +85,30 @@ export const CreateRoomContent = () => {
         placeholder={"Enter your username"}
         id={"username"}
       />
+
+      <div className="mt-5 text-left">
+        <label className="text-sm font-medium">Number of players</label>
+        <div className="border border-text bg-transparent rounded-xl shadow text-md py-2.5 px-3.5 w-full mt-1.5 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={decrementPlayers}
+            disabled={playerCount <= 2}
+            className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 flex items-center justify-center text-sm font-bold transition-colors"
+          >
+            −
+          </button>
+          <span className="text-md font-medium">{playerCount}</span>
+          <button
+            type="button"
+            onClick={incrementPlayers}
+            disabled={playerCount >= 8}
+            className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 flex items-center justify-center text-sm font-bold transition-colors"
+          >
+            +
+          </button>
+        </div>
+      </div>
+
       <Input
         labelText={"Mina Amount"}
         value={minaAmount}
@@ -97,13 +139,85 @@ export const CreateRoomContent = () => {
         type="number"
         min={0}
       /> */}
-      {/* <p className="text-sm text-left mt-1 text-muted-text">
+      <p className="text-sm text-left mt-1 text-muted-text">
         Leave blank for no limit.
-      </p> */}
+      </p>
+
+      <div className="mt-5 text-left">
+        <label className="text-sm font-medium">Room Visibility</label>
+        <div className="mt-1.5">
+          <div className="relative bg-background rounded-xl p-1 flex">
+            <div
+              className={`absolute top-1 bottom-1 w-1/2 bg-bg-dark rounded-lg shadow-sm transition-transform duration-200 ease-in-out ${
+                isPublic ? "translate-x-0" : "translate-x-full"
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setIsPublic(true)}
+              className={`relative z-10 flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-colors ${
+                isPublic ? "text-background" : "text-gray-600"
+              }`}
+            >
+              Public
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPublic(false)}
+              className={`relative z-10 flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-colors ${
+                !isPublic ? "text-background" : "text-gray-600"
+              }`}
+            >
+              Private
+            </button>
+          </div>
+        </div>
+        <p className="text-sm text-left mt-1 text-muted-text">
+          {isPublic
+            ? "Public rooms appear in the room list for anyone to join."
+            : "Private rooms require the room code to join."}
+        </p>
+      </div>
       <div className="mt-8 space-y-2 text-white transition-all">
-        <Button onClick={onCreateNewGame}>
+        <Button
+          onClick={onCreateNewGame}
+          disabled={!nameInput || nameInput.length === 0}
+        >
           <JoinRoom />
           <p className="font text-base px-0.5">Create Room</p>
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+interface LobbyWidgetProps {
+  group: Group;
+  onJoinGame: (group: Group) => void;
+}
+
+const LobbyWidget = ({ group, onJoinGame }: LobbyWidgetProps) => {
+  // Use type assertions to access Group properties safely
+  const groupAny = group as any;
+  const playerCount = groupAny.peers?.length || 0;
+  const maxPlayers = groupAny.config?.capacity || 2;
+  const roomCode = groupAny.config?.code || groupAny.id || "Unknown";
+
+  return (
+    <div className="border border-gray-300 rounded-lg p-4 mb-3 bg-gray-50 hover:bg-gray-100 transition-colors">
+      <div className="flex justify-between items-center">
+        <div>
+          <p className="font-semibold text-lg">{roomCode}</p>
+          <p className="text-sm text-gray-600">
+            Players: {playerCount}/{maxPlayers}
+          </p>
+        </div>
+        <Button
+          onClick={() => onJoinGame(group)}
+          disabled={playerCount >= maxPlayers}
+          className="px-4 py-2"
+        >
+          {playerCount >= maxPlayers ? "Full" : "Join"}
         </Button>
       </div>
     </div>
@@ -113,12 +227,60 @@ export const CreateRoomContent = () => {
 export const JoinRoomContent = () => {
   const { nameInput, setNameInput, roomIdInput, setRoomIdInput, onJoinGame } =
     useMultiplayerContext();
+  const [, , , , , , getRooms] = use2048();
+  const [availableRooms, setAvailableRooms] = useState<Group[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showManualJoin, setShowManualJoin] = useState(false);
+
+  const fetchRooms = async () => {
+    setLoading(true);
+    try {
+      const rooms = await getRooms("mina2048");
+      setAvailableRooms(rooms);
+    } catch (error) {
+      console.error("Failed to fetch rooms:", error);
+      setAvailableRooms([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManualJoin = async () => {
+    // Find the room by ID
+    const targetRoom = await getRooms("mina2048", roomIdInput);
+    if (targetRoom.length > 0) {
+      console.log("Found room", targetRoom[0]);
+      onJoinGame(targetRoom[0]);
+    } else {
+      // If room not found in available rooms, we could try to join anyway
+      console.error(
+        "Room " + roomIdInput + " not found in available rooms",
+        targetRoom,
+      );
+    }
+  };
+
+  const handleLobbyJoin = (group: Group) => {
+    if (!nameInput.trim()) {
+      return; // Don't join if no name
+    }
+    onJoinGame(group);
+  };
+
+  useEffect(() => {
+    fetchRooms();
+    // Refresh rooms every 5 seconds
+    const interval = setInterval(fetchRooms, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div>
-      <div className="">
+      <div className="mb-4">
         <p className="font-semibold text-2xl md:text-4xl">Join a Room</p>
         <p className="mt-1 text-sm">Join an existing game room</p>
       </div>
+
       <Input
         value={nameInput}
         onChange={setNameInput}
@@ -126,34 +288,127 @@ export const JoinRoomContent = () => {
         labelText={"Your Name"}
         placeholder="Enter your name"
       />
-      <Input
-        value={roomIdInput}
-        onChange={setRoomIdInput}
-        id={"roomcode"}
-        labelText={"Room Code"}
-        placeholder={"Enter code"}
-      >
-        <p className="text-sm text-center mt-1">
-          Paste the game room code here to join your friend&apos;s match.
-        </p>
-      </Input>
-      <div className="mt-8 space-y-2 text-white transition-all">
-        <Button onClick={() => onJoinGame()}>
-          <div className="font-semibold text-base">Join Game</div>
-        </Button>
+
+      <div className="mt-6">
+        <h3 className="text-lg font-semibold mb-3">Available Rooms</h3>
+
+        <div className="flex gap-2 mb-4">
+          <Button
+            onClick={fetchRooms}
+            disabled={loading}
+            variant="inverted"
+            className="px-3 py-1 text-sm"
+          >
+            {loading ? "..." : "Refresh"}
+          </Button>
+          <Button
+            onClick={() => setShowManualJoin(!showManualJoin)}
+            variant="inverted"
+            className="px-3 py-1 text-sm"
+          >
+            Join by Code
+          </Button>
+        </div>
+
+        {loading && (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-white"></div>
+          </div>
+        )}
+
+        {!loading && availableRooms.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p>No rooms available</p>
+            <p className="text-sm">Create a room or try refreshing</p>
+          </div>
+        )}
+
+        {!loading && availableRooms.length > 0 && (
+          <div className="max-h-60 overflow-y-auto">
+            {availableRooms.map((room, index) => {
+              const groupAny = room as any;
+              const playerCount = groupAny.peers?.length || 0;
+              const maxPlayers = groupAny.config?.capacity || 2;
+              const roomCode =
+                groupAny.config?.code || groupAny.id || "Unknown";
+              const isRoomFull = playerCount >= maxPlayers;
+              const canJoin = nameInput.trim() && !isRoomFull;
+
+              return (
+                <div
+                  key={(room as any).id || (room as any).config?.code || index}
+                  className="border border-gray-300 rounded-lg p-4 mb-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-semibold text-lg">{roomCode}</p>
+                      <p className="text-sm text-gray-600">
+                        Players: {playerCount}/{maxPlayers}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => handleLobbyJoin(room)}
+                      disabled={!canJoin}
+                      className="px-4 py-2"
+                    >
+                      {!nameInput.trim()
+                        ? "Enter Name"
+                        : isRoomFull
+                          ? "Full"
+                          : "Join"}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {showManualJoin && (
+          <div className="mt-4 p-4 border border-gray-300 rounded-lg bg-gray-50">
+            <Input
+              value={roomIdInput}
+              onChange={setRoomIdInput}
+              id={"roomcode"}
+              labelText={"Room Code"}
+              placeholder={"Enter code"}
+            >
+              <p className="text-sm text-center mt-1">
+                Paste the game room code here to join your friend&apos;s match.
+              </p>
+            </Input>
+            <div className="mt-4">
+              <Button
+                onClick={handleManualJoin}
+                disabled={!roomIdInput.trim() || !nameInput.trim()}
+              >
+                <div className="font-semibold text-base">Join Game</div>
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
-  const turboEdge = useTurboEdgeV0();
-  const [state2048] = use2048();
+  const [
+    state2048,
+    dispatch,
+    rtc,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    getRooms,
+    rtcConfig,
+    rtcPeers,
+    zkClient,
+  ] = use2048();
   const { state, roomId } = useMultiplayerContext();
 
   const minaAmount = state2048.minaAmount;
-  const minaDeposit =
-    state2048.minaDeposit[turboEdge?.node.peerId.toString() ?? ""];
+  const minaDeposit = state2048.minaDeposit[rtcConfig?.peer.peerIdString ?? ""];
 
   const needDeposit = minaAmount > 0 && !minaDeposit;
 

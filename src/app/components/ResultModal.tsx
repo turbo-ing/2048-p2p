@@ -51,7 +51,18 @@ export const ResultModal = ({
   isForceSubmit,
   setIsForceSubmit,
 }: ResultModalProps) => {
-  const [state, dispatch, _, room, setRoom, zkClient] = use2048();
+  const [
+    state,
+    dispatch,
+    rtc,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    getRooms,
+    rtcConfig,
+    rtcPeers,
+    zkClient,
+  ] = use2048();
   const [ranking, setRanking] = useState<Player[]>(rankingData);
   const [isZKModalOpen, setIsZKModalOpen] = useState<boolean>(true);
   const [isRematchRequested, setIsRematchRequested] = useState<boolean>(false);
@@ -156,7 +167,6 @@ export const ResultModal = ({
         type: "LEAVE",
       });
     }
-    setRoom("");
   };
 
   const renderButtons = () => (
