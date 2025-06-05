@@ -61,14 +61,14 @@ export type Game2048State = {
   surrendered: { [playerId: string]: boolean };
   playersCount: number;
   totalPlayers: number;
-  compiledProof: string;
+  compiledProof: { [playerId: string]: string };
   actionPeerId?: string;
   actionDirection?: MoveType;
   rematch: { [playerId: string]: boolean };
   timer: number;
 
   minaAmount: number;
-  minaDeposit: string;
+  minaDeposit: { [playerId: string]: string };
 };
 
 // Constants for grid size and initial tiles
@@ -109,8 +109,7 @@ interface WelcomeAction extends EdgeAction<Game2048State> {
 interface DepositAction extends EdgeAction<Game2048State> {
   type: "DEPOSIT";
   payload: {
-    playerId: string;
-    minaAmount: number;
+    minaDeposit: string;
   };
 }
 
@@ -146,6 +145,7 @@ export type Action =
   | MoveAction
   | JoinAction
   | WelcomeAction
+  | DepositAction
   | LeaveAction
   | SendProofAction
   | RematchAction
@@ -626,6 +626,8 @@ const game2048Reducer = (
         newNumPlayers = state.totalPlayers;
       }
 
+      let newMinaAmount = action.payload.minaAmount ?? state.minaAmount;
+
       // Assign the new player's board
       newBoard[action.peerId!] = {
         grid: action.payload.grid,
@@ -660,6 +662,7 @@ const game2048Reducer = (
         totalPlayers: newNumPlayers,
         actionPeerId: action.peerId,
         minaSessionKeys: newMinaSessionKeys,
+        minaAmount: newMinaAmount,
       };
     case "WELCOME": {
       console.log("Payload on WELCOME", action.payload);
@@ -733,6 +736,12 @@ const game2048Reducer = (
         minaSessionKeys: newMinaSessionKeys,
       };
     }
+    case "DEPOSIT": {
+      console.log("Payload on DEPOSIT", action.payload);
+      const newMinaDeposit = { ...state.minaDeposit };
+      newMinaDeposit[action.peerId!] = action.payload.minaDeposit;
+      return { ...state, minaDeposit: newMinaDeposit };
+    }
     case "LEAVE":
       console.log("Player " + action.peerId! + " is leaving the game.");
       console.log(state);
@@ -750,7 +759,7 @@ const game2048Reducer = (
       let receivedProof = JSON.stringify(action.payload);
       console.log(`Payload received: ${receivedProof} from ${action.peerId}`);
       const proofState = state;
-      proofState.compiledProof = receivedProof;
+      proofState.compiledProof[action.peerId!] = receivedProof;
       return { ...proofState };
 
     case "REMATCH":
@@ -820,7 +829,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     playerId: [],
     playersCount: 0,
     totalPlayers: 0,
-    compiledProof: "",
+    compiledProof: {},
     isFinished: {},
     surrendered: {},
     rematch: {},
@@ -828,7 +837,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     minaSessionKeys: PublicKey.empty(),
 
     minaAmount: 0,
-    minaDeposit: "",
+    minaDeposit: {},
   };
   const [room, setRoom] = useState("");
 

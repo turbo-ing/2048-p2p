@@ -112,6 +112,7 @@ export default function MultiplayerModal({
       nameInput,
       parseInt(numOfPlayers) ?? 1,
       parseInt(gameTimerInput) ?? 0,
+      parseFloat(minaAmount) ?? 0,
     );
     setSelectedMode(SelectedMode.SHOW_ROOM_CODE);
   };

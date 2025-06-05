@@ -67,6 +67,7 @@ import {
 import { DirectionMap, MoveType } from "@/utils/constants";
 import { Score2048 } from "@/app/mina/contracts/Score2048";
 import { LeaderboardScore } from "@/utils/types.ts";
+import { Deposit2048 } from "../app/mina/contracts/Deposit2048.ts";
 
 const SCORE_2048_ADDRESS =
   "B62qpKD5UKqYG4fNmYioioK6Lh2o3q1TqrvMeiKqwedcxr5AMhdmFw1";
@@ -77,6 +78,7 @@ let score2048: Score2048 | null = null;
 
 let zkProgramCompiling = false;
 let contractsLoading = false;
+let depositContractLoading = false;
 
 export const zkWorkerAPI = {
   async setActiveNetwork(network: string) {
@@ -210,6 +212,16 @@ export const zkWorkerAPI = {
     return result;
   },
 
+  async loadDepositContract() {
+    if (depositContractLoading) return;
+    depositContractLoading = true;
+
+    const { Deposit2048 } = await import(
+      "../app/mina/contracts/Deposit2048.ts"
+    );
+    return await Deposit2048.compile();
+  },
+
   async submitScore(publicKey58: string) {
     if (!sessionPrivateKey) {
       throw new Error("Session private key is not initialized");
@@ -307,6 +319,33 @@ export const zkWorkerAPI = {
     }
 
     return scores;
+  },
+
+  async depositMina(
+    amount: number,
+    seed: bigint,
+    yourAddress: string,
+    depositAddress?: string,
+  ) {
+    const needDeploy = !depositAddress;
+    const yourPublicKey = PublicKey.fromBase58(yourAddress);
+
+    if (needDeploy) {
+      const { privateKey, publicKey } = PrivateKey.randomKeypair();
+      const deposit2048 = new Deposit2048(publicKey);
+      const deployTx = await Mina.transaction(async () => {
+        AccountUpdate.fundNewAccount(yourPublicKey, 1);
+        await deposit2048.deploy();
+      });
+      await deployTx.prove();
+      return await deployTx.sign([privateKey]);
+    }
+
+    const publicKey = PublicKey.fromBase58(publicKey58);
+    const amountField = Field(amount);
+    const tx = await Mina.transaction(async () => {
+      await deposit2048!.deposit(publicKey, amountField);
+    });
   },
 };
 

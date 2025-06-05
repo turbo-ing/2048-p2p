@@ -14,18 +14,6 @@ import {
   declareMethods,
 } from "o1js";
 
-const PublicKey2 = Provable.Array(PublicKey, 2);
-const PublicKey3 = Provable.Array(PublicKey, 3);
-const PublicKey4 = Provable.Array(PublicKey, 4);
-
-const Signature2 = Provable.Array(Signature, 2);
-const Signature3 = Provable.Array(Signature, 3);
-const Signature4 = Provable.Array(Signature, 4);
-
-const Proof2 = Provable.Array(Game2048ZKProgramProof, 2);
-const Proof3 = Provable.Array(Game2048ZKProgramProof, 3);
-const Proof4 = Provable.Array(Game2048ZKProgramProof, 4);
-
 export class Deposit2048 extends SmartContract {
   @state(PublicKey) owner = State<PublicKey>();
   @state(Field) seed = State<Field>(Field(0));

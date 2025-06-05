@@ -11,6 +11,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     undefined,
   );
   const [gameTimer, setGameTimer] = useState(0);
+  const [minaAmount, setMinaAmount] = useState(0);
   const [gameStarted, setGameStarted] = useState(false); // New state to prevent re-runs
   const [
     state,
@@ -61,6 +62,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
           grid: gridBoard,
           zkBoard,
           numPlayers: numberOfPlayers,
+          minaAmount,
           minaSessionKey: PublicKey.fromPrivateKey(sessionKey!).toBase58(),
         },
       });
@@ -74,7 +76,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
 
       setWaitingToJoin(false);
     }
-  }, [waitingToJoin, connected, dispatch, name, numberOfPlayers]);
+  }, [waitingToJoin, connected, dispatch, name, numberOfPlayers, minaAmount]);
 
   // Game Start Logic (Single & Multiplayer)
   useEffect(() => {
@@ -137,6 +139,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     playerName: string,
     numPlayers?: number,
     timer?: number,
+    minaAmount?: number,
   ) => {
     console.log("Resetting states and joining room with parameters: ", {
       roomId,
@@ -151,11 +154,13 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     setName("");
     setGameTimer(0);
     setNumOfPlayers(undefined);
+    setMinaAmount(0);
 
     // Set new game parameters
     setName(playerName);
     setNumOfPlayers(numPlayers);
     setGameTimer(timer ?? 0);
+    setMinaAmount(minaAmount ?? 0);
     setWaitingToJoin(true);
 
     console.log("Updated states for joining: ", {

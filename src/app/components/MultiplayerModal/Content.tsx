@@ -40,6 +40,8 @@ export const CreateRoomContent = () => {
     setNameInput,
     numOfPlayers,
     setNumOfPlayers,
+    minaAmount,
+    setMinaAmount,
     gameTimerInput,
     setGameTimerInput,
     isPublic,
@@ -107,6 +109,27 @@ export const CreateRoomContent = () => {
       </div>
 
       <Input
+        labelText={"Mina Amount"}
+        value={minaAmount}
+        onChange={setMinaAmount}
+        placeholder={"Enter mina amount (Min: 1 MINA)"}
+        id={"mina-amount"}
+        min={1}
+      />
+      <p className="text-sm text-left mt-1 text-muted-text">
+        Leave blank for a free fun play match.
+      </p>
+      {/* <Input
+        labelText={"Number of players"}
+        value={numOfPlayers}
+        onChange={setNumOfPlayers}
+        placeholder={"Enter number of players"}
+        id={"number-of-players"}
+        type="number"
+        min={1}
+        disabled
+      />
+      <Input
         labelText={"Time Limit"}
         value={gameTimerInput}
         onChange={setGameTimerInput}
@@ -114,7 +137,7 @@ export const CreateRoomContent = () => {
         id={"gametimer"}
         type="number"
         min={0}
-      />
+      /> */}
       <p className="text-sm text-left mt-1 text-muted-text">
         Leave blank for no limit.
       </p>
@@ -154,7 +177,6 @@ export const CreateRoomContent = () => {
             : "Private rooms require the room code to join."}
         </p>
       </div>
-
       <div className="mt-8 space-y-2 text-white transition-all">
         <Button
           onClick={onCreateNewGame}
@@ -370,7 +392,33 @@ export const JoinRoomContent = () => {
 };
 
 export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
+  const [
+    state2048,
+    dispatch,
+    rtc,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    getRooms,
+    rtcConfig,
+    rtcPeers,
+    zkClient,
+  ] = use2048();
   const { state, roomId } = useMultiplayerContext();
+
+  const minaAmount = state2048.minaAmount;
+  const minaDeposit = state2048.minaDeposit[rtcConfig?.peer.peerIdString ?? ""];
+
+  const needDeposit = minaAmount > 0 && !minaDeposit;
+
+  if (needDeposit) {
+    return (
+      <div>
+        <p>Please deposit {minaAmount} Mina to join the game</p>
+        <Button onClick={() => onClose()}>Deposit</Button>
+      </div>
+    );
+  }
 
   return (
     <div>

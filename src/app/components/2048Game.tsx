@@ -23,7 +23,7 @@ interface Game2048Props {
   rematch: () => void;
   rem: number;
   remProcessing: boolean;
-  downloadProof: () => void;
+  downloadProof: (playerId?: string) => void;
   lenQueue: number;
   board: Board;
   score: number;
