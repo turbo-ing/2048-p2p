@@ -53,6 +53,13 @@ export default function HomePage() {
 
   const joinSingleplayer = useJoin(handleJoin);
 
+  // Assign the peer ID once we have a turboEdge instance
+  useEffect(() => {
+    if (rtc) {
+      assignMyPeerId(rtcConfig.peer.peerIdString);
+    }
+  }, [rtc]);
+
   // Set the reducer's dispatch into the ZK client once connected
   useEffect(() => {
     if (rtc) {
