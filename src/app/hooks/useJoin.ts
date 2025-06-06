@@ -47,32 +47,34 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
   // Join Room Logic
   useEffect(() => {
     if (waitingToJoin && connected) {
-      console.log("Attempting to join the room...");
+      setTimeout(() => {
+        console.log("Attempting to join the room...");
 
-      const [gridBoard, zkBoard] = initBoardWithSeed(
-        Math.floor(Math.random() * 100000000000),
-      );
-      console.log("Generated boards: ", { gridBoard, zkBoard });
-      console.log("number of players called", numberOfPlayers);
+        const [gridBoard, zkBoard] = initBoardWithSeed(
+          Math.floor(Math.random() * 100000000000),
+        );
+        console.log("Generated boards: ", { gridBoard, zkBoard });
+        console.log("number of players called", numberOfPlayers);
 
-      dispatch({
-        type: "JOIN",
-        payload: {
+        dispatch({
+          type: "JOIN",
+          payload: {
+            name,
+            grid: gridBoard,
+            zkBoard,
+            numPlayers: numberOfPlayers,
+            minaAmount,
+            minaSessionKey: PublicKey.fromPrivateKey(sessionKey!).toBase58(),
+          },
+        });
+
+        console.log("Dispatching JOIN with payload: ", {
           name,
-          grid: gridBoard,
+          gridBoard,
           zkBoard,
-          numPlayers: numberOfPlayers,
-          minaAmount,
-          minaSessionKey: PublicKey.fromPrivateKey(sessionKey!).toBase58(),
-        },
-      });
-
-      console.log("Dispatching JOIN with payload: ", {
-        name,
-        gridBoard,
-        zkBoard,
-        numPlayers: numberOfPlayers ?? 1,
-      });
+          numPlayers: numberOfPlayers ?? 1,
+        });
+      }, 2000);
 
       setWaitingToJoin(false);
     }
