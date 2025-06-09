@@ -69,6 +69,8 @@ export type Game2048State = {
 
   minaAmount: number;
   minaDeposit: { [playerId: string]: string };
+
+  seed: bigint;
 };
 
 // Constants for grid size and initial tiles
@@ -84,8 +86,6 @@ interface JoinAction extends EdgeAction<Game2048State> {
   type: "JOIN";
   payload: {
     name: string;
-    grid: Grid;
-    zkBoard: GameBoardWithSeed;
     minaSessionKey: string;
     numPlayers?: number;
     minaAmount?: number;
@@ -424,7 +424,7 @@ export function moveGrid(grid: Grid, direction: Direction): GridMoveResult {
 
 // ==== End move animation logic ====
 
-export const initBoardWithSeed = (seed: number): [Grid, GameBoardWithSeed] => {
+export const initBoardWithSeed = (seed: bigint): [Grid, GameBoardWithSeed] => {
   const zkBoard = new GameBoardWithSeed({
     board: new GameBoard(new Array(16).fill(Field.from(0))),
     seed: Field.from(seed),
@@ -590,10 +590,17 @@ const game2048Reducer = (
     case "JOIN":
       console.log("Payload on JOIN", action.payload);
 
+      let seed = state.seed;
+
+      if (!seed) {
+        seed = BigInt(Math.floor(Math.random() * 1000000000000));
+      }
+
       // Re-create the board from the payload
+      const [grid, zkBoard] = initBoardWithSeed(seed);
       const payloadBoard = new GameBoardWithSeed({
-        board: new GameBoard(action.payload.zkBoard.board.cells.map(Field)),
-        seed: Field.from(action.payload.zkBoard.seed),
+        board: new GameBoard(zkBoard.board.cells.map(Field)),
+        seed: Field.from(seed),
         sessionKey: PublicKey.fromBase58(action.payload.minaSessionKey),
       });
 
@@ -630,7 +637,7 @@ const game2048Reducer = (
 
       // Assign the new player's board
       newBoard[action.peerId!] = {
-        grid: action.payload.grid,
+        grid,
         merges: [],
       };
       newZkBoard[action.peerId!] = payloadBoard;
@@ -663,6 +670,7 @@ const game2048Reducer = (
         actionPeerId: action.peerId,
         minaSessionKeys: newMinaSessionKeys,
         minaAmount: newMinaAmount,
+        seed,
       };
     case "WELCOME": {
       console.log("Payload on WELCOME", action.payload);
@@ -844,6 +852,8 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
 
     minaAmount: 0,
     minaDeposit: {},
+
+    seed: 0n,
   };
   const [room, setRoom] = useState("");
 

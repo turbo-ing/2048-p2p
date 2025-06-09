@@ -7,6 +7,7 @@ import { useMultiplayerContext } from "./context";
 import { use2048 } from "@/reducer/2048";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { Group } from "@turbo-ing/turbo-p2p";
+import { useAuroWallet } from "@/app/mina/useAuroWallet";
 
 export const InviteContent = () => {
   const { joinRoom, createNewRoom } = useMultiplayerContext();
@@ -407,16 +408,48 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
   ] = use2048();
   const { state, roomId } = useMultiplayerContext();
 
+  const { address } = useAuroWallet();
+
   const minaAmount = state2048.minaAmount;
   const minaDeposit = state2048.minaDeposit[rtcConfig?.peer.peerIdString ?? ""];
 
   const needDeposit = minaAmount > 0 && !minaDeposit;
 
+  const [depositAddress, setDepositAddress] = useState<string | null>(null);
+
+  const handleDeposit = async () => {
+    if (!address) {
+      window.alert("Please connect your Auro Wallet");
+      return;
+    }
+
+    console.log("Deposit wei sus");
+
+    const { sendTxJson, depositAddress } = await zkClient.depositMina(
+      minaAmount,
+      state2048.seed,
+      address,
+    );
+
+    const { hash } = await (window as any).mina.sendTransaction({
+      transaction: sendTxJson,
+      feePayer: {
+        fee: 0.1,
+        memo: "",
+      },
+    });
+
+    console.log("Transaction submitted", sendTxJson);
+    setDepositAddress(depositAddress);
+  };
+
   if (needDeposit) {
     return (
       <div>
-        <p>Please deposit {minaAmount} Mina to join the game</p>
-        <Button onClick={() => onClose()}>Deposit</Button>
+        <div className="mb-2">
+          <p>Please deposit {minaAmount} Mina to join the game</p>
+        </div>
+        <Button onClick={() => handleDeposit()}>Deposit</Button>
       </div>
     );
   }

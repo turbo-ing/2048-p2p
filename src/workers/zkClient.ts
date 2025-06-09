@@ -178,6 +178,10 @@ export class ZkClient {
   async fetchLeaderboard() {
     return await this.remoteApi.fetchLeaderboard();
   }
+
+  async depositMina(amount: number, seed: bigint, yourAddress: string) {
+    return await this.remoteApi.depositMina(amount, seed, yourAddress);
+  }
 }
 
 // Global Singleton

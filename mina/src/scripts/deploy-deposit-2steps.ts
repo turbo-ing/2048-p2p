@@ -1,7 +1,7 @@
 import { config as dotenv } from "dotenv";
 dotenv();
 
-import { AccountUpdate, Bool, Mina, PrivateKey, UInt8 } from "o1js";
+import { AccountUpdate, Bool, Field, Mina, PrivateKey, UInt8 } from "o1js";
 import { Game2048ZKProgram } from "../lib/game2048ZKProgram.js";
 import { Deposit2048 } from "../contracts/Deposit2048.js";
 
@@ -61,6 +61,7 @@ async function main() {
     },
     async () => {
       await token.deploy();
+      await token.setSeed(Field(1234567890));
     },
   );
   await deployTx.prove();
