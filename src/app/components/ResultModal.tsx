@@ -261,39 +261,34 @@ export const ResultModal = ({
                 ? "Wait 3 minutes for your score to show in the leaderboard."
                 : "Click the button below to submit your score or download your ZK proof."}
             </p>
-            <div className="flex justify-center gap-4 mt-6 text-base">
-              {ranking[0].score > 0 && (
-                <Button
-                  onClick={submitted ? handleLeave : submitScore}
-                  disabled={submitting}
-                >
-                  {submitted
-                    ? "New Game"
-                    : submitting
-                      ? "Submitting..."
-                      : connected
-                        ? "Submit Score"
-                        : "Connect Auro Wallet"}
-                </Button>
-              )}
+            <div className="mt-6 text-base">
               {totalPlayers > 1 ? (
-                <div className="flex flex-col gap-2">
-                  <Button onClick={() => downloadProof()}>
-                    Download My Proof
-                  </Button>
-                  {areAllProofsAvailable() && (
-                    <Button onClick={downloadAllProofs}>
-                      Download All Proofs
+                <div className="space-y-4">
+                  {/* Top: Download buttons side by side */}
+                  <div className="flex justify-center gap-4">
+                    <Button onClick={() => downloadProof()}>
+                      Download My Proof
                     </Button>
-                  )}
+                    {areAllProofsAvailable() ? (
+                      <Button onClick={downloadAllProofs}>
+                        Download All Proofs
+                      </Button>
+                    ) : (
+                      <Button onClick={() => {}} disabled>
+                        Download All Proofs
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Status message if not all proofs available */}
                   {!areAllProofsAvailable() && (
                     <div className="text-sm text-gray-500 text-center">
                       Some player proofs not yet available
                     </div>
                   )}
 
-                  {/* Individual Player Proof Downloads */}
-                  <div className="mt-4 border-t pt-4">
+                  {/* Middle: Individual Player Proof Downloads */}
+                  <div className="border-t pt-4">
                     <p className="text-sm font-semibold mb-3 text-center">
                       Individual Player Proofs
                     </p>
@@ -324,15 +319,46 @@ export const ResultModal = ({
                       })}
                     </div>
                   </div>
+
+                  {/* Bottom: Submit Score button */}
+                  {ranking[0].score > 0 && (
+                    <div className="border-t pt-4 flex justify-center">
+                      <Button
+                        onClick={submitted ? handleLeave : submitScore}
+                        disabled={submitting}
+                      >
+                        {submitted
+                          ? "New Game"
+                          : submitting
+                            ? "Submitting..."
+                            : connected
+                              ? "Submit Score"
+                              : "Connect Auro Wallet"}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <Button onClick={() => downloadProof()}>
-                  Download ZK Proof
-                </Button>
+                <div className="flex justify-center gap-4">
+                  <Button onClick={() => downloadProof()}>
+                    Download ZK Proof
+                  </Button>
+                  {ranking[0].score > 0 && (
+                    <Button
+                      onClick={submitted ? handleLeave : submitScore}
+                      disabled={submitting}
+                    >
+                      {submitted
+                        ? "New Game"
+                        : submitting
+                          ? "Submitting..."
+                          : connected
+                            ? "Submit Score"
+                            : "Connect Auro Wallet"}
+                    </Button>
+                  )}
+                </div>
               )}
-              {/* <Button onClick={() => setIsZKModalOpen(false)}>
-                Back to Results
-              </Button> */}
             </div>
           </>
         ) : (
