@@ -69,7 +69,14 @@ export default function HomePage() {
 
   const handleSingleplayer = () => {
     setIsLoading(true);
-    joinSingleplayer("solomode-" + generateRoomCode(), "Solo", 1);
+    joinSingleplayer(
+      "solomode-" + generateRoomCode(),
+      "Solo",
+      1,
+      undefined,
+      undefined,
+      true,
+    );
   };
 
   const handleVersus = () => {

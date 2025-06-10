@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { use2048, initBoardWithSeed } from "@/reducer/2048";
+import { use2048 } from "@/reducer/2048";
 import { useMinaSessionKey } from "../mina/MinaSessionKeyProvider";
 import { PublicKey } from "o1js";
 
@@ -12,6 +12,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
   );
   const [gameTimer, setGameTimer] = useState(0);
   const [minaAmount, setMinaAmount] = useState(0);
+  const [isHost, setIsHost] = useState(false);
   const [gameStarted, setGameStarted] = useState(false); // New state to prevent re-runs
   const [
     state,
@@ -59,6 +60,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
             numPlayers: numberOfPlayers,
             minaAmount,
             minaSessionKey: PublicKey.fromPrivateKey(sessionKey!).toBase58(),
+            isHost,
           },
         });
 
@@ -134,6 +136,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     numPlayers?: number,
     timer?: number,
     minaAmount?: number,
+    isHostParam?: boolean,
   ) => {
     console.log("Resetting states and joining room with parameters: ", {
       roomId,
@@ -149,12 +152,14 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     setGameTimer(0);
     setNumOfPlayers(undefined);
     setMinaAmount(0);
+    setIsHost(false);
 
     // Set new game parameters
     setName(playerName);
     setNumOfPlayers(numPlayers);
     setGameTimer(timer ?? 0);
     setMinaAmount(minaAmount ?? 0);
+    setIsHost(isHostParam ?? false); // Default to false (not host)
     setWaitingToJoin(true);
 
     console.log("Updated states for joining: ", {

@@ -87,7 +87,14 @@ export default function MultiplayerModal({
     await joinRoom(group);
     //wait 50 ms
     await new Promise((resolve) => setTimeout(resolve, 100));
-    startJoin(rtcConfig.session?.code ?? "", nameInput);
+    startJoin(
+      rtcConfig.session?.code ?? "",
+      nameInput,
+      undefined,
+      undefined,
+      undefined,
+      false,
+    );
     setSelectedMode(SelectedMode.SHOW_ROOM_CODE);
   };
 
@@ -113,6 +120,7 @@ export default function MultiplayerModal({
       parseInt(numOfPlayers) ?? 1,
       parseInt(gameTimerInput) ?? 0,
       parseFloat(minaAmount) ?? 0,
+      true,
     );
     setSelectedMode(SelectedMode.SHOW_ROOM_CODE);
   };

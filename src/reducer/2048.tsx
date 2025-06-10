@@ -71,6 +71,7 @@ export type Game2048State = {
   minaDeposit: { [playerId: string]: string };
 
   seed: bigint;
+  receivedWelcome: boolean;
 };
 
 // Constants for grid size and initial tiles
@@ -89,6 +90,7 @@ interface JoinAction extends EdgeAction<Game2048State> {
     minaSessionKey: string;
     numPlayers?: number;
     minaAmount?: number;
+    isHost: boolean;
   };
 }
 
@@ -596,7 +598,7 @@ const game2048Reducer = (
         seed = BigInt(Math.floor(Math.random() * 1000000000000));
       }
 
-      // Re-create the board from the payload
+      // initialise board and seed
       const [grid, zkBoard] = initBoardWithSeed(seed);
       const payloadBoard = new GameBoardWithSeed({
         board: new GameBoard(zkBoard.board.cells.map(Field)),
@@ -651,8 +653,13 @@ const game2048Reducer = (
 
       console.log("Payload Board Session Key", payloadBoard.sessionKey);
 
-      // Queue the "init" move
-      queueMove(action.peerId!, payloadBoard, "init");
+      // Only queue the "init" move if we're the host (creating room)
+      if (action.payload.isHost) {
+        console.log("Host: Queueing init move");
+        queueMove(action.peerId!, payloadBoard, "init");
+      } else {
+        console.log("Joiner: Will queue init move in WELCOME");
+      }
 
       // Now return a brand-new state object
       return {
@@ -726,9 +733,10 @@ const game2048Reducer = (
         (peerId) => state.players[peerId] && peerId !== action.peerId,
       );
 
-      if (currentPeerId) {
+      // Only initialize our board if this is the first WELCOME message
+      if (currentPeerId && !state.receivedWelcome) {
         console.log(
-          "Updating our own board with seed from WELCOME:",
+          "First WELCOME - updating our board with seed:",
           seedBigInt,
         );
 
@@ -750,6 +758,8 @@ const game2048Reducer = (
 
         // Queue the "init" move for our board
         queueMove(currentPeerId, ourPayloadBoard, "init");
+      } else if (currentPeerId) {
+        console.log("Already received WELCOME - skipping board initialization");
       }
 
       // Assign the existing player's current state
@@ -780,6 +790,7 @@ const game2048Reducer = (
         totalPlayers: newTotalPlayers,
         minaSessionKeys: newMinaSessionKeys,
         seed: seedBigInt, // Update our state seed to match the host
+        receivedWelcome: true, // Mark that we've received a WELCOME message
       };
     }
     case "DEPOSIT": {
@@ -892,6 +903,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     minaDeposit: {},
 
     seed: 0n,
+    receivedWelcome: false,
   };
   const [room, setRoom] = useState("");
 

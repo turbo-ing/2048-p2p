@@ -21,8 +21,10 @@ export async function queueMove(
 ) {
   if (peerId != myPeerId) return;
   if (move == "init") {
+    console.log("Queueing init move");
     return zkClient.initZKProof(zkBoard);
   } else {
+    console.log("Queueing regular move");
     return zkClient.addMove(zkBoard, move);
   }
 }
