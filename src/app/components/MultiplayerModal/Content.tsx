@@ -423,23 +423,14 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
       return;
     }
 
-    console.log("Deposit wei sus");
+    const depositAddress = await zkClient.deployDepositContract(state2048.seed);
 
-    const { sendTxJson, depositAddress } = await zkClient.depositMina(
-      minaAmount,
-      state2048.seed,
-      address,
-    );
-
-    const { hash } = await (window as any).mina.sendTransaction({
-      transaction: sendTxJson,
-      feePayer: {
-        fee: 0.1,
-        memo: "",
-      },
+    const { hash } = await (window as any).mina.sendPayment({
+      to: depositAddress,
+      amount: Math.floor((minaAmount + 1.11) * 1000000) / 1000000,
     });
 
-    console.log("Transaction submitted", sendTxJson);
+    console.log("Transaction submitted", hash);
     setDepositAddress(depositAddress);
   };
 

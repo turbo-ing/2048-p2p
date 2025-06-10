@@ -179,8 +179,8 @@ export class ZkClient {
     return await this.remoteApi.fetchLeaderboard();
   }
 
-  async depositMina(amount: number, seed: bigint, yourAddress: string) {
-    return await this.remoteApi.depositMina(amount, seed, yourAddress);
+  async deployDepositContract(seed: bigint) {
+    return await this.remoteApi.deployDepositContract(seed);
   }
 }
 

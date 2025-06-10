@@ -321,28 +321,9 @@ export const zkWorkerAPI = {
     return scores;
   },
 
-  async depositMina(amount: number, seed: bigint, yourAddress: string) {
-    const yourPublicKey = PublicKey.fromBase58(yourAddress);
-
+  async deployDepositContract(seed: bigint) {
     const depositPrivateKey = PrivateKey.random();
     const depositAddress = depositPrivateKey.toPublicKey();
-
-    const sendTx = await Mina.transaction(async () => {
-      AccountUpdate.fundNewAccount(yourPublicKey, 1);
-      const update = AccountUpdate.createSigned(yourPublicKey);
-      update.send({
-        to: depositAddress,
-        amount: (amount + 0.11) * 1000000000,
-      });
-    });
-
-    console.log("Generating proof for sending MINA deposit");
-
-    await sendTx.prove();
-
-    console.log("Proof generated... for sending MINA deposit");
-
-    const sendTxJson = sendTx.toJSON();
 
     setTimeout(async () => {
       await Deposit2048.compile();
@@ -353,6 +334,7 @@ export const zkWorkerAPI = {
           if (account.account && account.account.balance.toBigInt() > 0) {
             break;
           }
+          console.log("Waiting for deposit contract to be funded");
           await new Promise((resolve) => setTimeout(resolve, 3000));
         } catch (error) {
           console.log("Error fetching account", error);
@@ -387,10 +369,7 @@ export const zkWorkerAPI = {
       console.log("Deposit contract deployed at", depositAddress.toBase58());
     }, 1);
 
-    return {
-      sendTxJson,
-      depositAddress: depositAddress.toBase58(),
-    };
+    return depositAddress.toBase58();
   },
 };
 
