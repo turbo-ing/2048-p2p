@@ -715,6 +715,43 @@ const game2048Reducer = (
         state.totalPlayers,
       );
 
+      // Extract seed from the WELCOME message
+      const welcomeSeed = action.payload.zkBoard.seed;
+      const seedBigInt = BigInt(welcomeSeed.toString());
+
+      console.log("Received seed from WELCOME:", seedBigInt);
+
+      // Find our own peer ID (we should already be in the player list from our JOIN)
+      const currentPeerId = state.playerId.find(
+        (peerId) => state.players[peerId] && peerId !== action.peerId,
+      );
+
+      if (currentPeerId) {
+        console.log(
+          "Updating our own board with seed from WELCOME:",
+          seedBigInt,
+        );
+
+        // Generate our own board using the same seed from the host
+        const [ourGrid, ourZkBoard] = initBoardWithSeed(seedBigInt);
+        const ourPayloadBoard = new GameBoardWithSeed({
+          board: new GameBoard(ourZkBoard.board.cells.map(Field)),
+          seed: Field.from(seedBigInt),
+          sessionKey:
+            newZkBoard[currentPeerId]?.sessionKey || PublicKey.empty(),
+        });
+
+        // Update our own board with the synchronized seed
+        newBoard[currentPeerId] = {
+          grid: ourGrid,
+          merges: [],
+        };
+        newZkBoard[currentPeerId] = ourPayloadBoard;
+
+        // Queue the "init" move for our board
+        queueMove(currentPeerId, ourPayloadBoard, "init");
+      }
+
       // Assign the existing player's current state
       newBoard[action.peerId!] = {
         grid: action.payload.grid,
@@ -742,6 +779,7 @@ const game2048Reducer = (
         playersCount: newPlayersCount,
         totalPlayers: newTotalPlayers,
         minaSessionKeys: newMinaSessionKeys,
+        seed: seedBigInt, // Update our state seed to match the host
       };
     }
     case "DEPOSIT": {
