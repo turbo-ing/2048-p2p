@@ -84,15 +84,17 @@ export default function HomePage() {
   };
 
   //make sure that we leave room if we refresh
-  window.onbeforeunload = function () {
-    if (rtc) {
-      try {
-        leaveRoom();
-      } catch (e) {
-        console.log("Error leaving room - may not be in one");
+  if (typeof window !== "undefined") {
+    window.onbeforeunload = function () {
+      if (rtc) {
+        try {
+          leaveRoom();
+        } catch (e) {
+          console.log("Error leaving room - may not be in one");
+        }
       }
-    }
-  };
+    };
+  }
 
   return (
     <>
