@@ -142,6 +142,10 @@ interface ResetAction extends EdgeAction<Game2048State> {
   type: "RESET";
 }
 
+interface KeepAliveAction extends EdgeAction<Game2048State> {
+  type: "KEEPALIVE";
+}
+
 // Action Types
 export type Action =
   | MoveAction
@@ -152,7 +156,8 @@ export type Action =
   | SendProofAction
   | RematchAction
   | TimerAction
-  | ResetAction;
+  | ResetAction
+  | KeepAliveAction;
 
 const error = (message: string) => {
   console.error(message);
@@ -859,6 +864,10 @@ const game2048Reducer = (
       console.log("reset states!");
       return { ...resetState };
 
+    case "KEEPALIVE":
+      console.log("[Reducer] KEEP ALIVE");
+      return state;
+
     default:
       return state;
   }
@@ -874,8 +883,8 @@ const Game2048Context = createContext<
       (group: Group) => Promise<void>,
       () => void,
       (topic: string, code?: string) => Promise<Group[]>,
-      Config,
-      string[],
+      Config | undefined,
+      string[] | undefined,
       ZkClient,
     ]
   | null
@@ -974,6 +983,26 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
       return () => clearTimeout(timer);
     }
   }, [state.actionPeerId, state.players, rtcConfig?.peer?.peerIdString]);
+
+  // Dispatch KEEPALIVE every 10 seconds when in a room
+  useEffect(() => {
+    const currentPeerId = rtcConfig?.peer?.peerIdString;
+    const isInRoom = currentPeerId && state.players[currentPeerId];
+
+    if (isInRoom) {
+      console.log("Starting KEEPALIVE timer - dispatching every 10 seconds");
+      const keepAliveInterval = setInterval(() => {
+        dispatch({
+          type: "KEEPALIVE",
+        });
+      }, 10000); // 10 seconds
+
+      return () => {
+        console.log("Clearing KEEPALIVE timer");
+        clearInterval(keepAliveInterval);
+      };
+    }
+  }, [state.players, rtcConfig?.peer?.peerIdString, dispatch]);
 
   return (
     <Game2048Context.Provider

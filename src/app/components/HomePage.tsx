@@ -56,7 +56,7 @@ export default function HomePage() {
   // Assign the peer ID once we have a turboEdge instance
   useEffect(() => {
     if (rtc) {
-      assignMyPeerId(rtcConfig.peer.peerIdString);
+      assignMyPeerId(rtcConfig!.peer.peerIdString);
     }
   }, [rtc]);
 

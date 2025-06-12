@@ -423,17 +423,24 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
       return;
     }
 
+    //set state value to indicate contract deploying, then deploy contract
+
     const depositAddress = await zkClient.deployDepositContract(state2048.seed);
 
+    //set state value to indicate contract deployed, then send payment
     const { hash } = await (window as any).mina.sendPayment({
       to: depositAddress,
       amount: Math.floor((minaAmount + 1.11) * 1000000) / 1000000,
     });
 
+    //set state value to indicate payment sent, then set deposit address
     console.log("Transaction submitted", hash);
     setDepositAddress(depositAddress);
   };
 
+  //TODO only allow deposit once ZK has compiled/initialised.
+  //TODO prevent second deposit while deploying contract / sending payment
+  //TODO add spinning wheel and waiting text for both of these
   if (needDeposit) {
     return (
       <div>

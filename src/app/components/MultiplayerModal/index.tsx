@@ -88,7 +88,7 @@ export default function MultiplayerModal({
     //wait 50 ms
     await new Promise((resolve) => setTimeout(resolve, 100));
     startJoin(
-      rtcConfig.session?.code ?? "",
+      rtcConfig!.session?.code ?? "",
       nameInput,
       undefined,
       undefined,
@@ -113,7 +113,7 @@ export default function MultiplayerModal({
     };
     console.log("Creating room with input config:", inputConfig);
     await createRoom(inputConfig);
-    const room = rtcConfig.session?.code;
+    const room = rtcConfig!.session?.code;
     startJoin(
       room ?? "",
       nameInput,
