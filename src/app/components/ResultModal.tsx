@@ -251,7 +251,9 @@ export const ResultModal = ({
             {totalPlayers > 1 ? (
               <div className="mt-2 text-lg text-center">
                 <p>Your Score: {currentPlayerScore}</p>
-                {!isCurrentPlayerWinner && <p>Winner's Score: {winnerScore}</p>}
+                {!isCurrentPlayerWinner && (
+                  <p>Winner&apos;s Score: {winnerScore}</p>
+                )}
               </div>
             ) : (
               <p className="mt-2 text-lg">Score: {currentPlayerScore}</p>
