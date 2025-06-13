@@ -12,6 +12,7 @@ import { Action } from "@/reducer/2048";
 import { Field, PrivateKey, Signature } from "o1js";
 import { minaSessionKey } from "@/app/mina/MinaSessionKeyProvider";
 import { DirectionMap, MoveType } from "@/utils/constants";
+import { DeployStatus } from "@/utils/types";
 
 export class ZkClient {
   worker: Worker;
@@ -20,6 +21,7 @@ export class ZkClient {
 
   compiled = false;
   isProcessing = false;
+  deployStatus: DeployStatus = DeployStatus.Compiling;
   moveCache: string[] = [];
   boardCache: GameBoardWithSeed[] = [];
   intervalId: number | null = null;
@@ -64,6 +66,10 @@ export class ZkClient {
 
   startInterval() {
     this.intervalId = window.setInterval(async () => {
+      //Before we do ZK let's check if our contract has deployed
+      this.deployStatus = await this.remoteApi.getDeployStatus();
+      console.log("Current deploy status", this.deployStatus);
+
       if (!this.compiled) {
         console.debug("Still compiling, skipping interval");
 

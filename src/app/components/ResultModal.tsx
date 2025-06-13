@@ -8,6 +8,7 @@ import Link from "next/link";
 import { use2048 } from "@/reducer/2048";
 import { useAuroWallet } from "../mina/useAuroWallet";
 import { useLeaderboard } from "../hooks/useLeaderboard";
+import { DeployStatus } from "@/utils/types";
 
 export interface Player {
   name: string;
@@ -258,6 +259,11 @@ export const ResultModal = ({
             ) : (
               <p className="mt-2 text-lg">Score: {currentPlayerScore}</p>
             )}
+            {zkClient.deployStatus !== DeployStatus.Compiling && (
+              <p className="mt-2 text-center text-sm text-[#94969C]">
+                Contract deployment state: {DeployStatus[zkClient.deployStatus]}
+              </p>
+            )}
             <p className="mt-3 text-center text-base">
               {submitted
                 ? "Wait 3 minutes for your score to show in the leaderboard."
@@ -368,10 +374,14 @@ export const ResultModal = ({
             <h2 className="font-semibold text-2xl md:text-4xl text-center">
               Generating ZK Proof...
             </h2>
-            {/* <p className="mt-2 text-lg">Score: {ranking[0].score}</p> */}
             <p className="mt-3 text-center text-base">
               Moves left to process: {lenQueue}
             </p>
+            {zkClient.deployStatus !== DeployStatus.Compiling && (
+              <p className="mt-2 text-center text-sm text-[#94969C]">
+                Contract deployment state: {DeployStatus[zkClient.deployStatus]}
+              </p>
+            )}
             {renderRanking()}
             {/* <div className="mt-8 flex justify-center text-base">
               <Button onClick={() => setIsZKModalOpen(false)}>

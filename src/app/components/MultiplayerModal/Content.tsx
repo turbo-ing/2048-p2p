@@ -8,6 +8,7 @@ import { use2048 } from "@/reducer/2048";
 import { useTurboEdgeV0 } from "@turbo-ing/edge-v0";
 import { Group } from "@turbo-ing/turbo-p2p";
 import { useAuroWallet } from "@/app/mina/useAuroWallet";
+import { DeployStatus } from "@/utils/types";
 
 export const InviteContent = () => {
   const { joinRoom, createNewRoom } = useMultiplayerContext();
@@ -537,7 +538,12 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
         </div>
       </div>
       <div className="mt-2 gap-4 mb-4 flex flex-col items-center">
-        <p className=" text-sm text-[#94969C]">Waiting for opponent</p>
+        <p className="text-sm text-[#94969C]">Waiting for opponent</p>
+        {minaAmount > 0 && (
+          <p className="text-sm text-[#94969C]">
+            Contract deployment state: {DeployStatus[zkClient.deployStatus]}
+          </p>
+        )}
         <p className="text-4xl text-center">{roomId}</p>
       </div>
       <div className="space-y-4 text-white">
