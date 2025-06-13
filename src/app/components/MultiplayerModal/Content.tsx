@@ -415,7 +415,8 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
 
   const needDeposit = minaAmount > 0 && !minaDeposit;
 
-  const [depositAddress, setDepositAddress] = useState<string | null>(null);
+  const [isDeployingContract, setIsDeployingContract] = useState(false);
+  const [isSendingPayment, setIsSendingPayment] = useState(false);
 
   const handleDeposit = async () => {
     if (!address) {
@@ -423,31 +424,81 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
       return;
     }
 
-    //set state value to indicate contract deploying, then deploy contract
+    try {
+      // Deploy contract
+      setIsDeployingContract(true);
+      const depositAddress = await zkClient.deployDepositContract(
+        state2048.seed,
+      );
+      setIsDeployingContract(false);
 
-    const depositAddress = await zkClient.deployDepositContract(state2048.seed);
+      console.log("About to send payment to deposit address", depositAddress);
 
-    //set state value to indicate contract deployed, then send payment
-    const { hash } = await (window as any).mina.sendPayment({
-      to: depositAddress,
-      amount: Math.floor((minaAmount + 1.11) * 1000000) / 1000000,
-    });
+      // Send payment
+      setIsSendingPayment(true);
+      const { hash } = await (window as any).mina.sendPayment({
+        to: depositAddress,
+        amount: Math.floor((minaAmount + 1.11) * 1000000) / 1000000,
+      });
+      setIsSendingPayment(false);
 
-    //set state value to indicate payment sent, then set deposit address
-    console.log("Transaction submitted", hash);
-    setDepositAddress(depositAddress);
+      console.log("Transaction submitted", hash);
+
+      // Dispatch DEPOSIT action to update state
+      dispatch({
+        type: "DEPOSIT",
+        payload: {
+          minaDeposit: minaAmount.toString(),
+        },
+      });
+    } catch (error) {
+      console.error("Error during deposit process:", error);
+      setIsDeployingContract(false);
+      setIsSendingPayment(false);
+    }
   };
 
-  //TODO only allow deposit once ZK has compiled/initialised.
-  //TODO prevent second deposit while deploying contract / sending payment
-  //TODO add spinning wheel and waiting text for both of these
+  const isZkReady = zkClient.compiled && !zkClient.isProcessing;
+  const isProcessingDeposit = isDeployingContract || isSendingPayment;
+
   if (needDeposit) {
     return (
-      <div>
-        <div className="mb-2">
-          <p>Please deposit {minaAmount} Mina to join the game</p>
+      <div className="p-6">
+        <div className="mb-6">
+          <p className="font-semibold text-xl mb-2">Deposit Required</p>
+          <p className="text-gray-600">
+            Please deposit {minaAmount} Mina to join the game
+          </p>
         </div>
-        <Button onClick={() => handleDeposit()}>Deposit</Button>
+
+        {!isZkReady && (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-black mr-3"></div>
+            <p className="text-gray-600">
+              Compiling ZK circuit, please wait...
+            </p>
+          </div>
+        )}
+
+        {isZkReady && !isProcessingDeposit && (
+          <Button onClick={handleDeposit} className="w-full">
+            Deposit {minaAmount} Mina
+          </Button>
+        )}
+
+        {isDeployingContract && (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-black mr-3"></div>
+            <p className="text-gray-600">Deploying Mina contract...</p>
+          </div>
+        )}
+
+        {isSendingPayment && (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-black mr-3"></div>
+            <p className="text-gray-600">Sending payment to contract...</p>
+          </div>
+        )}
       </div>
     );
   }

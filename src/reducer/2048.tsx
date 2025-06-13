@@ -105,6 +105,8 @@ interface WelcomeAction extends EdgeAction<Game2048State> {
     isFinished: boolean;
     surrendered: boolean;
     totalPlayers: number;
+    minaAmount: number;
+    minaDeposit: { [playerId: string]: string };
   };
 }
 
@@ -794,15 +796,11 @@ const game2048Reducer = (
         playersCount: newPlayersCount,
         totalPlayers: newTotalPlayers,
         minaSessionKeys: newMinaSessionKeys,
+        minaAmount: action.payload.minaAmount, // Update minaAmount from WELCOME
+        minaDeposit: { ...state.minaDeposit, ...action.payload.minaDeposit }, // Merge minaDeposit mappings
         seed: seedBigInt, // Update our state seed to match the host
         receivedWelcome: true, // Mark that we've received a WELCOME message
       };
-    }
-    case "DEPOSIT": {
-      console.log("Payload on DEPOSIT", action.payload);
-      const newMinaDeposit = { ...state.minaDeposit };
-      newMinaDeposit[action.peerId!] = action.payload.minaDeposit;
-      return { ...state, minaDeposit: newMinaDeposit };
     }
     case "DEPOSIT": {
       console.log("Payload on DEPOSIT", action.payload);
@@ -976,6 +974,8 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
             isFinished: state.isFinished[currentPeerId] || false,
             surrendered: state.surrendered[currentPeerId] || false,
             totalPlayers: state.totalPlayers,
+            minaAmount: state.minaAmount,
+            minaDeposit: state.minaDeposit,
           },
         });
       }, 200);
