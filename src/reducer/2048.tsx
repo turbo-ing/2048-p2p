@@ -69,6 +69,7 @@ export type Game2048State = {
 
   minaAmount: number;
   minaDeposit: { [playerId: string]: string };
+  deployed: { [playerId: string]: boolean };
 
   seed: bigint;
   receivedWelcome: boolean;
@@ -117,6 +118,10 @@ interface DepositAction extends EdgeAction<Game2048State> {
   };
 }
 
+interface DeployedAction extends EdgeAction<Game2048State> {
+  type: "DEPLOYED";
+}
+
 interface LeaveAction extends EdgeAction<Game2048State> {
   type: "LEAVE";
 }
@@ -154,6 +159,7 @@ export type Action =
   | JoinAction
   | WelcomeAction
   | DepositAction
+  | DeployedAction
   | LeaveAction
   | SendProofAction
   | RematchAction
@@ -625,6 +631,7 @@ const game2048Reducer = (
       const newSurrendered = { ...state.surrendered };
       const newRematch = { ...state.rematch };
       const newMinaSessionKeys = { ...state.minaSessionKeys };
+      const newMinaDeposit = { ...state.minaDeposit };
 
       // Figure out if we're adding a brand-new player
       // - If already in the list, don't increment player count
@@ -642,7 +649,11 @@ const game2048Reducer = (
         newNumPlayers = state.totalPlayers;
       }
 
-      let newMinaAmount = action.payload.minaAmount ?? state.minaAmount;
+      // Only update minaAmount if the payload amount is greater than 0
+      let newMinaAmount = state.minaAmount;
+      if (action.payload.minaAmount && action.payload.minaAmount > 0) {
+        newMinaAmount = action.payload.minaAmount;
+      }
 
       // Assign the new player's board
       newBoard[action.peerId!] = {
@@ -684,6 +695,7 @@ const game2048Reducer = (
         actionPeerId: action.peerId,
         minaSessionKeys: newMinaSessionKeys,
         minaAmount: newMinaAmount,
+        minaDeposit: newMinaDeposit,
         seed,
       };
     case "WELCOME": {
@@ -714,6 +726,7 @@ const game2048Reducer = (
       const newSurrendered = { ...state.surrendered };
       const newRematch = { ...state.rematch };
       const newMinaSessionKeys = { ...state.minaSessionKeys };
+      const newMinaDeposit = { ...state.minaDeposit };
 
       // Add the existing player if not already present
       let newPlayersCount = state.playersCount;
@@ -783,6 +796,30 @@ const game2048Reducer = (
         action.payload.minaSessionKey,
       );
 
+      // For joining players, update their minaAmount and minaDeposit
+      let newMinaAmount = state.minaAmount;
+
+      // If we're the host (our peerId is in the players list but not the joining peerId)
+      const isHost =
+        state.playerId.includes(action.peerId!) &&
+        action.peerId !== currentPeerId;
+      if (isHost) {
+        // If we're the host, keep our minaAmount
+        newMinaAmount = state.minaAmount;
+      } else {
+        // If we're joining, use the host's minaAmount
+        newMinaAmount = action.payload.minaAmount;
+      }
+
+      // Merge deposits from all players
+      if (action.payload.minaDeposit) {
+        Object.entries(action.payload.minaDeposit).forEach(
+          ([peerId, amount]) => {
+            newMinaDeposit[peerId] = amount;
+          },
+        );
+      }
+
       return {
         ...state,
         board: newBoard,
@@ -796,10 +833,10 @@ const game2048Reducer = (
         playersCount: newPlayersCount,
         totalPlayers: newTotalPlayers,
         minaSessionKeys: newMinaSessionKeys,
-        minaAmount: action.payload.minaAmount, // Update minaAmount from WELCOME
-        minaDeposit: { ...state.minaDeposit, ...action.payload.minaDeposit }, // Merge minaDeposit mappings
-        seed: seedBigInt, // Update our state seed to match the host
-        receivedWelcome: true, // Mark that we've received a WELCOME message
+        minaAmount: newMinaAmount,
+        minaDeposit: newMinaDeposit,
+        seed: seedBigInt,
+        receivedWelcome: true,
       };
     }
     case "DEPOSIT": {
@@ -807,6 +844,13 @@ const game2048Reducer = (
       const newMinaDeposit = { ...state.minaDeposit };
       newMinaDeposit[action.peerId!] = action.payload.minaDeposit;
       return { ...state, minaDeposit: newMinaDeposit };
+    }
+    case "DEPLOYED": {
+      console.log("Received DEPLOYED from", action.peerId!);
+      return {
+        ...state,
+        deployed: { ...state.deployed, [action.peerId!]: true },
+      };
     }
     case "LEAVE":
       console.log("Player " + action.peerId! + " is leaving the game.");
@@ -908,6 +952,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
 
     minaAmount: 0,
     minaDeposit: {},
+    deployed: {},
 
     seed: 0n,
     receivedWelcome: false,

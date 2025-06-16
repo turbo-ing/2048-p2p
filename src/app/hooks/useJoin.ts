@@ -31,20 +31,6 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
 
   const { sessionKey } = useMinaSessionKey();
 
-  // Debugging: Initial state
-  useEffect(() => {
-    console.log("Initial States: ", {
-      waitingToJoin,
-      sentTimer,
-      name,
-      numberOfPlayers,
-      gameTimer,
-      gameStarted,
-      state,
-      connected,
-    });
-  }, []);
-
   // Join Room Logic
   useEffect(() => {
     if (waitingToJoin && connected) {
@@ -80,10 +66,17 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     const allPlayersReady =
       state.totalPlayers > 0 && state.totalPlayers === state.playersCount;
 
+    // Check if all players have deployed their contracts
+    const allPlayersDeployed = Object.keys(state.players).every(
+      (playerId) => state.deployed[playerId] === true,
+    );
+
     console.log("Checking game start conditions: ", {
       isSinglePlayer,
       allPlayersReady,
       connected,
+      allPlayersDeployed,
+      deployed: state.deployed,
     });
 
     console.log(
@@ -93,7 +86,11 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
       state.playersCount,
     );
 
-    if (allPlayersReady && connected) {
+    if (
+      allPlayersReady &&
+      connected &&
+      (isSinglePlayer || allPlayersDeployed)
+    ) {
       console.log("All players are ready, starting game...");
 
       if (!isSinglePlayer && gameTimer && gameTimer > 0 && !sentTimer) {
@@ -114,14 +111,15 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
       setGameStarted(true);
       console.log("Game started, redirecting to play screen...");
       handleJoinGame(true);
-    } else if (!allPlayersReady) {
-      console.log("Players are not ready or some conditions failed.");
+    } else if (!allPlayersReady || (!isSinglePlayer && !allPlayersDeployed)) {
+      console.log("Players are not ready or contracts not deployed.");
       setGameStarted(false);
       handleJoinGame(false);
     }
   }, [
     state.totalPlayers,
     state.playersCount,
+    state.deployed,
     connected,
     gameTimer,
     sentTimer,
@@ -151,14 +149,13 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     setName("");
     setGameTimer(0);
     setNumOfPlayers(undefined);
-    setMinaAmount(0);
     setIsHost(false);
 
     // Set new game parameters
     setName(playerName);
     setNumOfPlayers(numPlayers);
     setGameTimer(timer ?? 0);
-    setMinaAmount(minaAmount ?? 0);
+    setMinaAmount(minaAmount ?? 0); // Set minaAmount only once
     setIsHost(isHostParam ?? false); // Default to false (not host)
     setWaitingToJoin(true);
 

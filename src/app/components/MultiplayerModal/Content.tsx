@@ -412,12 +412,23 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
   const { address } = useAuroWallet();
 
   const minaAmount = state2048.minaAmount;
-  const minaDeposit = state2048.minaDeposit[rtcConfig?.peer.peerIdString ?? ""];
+  const currentPeerId = rtcConfig?.peer.peerIdString ?? "";
+  const minaDeposit = state2048.minaDeposit[currentPeerId];
 
   const needDeposit = minaAmount > 0 && !minaDeposit;
 
   const [isDeployingContract, setIsDeployingContract] = useState(false);
   const [isSendingPayment, setIsSendingPayment] = useState(false);
+
+  // Watch for deploy status changes
+  useEffect(() => {
+    if (zkClient.deployStatus === 7 && !state2048.deployed[currentPeerId]) {
+      console.log("Contract deployed, dispatching DEPLOYED action");
+      dispatch({
+        type: "DEPLOYED",
+      });
+    }
+  }, [zkClient.deployStatus, currentPeerId, state2048.deployed, dispatch]);
 
   const handleDeposit = async () => {
     if (!address) {
@@ -462,99 +473,111 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
   const isZkReady = zkClient.compiled && !zkClient.isProcessing;
   const isProcessingDeposit = isDeployingContract || isSendingPayment;
 
-  if (needDeposit) {
-    return (
-      <div className="p-6">
-        <div className="mb-6">
-          <p className="font-semibold text-xl mb-2">Deposit Required</p>
-          <p className="text-gray-600">
-            Please deposit {minaAmount} Mina to join the game
-          </p>
-        </div>
+  // Determine waiting message based on player count and deployment status
+  const allPlayersJoined = state2048.playersCount === state2048.totalPlayers;
+  const allPlayersDeployed = Object.keys(state2048.players).every(
+    (playerId) => state2048.deployed[playerId] === true,
+  );
 
-        {!isZkReady && (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-black mr-3"></div>
-            <p className="text-gray-600">
-              Compiling ZK circuit, please wait...
-            </p>
-          </div>
-        )}
-
-        {isZkReady && !isProcessingDeposit && (
-          <Button onClick={handleDeposit} className="w-full">
-            Deposit {minaAmount} Mina
-          </Button>
-        )}
-
-        {isDeployingContract && (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-black mr-3"></div>
-            <p className="text-gray-600">Deploying Mina contract...</p>
-          </div>
-        )}
-
-        {isSendingPayment && (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-black mr-3"></div>
-            <p className="text-gray-600">Sending payment to contract...</p>
-          </div>
-        )}
-      </div>
-    );
-  }
+  const waitingMessage = allPlayersJoined
+    ? "Waiting for opponents to deploy contract"
+    : "Waiting for players to join";
 
   return (
-    <div>
-      <div className="">
-        <p className="font-semibold text-2xl md:text-4xl">
-          Share the Room Code
-        </p>
-        <p className="mt-1 text-sm text-[#94969C]">
-          Invite a friend for a private match!
-        </p>
-      </div>
-      <div className="flex flex-col items-center mt-10">
-        <div
-          className="rounded-full w-[182px] h-[182px] flex items-center justify-center transition-all"
-          style={{
-            background: `conic-gradient(
-#edc22e ${Math.min((state.playersCount / state.totalPlayers) * 100, 100)}%, 
-#e0e0e0 0
-    )`,
-          }}
-        >
+    <div className="flex flex-col gap-8">
+      {/* Room Code Section */}
+      <div>
+        <div className="">
+          <p className="font-semibold text-2xl md:text-4xl">
+            Share the Room Code
+          </p>
+          <p className="mt-1 text-sm text-[#94969C]">
+            Invite a friend for a private match!
+          </p>
+        </div>
+        <div className="flex flex-col items-center mt-10">
           <div
-            className="bg-background rounded-full flex items-center justify-center"
+            className="rounded-full w-[182px] h-[182px] flex items-center justify-center transition-all"
             style={{
-              width: "calc(182px - 20px)",
-              height: "calc(182px - 20px)",
+              background: `conic-gradient(
+                #edc22e ${Math.min((state.playersCount / state.totalPlayers) * 100, 100)}%, 
+                #e0e0e0 0
+              )`,
             }}
           >
-            <p className="text-4xl">
-              {state.playersCount}/{state.totalPlayers}
-            </p>
+            <div
+              className="bg-background rounded-full flex items-center justify-center"
+              style={{
+                width: "calc(182px - 20px)",
+                height: "calc(182px - 20px)",
+              }}
+            >
+              <p className="text-4xl">
+                {state.playersCount}/{state.totalPlayers}
+              </p>
+            </div>
           </div>
         </div>
+        <div className="mt-2 gap-4 mb-4 flex flex-col items-center">
+          <p className="text-sm text-[#94969C]">{waitingMessage}</p>
+          {minaAmount > 0 && (
+            <p className="text-sm text-[#94969C]">
+              Contract deployment state: {DeployStatus[zkClient.deployStatus]}
+            </p>
+          )}
+          <p className="text-4xl text-center">{roomId}</p>
+        </div>
+        <div className="space-y-4 text-white">
+          <Button
+            variant="inverted"
+            onClick={() => navigator.clipboard.writeText(roomId)}
+          >
+            Copy Room Code
+          </Button>
+          <Button onClick={onClose}>Leave Room</Button>
+        </div>
       </div>
-      <div className="mt-2 gap-4 mb-4 flex flex-col items-center">
-        <p className="text-sm text-[#94969C]">Waiting for opponent</p>
-        {minaAmount > 0 && (
-          <p className="text-sm text-[#94969C]">
-            Contract deployment state: {DeployStatus[zkClient.deployStatus]}
-          </p>
-        )}
-        <p className="text-4xl text-center">{roomId}</p>
-      </div>
-      <div className="space-y-4 text-white">
-        <Button
-          variant="inverted"
-          onClick={() => navigator.clipboard.writeText(roomId)}
-        >
-          Copy Room Code
-        </Button>
-        <Button onClick={onClose}>Leave Room</Button>
-      </div>
+
+      {/* Deposit Section - Only shown if needed */}
+      {needDeposit && (
+        <div className="border-t pt-8">
+          <div className="mb-6">
+            <p className="font-semibold text-xl mb-2">Deposit Required</p>
+            <p className="text-gray-600">
+              Please deposit {minaAmount} Mina to join the game
+            </p>
+          </div>
+
+          {!isZkReady && (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-black mr-3"></div>
+              <p className="text-gray-600">
+                Compiling ZK circuit, please wait...
+              </p>
+            </div>
+          )}
+
+          {isZkReady && !isProcessingDeposit && (
+            <Button onClick={handleDeposit} className="w-full">
+              Deposit {minaAmount} Mina
+            </Button>
+          )}
+
+          {isDeployingContract && (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-black mr-3"></div>
+              <p className="text-gray-600">Deploying Mina contract...</p>
+            </div>
+          )}
+
+          {isSendingPayment && (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-black mr-3"></div>
+              <p className="text-gray-600">Sending payment to contract...</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

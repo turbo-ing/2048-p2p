@@ -11,7 +11,6 @@ import SinglePlayer from "./icon/Singleplayer";
 import Versus from "./icon/Versus";
 import TurboEdgeNotification from "./TurboEdgeNotifcation";
 import useIsMobile from "../hooks/useIsMobile";
-//import { useJoin } from "../hooks/useJoin";
 import React from "react";
 import Navbar from "./Navbar";
 import LeaderboardModal from "./LeaderboardModal";
