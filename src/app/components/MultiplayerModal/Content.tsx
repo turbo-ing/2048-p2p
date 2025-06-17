@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Button from "../Button";
 import CreateRoom from "../icon/CreateRoom";
 import JoinRoom from "../icon/JoinRoom";
@@ -419,16 +419,32 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
 
   const [isDeployingContract, setIsDeployingContract] = useState(false);
   const [isSendingPayment, setIsSendingPayment] = useState(false);
+  const [deployStatus, setDeployStatus] = useState(DeployStatus.Compiling);
 
-  // Watch for deploy status changes
+  // Set up interval to check deploy status
+  const deployCheckInterval = useRef<NodeJS.Timeout>();
+
+  if (!deployCheckInterval.current) {
+    deployCheckInterval.current = setInterval(() => {
+      console.log("Deploy status", zkClient.deployStatus);
+      setDeployStatus(zkClient.deployStatus);
+      if (zkClient.deployStatus === 7 && !state2048.deployed[currentPeerId]) {
+        console.log("Contract deployed, dispatching DEPLOYED action");
+        dispatch({
+          type: "DEPLOYED",
+        });
+      }
+    }, 1000);
+  }
+
+  // Clean up interval on unmount
   useEffect(() => {
-    if (zkClient.deployStatus === 7 && !state2048.deployed[currentPeerId]) {
-      console.log("Contract deployed, dispatching DEPLOYED action");
-      dispatch({
-        type: "DEPLOYED",
-      });
-    }
-  }, [zkClient.deployStatus, currentPeerId, state2048.deployed, dispatch]);
+    return () => {
+      if (deployCheckInterval.current) {
+        clearInterval(deployCheckInterval.current);
+      }
+    };
+  }, []);
 
   const handleDeposit = async () => {
     if (!address) {
@@ -522,7 +538,7 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
           <p className="text-sm text-[#94969C]">{waitingMessage}</p>
           {minaAmount > 0 && (
             <p className="text-sm text-[#94969C]">
-              Contract deployment state: {DeployStatus[zkClient.deployStatus]}
+              Contract deployment state: {DeployStatus[deployStatus]}
             </p>
           )}
           <p className="text-4xl text-center">{roomId}</p>

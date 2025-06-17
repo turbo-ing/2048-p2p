@@ -85,7 +85,8 @@ export const ResultModal = ({
   // Helper function to download all player proofs
   const downloadAllProofs = () => {
     state.playerId.forEach((playerId) => {
-      if (state.compiledProof[playerId]) {
+      console.log(state.zkCompleted[playerId]);
+      if (state.compiledProof[playerId] && state.zkCompleted[playerId]) {
         downloadProof(playerId);
       }
     });
@@ -93,7 +94,7 @@ export const ResultModal = ({
 
   // Helper function to check if proofs are available for all players
   const areAllProofsAvailable = () => {
-    return state.playerId.every((playerId) => state.compiledProof[playerId]);
+    return state.playerId.every((playerId) => state.zkCompleted[playerId]);
   };
 
   useEffect(() => {
@@ -102,6 +103,40 @@ export const ResultModal = ({
       rematch();
     }
   }, [isRematchRequested, lenQueue, remProcessing, rematch]);
+
+  useEffect(() => {
+    console.log("Setting up ZK completion check interval");
+
+    const checkZKCompletion = () => {
+      console.log("Checking ZK completion status...");
+      console.log("Current players:", Object.keys(state.players));
+      console.log("ZK completion status:", state.zkCompleted);
+      console.log("LenQueue:", zkClient.moveCache.length);
+      console.log("Is lenQueue 0:", zkClient.moveCache.length === 0);
+      console.log("isProcessing:", !zkClient.isProcessing);
+      console.log(
+        "RTC Config:",
+        !state.zkCompleted[rtcConfig!.peer.peerIdString],
+      );
+
+      if (
+        zkClient.moveCache.length === 0 &&
+        !zkClient.isProcessing &&
+        !state.zkCompleted[rtcConfig!.peer.peerIdString]
+      ) {
+        console.log("All ZK proofs completed, dispatching ZK_COMPLETED");
+        dispatch({ type: "ZK_COMPLETED" });
+      }
+    };
+
+    // Set up interval that runs forever
+    const intervalId = setInterval(checkZKCompletion, 1000);
+
+    return () => {
+      console.log("Cleaning up ZK completion check interval");
+      clearInterval(intervalId);
+    };
+  }, []); // Empty dependency array - only run on mount
 
   const getHeadingText = () => {
     if (totalPlayers > 1) {
@@ -282,8 +317,8 @@ export const ResultModal = ({
                         Download All Proofs
                       </Button>
                     ) : (
-                      <Button onClick={() => {}} disabled>
-                        Download All Proofs
+                      <Button onClick={downloadAllProofs}>
+                        Download Available Proofs
                       </Button>
                     )}
                   </div>
@@ -303,11 +338,15 @@ export const ResultModal = ({
                     <div className="space-y-2">
                       {state.playerId.map((playerId) => {
                         const playerName = state.players[playerId];
-                        const hasProof = state.compiledProof[playerId];
+                        const hasProof = (peer: string) =>
+                          state.zkCompleted[peer];
+                        const score =
+                          ranking.find((p) => p.name === playerName)?.score ||
+                          0;
                         return (
                           <div
                             key={playerId}
-                            className="flex items-center justify-between text-sm"
+                            className="flex items-center justify-between p-4 border rounded"
                           >
                             <div className="flex flex-col">
                               <span className="font-medium">{playerName}</span>
@@ -317,10 +356,16 @@ export const ResultModal = ({
                             </div>
                             <Button
                               onClick={() => downloadProof(playerId)}
-                              disabled={!hasProof}
-                              className="text-xs px-2 py-1"
+                              disabled={!hasProof(playerId)}
+                              className={`text-xs px-2 py-1 ${
+                                !hasProof(playerId)
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
                             >
-                              {hasProof ? "Download" : "No Proof"}
+                              {hasProof(playerId)
+                                ? "Download Proof"
+                                : "Waiting for Proof"}
                             </Button>
                           </div>
                         );

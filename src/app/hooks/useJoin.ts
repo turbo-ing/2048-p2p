@@ -66,16 +66,20 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     const allPlayersReady =
       state.totalPlayers > 0 && state.totalPlayers === state.playersCount;
 
-    // Check if all players have deployed their contracts
-    const allPlayersDeployed = Object.keys(state.players).every(
-      (playerId) => state.deployed[playerId] === true,
-    );
+    // Only check for contract deployment if minaAmount > 0
+    const needsContractDeployment = state.minaAmount > 0;
+    const allPlayersDeployed =
+      !needsContractDeployment ||
+      Object.keys(state.players).every(
+        (playerId) => state.deployed[playerId] === true,
+      );
 
     console.log("Checking game start conditions: ", {
       isSinglePlayer,
       allPlayersReady,
       connected,
       allPlayersDeployed,
+      needsContractDeployment,
       deployed: state.deployed,
     });
 
@@ -120,6 +124,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     state.totalPlayers,
     state.playersCount,
     state.deployed,
+    state.minaAmount,
     connected,
     gameTimer,
     sentTimer,

@@ -70,6 +70,7 @@ export type Game2048State = {
   minaAmount: number;
   minaDeposit: { [playerId: string]: string };
   deployed: { [playerId: string]: boolean };
+  zkCompleted: { [playerId: string]: boolean };
 
   seed: bigint;
   receivedWelcome: boolean;
@@ -122,6 +123,10 @@ interface DeployedAction extends EdgeAction<Game2048State> {
   type: "DEPLOYED";
 }
 
+interface ZKCompletedAction extends EdgeAction<Game2048State> {
+  type: "ZK_COMPLETED";
+}
+
 interface LeaveAction extends EdgeAction<Game2048State> {
   type: "LEAVE";
 }
@@ -160,6 +165,7 @@ export type Action =
   | WelcomeAction
   | DepositAction
   | DeployedAction
+  | ZKCompletedAction
   | LeaveAction
   | SendProofAction
   | RematchAction
@@ -847,10 +853,15 @@ const game2048Reducer = (
     }
     case "DEPLOYED": {
       console.log("Received DEPLOYED from", action.peerId!);
-      return {
-        ...state,
-        deployed: { ...state.deployed, [action.peerId!]: true },
-      };
+      const deployedState = state;
+      deployedState.deployed[action.peerId!] = true;
+      return { ...deployedState };
+    }
+    case "ZK_COMPLETED": {
+      console.log("Received ZK_COMPLETED from", action.peerId!);
+      const zkState = state;
+      zkState.zkCompleted[action.peerId!] = true;
+      return { ...zkState };
     }
     case "LEAVE":
       console.log("Player " + action.peerId! + " is leaving the game.");
@@ -953,6 +964,7 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     minaAmount: 0,
     minaDeposit: {},
     deployed: {},
+    zkCompleted: {},
 
     seed: 0n,
     receivedWelcome: false,
