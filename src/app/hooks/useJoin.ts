@@ -90,11 +90,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
       state.playersCount,
     );
 
-    if (
-      allPlayersReady &&
-      connected &&
-      (isSinglePlayer || allPlayersDeployed)
-    ) {
+    if (allPlayersReady && connected) {
       console.log("All players are ready, starting game...");
 
       if (!isSinglePlayer && gameTimer && gameTimer > 0 && !sentTimer) {

@@ -79,7 +79,7 @@ let score2048: Score2048 | null = null;
 let zkProgramCompiling = false;
 let contractsLoading = false;
 let depositContractLoading = false;
-let deployStatus = DeployStatus.Compiling;
+let deployStatus = DeployStatus.Idle;
 
 export const zkWorkerAPI = {
   async setActiveNetwork(network: string) {
@@ -162,6 +162,14 @@ export const zkWorkerAPI = {
     if (!proofCache || !sessionPrivateKey) {
       throw new Error("Proof cache is not initialized");
     }
+
+    while (
+      deployStatus !== DeployStatus.Deployed &&
+      deployStatus !== DeployStatus.Idle
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
     const zkBoard = new GameBoard(boardFields);
     const seed = Field(seedNum);
@@ -329,6 +337,8 @@ export const zkWorkerAPI = {
   async deployDepositContract(seed: bigint) {
     const depositPrivateKey = PrivateKey.random();
     const depositAddress = depositPrivateKey.toPublicKey();
+
+    deployStatus = DeployStatus.Compiling;
 
     setTimeout(async () => {
       console.log("Compiling deposit contract");

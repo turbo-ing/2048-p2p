@@ -21,6 +21,7 @@ export type ArrowKeyType = keyof typeof ArrowKey;
 export type DirectionType = keyof typeof Direction;
 
 export enum DeployStatus {
+  Idle,
   Compiling,
   Funding,
   Constructing,
