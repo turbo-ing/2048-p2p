@@ -853,9 +853,9 @@ const game2048Reducer = (
     }
     case "DEPLOYED": {
       console.log("Received DEPLOYED from", action.peerId!);
-      const deployedState = state;
-      deployedState.deployed[action.peerId!] = true;
-      return { ...deployedState };
+      const deployedState = { ...state.deployed };
+      deployedState[action.peerId!] = true;
+      return { ...state, deployed: deployedState };
     }
     case "ZK_COMPLETED": {
       console.log("Received ZK_COMPLETED from", action.peerId!);
