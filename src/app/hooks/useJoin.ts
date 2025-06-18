@@ -71,7 +71,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
     const allPlayersDeployed =
       !needsContractDeployment ||
       Object.keys(state.players).every(
-        (playerId) => state.deployed[playerId] === true,
+        (playerId) => state.minaDeposit[playerId], //state.deployed[playerId] === true,
       );
 
     console.log("Checking game start conditions: ", {
@@ -119,7 +119,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
   }, [
     state.totalPlayers,
     state.playersCount,
-    state.deployed,
+    state.minaDeposit,
     state.minaAmount,
     connected,
     gameTimer,
