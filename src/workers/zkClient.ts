@@ -80,6 +80,11 @@ export class ZkClient {
 
         return;
       }
+      if (this.deployStatus !== DeployStatus.Deployed) {
+        console.debug("Contract is not deployed, skipping interval");
+
+        return;
+      }
       if (this.moveCache.length === 0) {
         console.debug("No moves to process, skipping interval");
 

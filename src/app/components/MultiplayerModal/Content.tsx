@@ -476,7 +476,7 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
       dispatch({
         type: "DEPOSIT",
         payload: {
-          minaDeposit: minaAmount.toString(),
+          minaDeposit: depositAddress,
         },
       });
     } catch (error) {
