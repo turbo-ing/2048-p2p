@@ -87,7 +87,7 @@ export const CreateRoomContent = () => {
         id={"username"}
       />
 
-      <div className="mt-5 text-left">
+      <div className="mt-5 text-left hidden">
         <label className="text-sm font-medium">Number of players</label>
         <div className="border border-text bg-transparent rounded-xl shadow text-md py-2.5 px-3.5 w-full mt-1.5 flex items-center justify-between">
           <button
