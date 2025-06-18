@@ -66,7 +66,7 @@ import {
 } from "@/lib/game2048ZKLogic";
 import { DirectionMap, MoveType } from "@/utils/constants";
 import { Score2048 } from "@/app/mina/contracts/Score2048";
-import { LeaderboardScore } from "@/utils/types.ts";
+import { LeaderboardScore, DeployStatus } from "@/utils/types.ts";
 import { Deposit2048 } from "../app/mina/contracts/Deposit2048.ts";
 
 const SCORE_2048_ADDRESS =
@@ -79,12 +79,17 @@ let score2048: Score2048 | null = null;
 let zkProgramCompiling = false;
 let contractsLoading = false;
 let depositContractLoading = false;
+let deployStatus = DeployStatus.Compiling;
 
 export const zkWorkerAPI = {
   async setActiveNetwork(network: string) {
     const Network = Mina.Network(network);
     console.log("Network instance configured", network);
     Mina.setActiveInstance(Network);
+  },
+
+  async getDeployStatus() {
+    return deployStatus;
   },
 
   async initZKProof(
@@ -326,15 +331,17 @@ export const zkWorkerAPI = {
     const depositAddress = depositPrivateKey.toPublicKey();
 
     setTimeout(async () => {
+      console.log("Compiling deposit contract");
       await Deposit2048.compile();
 
+      deployStatus = DeployStatus.Funding;
+      console.log("Waiting for deposit contract to be funded");
       while (true) {
         try {
           const account = await fetchAccount({ publicKey: depositAddress });
           if (account.account && account.account.balance.toBigInt() > 0) {
             break;
           }
-          console.log("Waiting for deposit contract to be funded");
           await new Promise((resolve) => setTimeout(resolve, 3000));
         } catch (error) {
           console.log("Error fetching account", error);
@@ -343,9 +350,10 @@ export const zkWorkerAPI = {
       }
 
       const fee = 100_000_000;
-
       const deposit = new Deposit2048(depositAddress);
 
+      deployStatus = DeployStatus.Constructing;
+      console.log("Constructing deploy transaction");
       const deployTx = await Mina.transaction(
         {
           sender: depositAddress,
@@ -356,16 +364,24 @@ export const zkWorkerAPI = {
           await deposit.setSeed(Field(seed));
         },
       );
+
+      deployStatus = DeployStatus.Proving;
+      console.log("Proving deploy transaction");
       await deployTx.prove();
 
+      deployStatus = DeployStatus.Signing;
+      console.log("Signing deploy transaction");
       const signedTx = await deployTx.sign([depositPrivateKey]);
 
+      deployStatus = DeployStatus.Sending;
+      console.log("Sending deploy transaction");
       const pendingTx = await signedTx.send();
 
+      deployStatus = DeployStatus.Deploying;
       console.log("Deploying Deposit contract at", depositAddress.toBase58());
-
       await pendingTx.wait();
 
+      deployStatus = DeployStatus.Deployed;
       console.log("Deposit contract deployed at", depositAddress.toBase58());
     }, 1);
 

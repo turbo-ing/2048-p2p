@@ -20,6 +20,17 @@ export enum Direction {
 export type ArrowKeyType = keyof typeof ArrowKey;
 export type DirectionType = keyof typeof Direction;
 
+export enum DeployStatus {
+  Compiling,
+  Funding,
+  Constructing,
+  Proving,
+  Signing,
+  Sending,
+  Deploying,
+  Deployed,
+}
+
 export type LeaderboardScore = {
   address: string;
   totalScore: number;
