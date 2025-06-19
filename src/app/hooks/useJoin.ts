@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { use2048 } from "@/reducer/2048";
 import { useMinaSessionKey } from "../mina/MinaSessionKeyProvider";
 import { PublicKey } from "o1js";
+import { useAuroWallet } from "../mina/useAuroWallet";
 
 export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
   const [waitingToJoin, setWaitingToJoin] = useState(false);
@@ -30,6 +31,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
   const connected = (rtc && true) ?? false;
 
   const { sessionKey } = useMinaSessionKey();
+  const { address } = useAuroWallet();
 
   // Join Room Logic
   useEffect(() => {
@@ -47,6 +49,7 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
             minaAmount,
             minaSessionKey: PublicKey.fromPrivateKey(sessionKey!).toBase58(),
             isHost,
+            minaWallet: address ?? undefined,
           },
         });
 
@@ -90,7 +93,11 @@ export const useJoin = (handleJoinGame: (joining: boolean) => void) => {
       state.playersCount,
     );
 
-    if (allPlayersReady && connected) {
+    if (
+      allPlayersReady &&
+      connected &&
+      (isSinglePlayer || allPlayersDeployed)
+    ) {
       console.log("All players are ready, starting game...");
 
       if (!isSinglePlayer && gameTimer && gameTimer > 0 && !sentTimer) {

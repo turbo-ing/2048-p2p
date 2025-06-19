@@ -57,6 +57,7 @@ export type Game2048State = {
   playerId: string[];
   players: { [playerId: string]: string };
   minaSessionKeys: { [playerId: string]: PublicKey };
+  minaWallet: { [playerId: string]: PublicKey };
   isFinished: { [playerId: string]: boolean };
   surrendered: { [playerId: string]: boolean };
   playersCount: number;
@@ -69,6 +70,7 @@ export type Game2048State = {
 
   minaAmount: number;
   minaDeposit: { [playerId: string]: string };
+  minaDepositSignatures: { [playerId: string]: string };
   deployed: { [playerId: string]: boolean };
   zkCompleted: { [playerId: string]: boolean };
 
@@ -90,6 +92,7 @@ interface JoinAction extends EdgeAction<Game2048State> {
   payload: {
     name: string;
     minaSessionKey: string;
+    minaWallet?: string;
     numPlayers?: number;
     minaAmount?: number;
     isHost: boolean;
@@ -103,6 +106,7 @@ interface WelcomeAction extends EdgeAction<Game2048State> {
     grid: Grid;
     zkBoard: GameBoardWithSeed;
     minaSessionKey: string;
+    minaWallet?: string;
     score: number;
     isFinished: boolean;
     surrendered: boolean;
@@ -116,6 +120,13 @@ interface DepositAction extends EdgeAction<Game2048State> {
   type: "DEPOSIT";
   payload: {
     minaDeposit: string;
+  };
+}
+
+interface DepositSignatureAction extends EdgeAction<Game2048State> {
+  type: "DEPOSIT_SIGNATURE";
+  payload: {
+    signature: string;
   };
 }
 
@@ -164,6 +175,7 @@ export type Action =
   | JoinAction
   | WelcomeAction
   | DepositAction
+  | DepositSignatureAction
   | DeployedAction
   | ZKCompletedAction
   | LeaveAction
@@ -638,6 +650,7 @@ const game2048Reducer = (
       const newRematch = { ...state.rematch };
       const newMinaSessionKeys = { ...state.minaSessionKeys };
       const newMinaDeposit = { ...state.minaDeposit };
+      const newMinaWallet = { ...state.minaWallet };
 
       // Figure out if we're adding a brand-new player
       // - If already in the list, don't increment player count
@@ -674,6 +687,11 @@ const game2048Reducer = (
       newMinaSessionKeys[action.peerId!] = PublicKey.fromBase58(
         action.payload.minaSessionKey,
       );
+      if (action.payload.minaWallet) {
+        newMinaWallet[action.peerId!] = PublicKey.fromBase58(
+          action.payload.minaWallet,
+        );
+      }
 
       console.log("Payload Board Session Key", payloadBoard.sessionKey);
 
@@ -702,6 +720,7 @@ const game2048Reducer = (
         minaSessionKeys: newMinaSessionKeys,
         minaAmount: newMinaAmount,
         minaDeposit: newMinaDeposit,
+        minaWallet: newMinaWallet,
         seed,
       };
     case "WELCOME": {
@@ -733,6 +752,7 @@ const game2048Reducer = (
       const newRematch = { ...state.rematch };
       const newMinaSessionKeys = { ...state.minaSessionKeys };
       const newMinaDeposit = { ...state.minaDeposit };
+      const newMinaWallet = { ...state.minaWallet };
 
       // Add the existing player if not already present
       let newPlayersCount = state.playersCount;
@@ -801,6 +821,11 @@ const game2048Reducer = (
       newMinaSessionKeys[action.peerId!] = PublicKey.fromBase58(
         action.payload.minaSessionKey,
       );
+      if (action.payload.minaWallet) {
+        newMinaWallet[action.peerId!] = PublicKey.fromBase58(
+          action.payload.minaWallet,
+        );
+      }
 
       // For joining players, update their minaAmount and minaDeposit
       let newMinaAmount = state.minaAmount;
@@ -841,6 +866,7 @@ const game2048Reducer = (
         minaSessionKeys: newMinaSessionKeys,
         minaAmount: newMinaAmount,
         minaDeposit: newMinaDeposit,
+        minaWallet: newMinaWallet,
         seed: seedBigInt,
         receivedWelcome: true,
       };
@@ -856,6 +882,12 @@ const game2048Reducer = (
       const deployedState = { ...state.deployed };
       deployedState[action.peerId!] = true;
       return { ...state, deployed: deployedState };
+    }
+    case "DEPOSIT_SIGNATURE": {
+      console.log("Received deposit signature from", action.peerId!);
+      const minaSignatureState = { ...state.minaDepositSignatures };
+      minaSignatureState[action.peerId!] = action.payload.signature;
+      return { ...state, minaDepositSignatures: minaSignatureState };
     }
     case "ZK_COMPLETED": {
       console.log("Received ZK_COMPLETED from", action.peerId!);
@@ -959,10 +991,11 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
     surrendered: {},
     rematch: {},
     timer: 0,
-    minaSessionKeys: PublicKey.empty(),
-
+    minaSessionKeys: {},
+    minaWallet: {},
     minaAmount: 0,
     minaDeposit: {},
+    minaDepositSignatures: {},
     deployed: {},
     zkCompleted: {},
 
@@ -1033,6 +1066,8 @@ export const Game2048Provider: React.FC<{ children: React.ReactNode }> = ({
             totalPlayers: state.totalPlayers,
             minaAmount: state.minaAmount,
             minaDeposit: state.minaDeposit,
+            minaWallet:
+              state.minaWallet[currentPeerId]?.toBase58() ?? undefined,
           },
         });
       }, 200);

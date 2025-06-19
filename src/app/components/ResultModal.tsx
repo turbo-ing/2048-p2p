@@ -203,6 +203,8 @@ export const ResultModal = ({
         type: "LEAVE",
       });
     }
+
+    window.location.href = "/";
   };
 
   const renderButtons = () => (

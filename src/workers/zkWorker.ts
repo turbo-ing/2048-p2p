@@ -51,6 +51,7 @@ import {
   Proof,
   PublicKey,
   Signature,
+  UInt64,
 } from "o1js";
 
 import {
@@ -167,6 +168,7 @@ export const zkWorkerAPI = {
       deployStatus !== DeployStatus.Deployed &&
       deployStatus !== DeployStatus.Idle
     ) {
+      console.log("ZK Processor waiting for deposit contract to be deployed");
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
@@ -263,6 +265,99 @@ export const zkWorkerAPI = {
     console.log("Proof generated... submitting score");
 
     return tx.toJSON();
+  },
+
+  async submitScoreMultiplayer(
+    publicKey58: string,
+    amount: bigint,
+    depositAddresses: string[],
+    players: string[],
+    signatures: string[],
+    proofs: string[],
+  ) {
+    if (!sessionPrivateKey) {
+      throw new Error("Session private key is not initialized");
+    }
+
+    if (!proofCache) {
+      throw new Error("Proof cache is not initialized");
+    }
+
+    if (
+      depositAddresses.length != 2 ||
+      players.length != 2 ||
+      signatures.length != 2 ||
+      proofs.length != 2
+    ) {
+      throw new Error("Invalid length");
+    }
+
+    const publicKey = PublicKey.fromBase58(publicKey58);
+
+    const signature = Signature.create(sessionPrivateKey!, [
+      proofCache.publicInput.seed,
+      ...proofCache.publicInput.board.cells,
+      ...publicKey.toFields(),
+    ]);
+
+    const deposit0 = new Deposit2048(PublicKey.fromBase58(depositAddresses[0]));
+    const deposit1 = new Deposit2048(PublicKey.fromBase58(depositAddresses[1]));
+
+    const tx = await Mina.transaction(async () => {
+      await score2048!.submit(proofCache!, publicKey, signature);
+      await deposit0.claim(
+        UInt64.from(amount),
+        PublicKey.fromBase58(players[0]),
+        PublicKey.fromBase58(players[1]),
+        Signature.fromBase58(signatures[0]),
+        Signature.fromBase58(signatures[1]),
+        await Game2048ZKProgramProof.fromJSON(JSON.parse(proofs[0])),
+        await Game2048ZKProgramProof.fromJSON(JSON.parse(proofs[1])),
+      );
+      await deposit1.claim(
+        UInt64.from(amount),
+        PublicKey.fromBase58(players[0]),
+        PublicKey.fromBase58(players[1]),
+        Signature.fromBase58(signatures[0]),
+        Signature.fromBase58(signatures[1]),
+        await Game2048ZKProgramProof.fromJSON(JSON.parse(proofs[0])),
+        await Game2048ZKProgramProof.fromJSON(JSON.parse(proofs[1])),
+      );
+    });
+
+    console.log("Generating proof for submitting score");
+
+    await tx.prove();
+
+    console.log("Proof generated... submitting score");
+
+    return tx.toJSON();
+  },
+
+  async signDeposit(publicKey58: string, amount: bigint, players: string[]) {
+    if (!sessionPrivateKey) {
+      throw new Error("Session private key is not initialized");
+    }
+
+    if (!proofCache) {
+      throw new Error("Proof cache is not initialized");
+    }
+
+    const publicKey = PublicKey.fromBase58(publicKey58);
+
+    const playerFields = players.flatMap((player) =>
+      PublicKey.fromBase58(player).toFields(),
+    );
+
+    const signature = Signature.create(sessionPrivateKey!, [
+      proofCache.publicInput.seed,
+      ...proofCache.publicInput.board.cells,
+      ...publicKey.toFields(),
+      ...Field(amount).toFields(),
+      ...playerFields,
+    ]);
+
+    return signature.toBase58();
   },
 
   async fetchLeaderboard() {

@@ -80,7 +80,10 @@ export class ZkClient {
 
         return;
       }
-      if (this.deployStatus !== DeployStatus.Deployed) {
+      if (
+        this.deployStatus !== DeployStatus.Deployed &&
+        this.deployStatus !== DeployStatus.Idle
+      ) {
         console.debug("Contract is not deployed, skipping interval");
 
         return;
