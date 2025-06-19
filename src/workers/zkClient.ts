@@ -189,6 +189,28 @@ export class ZkClient {
     return await this.remoteApi.submitScore(publicKey58);
   }
 
+  async submitScoreMultiplayer(
+    publicKey58: string,
+    amount: bigint,
+    depositAddresses: string[],
+    players: string[],
+    signatures: string[],
+    proofs: string[],
+  ) {
+    return await this.remoteApi.submitScoreMultiplayer(
+      publicKey58,
+      amount,
+      depositAddresses,
+      players,
+      signatures,
+      proofs,
+    );
+  }
+
+  async signDeposit(publicKey58: string, amount: bigint, players: string[]) {
+    return await this.remoteApi.signDeposit(publicKey58, amount, players);
+  }
+
   async fetchLeaderboard() {
     return await this.remoteApi.fetchLeaderboard();
   }

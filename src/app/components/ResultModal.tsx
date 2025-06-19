@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import Modal from "./Modal";
 import Button from "./Button";
@@ -254,23 +254,97 @@ export const ResultModal = ({
       try {
         setSubmitting(true);
 
-        const tx = await zkClient.submitScore(address);
+        // If single player or losing player, submit score
+        if (totalPlayers == 1 || !isWinner) {
+          const tx = await zkClient.submitScore(address);
 
-        const { hash } = await (window as any).mina.sendTransaction({
-          transaction: tx,
-          feePayer: {
-            fee: 0.1,
-            memo: "",
-          },
-        });
+          const { hash } = await (window as any).mina.sendTransaction({
+            transaction: tx,
+            feePayer: {
+              fee: 0.1,
+              memo: "",
+            },
+          });
 
-        console.log("Transaction submitted", tx);
+          console.log("Transaction submitted", tx);
+        } else {
+          if (!areAllProofsAvailable()) {
+            if (typeof window !== "undefined") {
+              window.alert("Waiting for proofs from other players");
+            }
+            return;
+          }
+
+          const depositAddresses = state.playerId.map(
+            (playerId) => state.minaDeposit[playerId] ?? "",
+          );
+          const players = state.playerId.map(
+            (playerId) => state.minaWallet[playerId].toBase58() ?? "",
+          );
+          const signatures = state.playerId.map(
+            (playerId) => state.minaDepositSignatures[playerId] ?? "",
+          );
+          const proofs = state.playerId.map(
+            (playerId) => state.compiledProof[playerId] ?? "",
+          );
+
+          const tx = await zkClient.submitScoreMultiplayer(
+            address,
+            BigInt(state.minaAmount * 1_000_000_000),
+            depositAddresses,
+            players,
+            signatures,
+            proofs,
+          );
+
+          const { hash } = await (window as any).mina.sendTransaction({
+            transaction: tx,
+            feePayer: {
+              fee: 0.1,
+              memo: "",
+            },
+          });
+
+          console.log("Transaction submitted", tx);
+        }
+
         setSubmitted(true);
       } finally {
         setSubmitting(false);
       }
     }
   };
+
+  const multiplayerSigned = useRef(false);
+
+  // Sign and broadcast signature in case of multiplayer
+  useEffect(() => {
+    if (totalPlayers > 1 && open && address) {
+      const signAndBroadcastSignature = async () => {
+        const players = state.playerId.map(
+          (playerId) => state.minaWallet[playerId]?.toBase58() ?? "",
+        );
+        console.log("Final Players:", players);
+        const signature = await zkClient.signDeposit(
+          address,
+          BigInt(state.minaAmount * 1_000_000_000),
+          players,
+        );
+        console.log("Multiplayer Signature:", signature);
+        dispatch({
+          type: "DEPOSIT_SIGNATURE",
+          payload: {
+            signature: signature,
+          },
+        });
+      };
+
+      if (!multiplayerSigned.current) {
+        signAndBroadcastSignature();
+        multiplayerSigned.current = true;
+      }
+    }
+  }, [totalPlayers, open, address]);
 
   const renderZKModalContent = () => {
     // Find the current player's score
