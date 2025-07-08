@@ -254,8 +254,10 @@ export const ResultModal = ({
       try {
         setSubmitting(true);
 
+        const isCurrentPlayerWinner = player === ranking[0].name;
+
         // If single player or losing player, submit score
-        if (totalPlayers == 1 || !isWinner) {
+        if (totalPlayers == 1 || !isCurrentPlayerWinner) {
           const tx = await zkClient.submitScore(address);
 
           const { hash } = await (window as any).mina.sendTransaction({

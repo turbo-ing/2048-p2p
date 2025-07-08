@@ -7,7 +7,9 @@
     "deploy-score-2048": "tsc && node build/src/scripts/deploy-score-2048.js",
     "deploy-deposit-2048": "tsc && node build/src/scripts/deploy-deposit-2048.js",
     "deploy-deposit-2steps": "tsc && node build/src/scripts/deploy-deposit-2steps.js",
-    "fetch-score": "tsc && node build/src/scripts/fetch-score.js"
+    "fetch-score": "tsc && node build/src/scripts/fetch-score.js",
+    "test-multiplayer-submit": "tsc && node build/src/scripts/test-multiplayer-submit.js",
+    "lab-multiplayer-submit": "tsc && node build/src/scripts/lab-multiplayer-submit.js"
   },
   "dependencies": {
     "dotenv": "^16.4.7",

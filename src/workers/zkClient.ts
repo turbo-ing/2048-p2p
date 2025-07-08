@@ -197,6 +197,16 @@ export class ZkClient {
     signatures: string[],
     proofs: string[],
   ) {
+    console.log(
+      "[zkClient] Submitting score multiplayer",
+      publicKey58,
+      amount,
+      depositAddresses,
+      players,
+      signatures,
+      proofs,
+    );
+
     return await this.remoteApi.submitScoreMultiplayer(
       publicKey58,
       amount,

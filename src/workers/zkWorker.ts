@@ -275,6 +275,16 @@ export const zkWorkerAPI = {
     signatures: string[],
     proofs: string[],
   ) {
+    console.log(
+      "[zkWorker] Submitting score multiplayer",
+      publicKey58,
+      amount,
+      depositAddresses,
+      players,
+      signatures,
+      proofs,
+    );
+
     if (!sessionPrivateKey) {
       throw new Error("Session private key is not initialized");
     }
