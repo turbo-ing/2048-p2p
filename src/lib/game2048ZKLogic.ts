@@ -70,6 +70,7 @@ export class GameBoard extends Struct({
 export class GameBoardWithSeed extends Struct({
   board: GameBoard,
   seed: Field,
+  initialSeed: Field,
   sessionKey: PublicKey,
 }) {
   getBoard(): GameBoard {
@@ -86,6 +87,14 @@ export class GameBoardWithSeed extends Struct({
 
   setSeed(seed: Field): void {
     this.seed = seed;
+  }
+
+  getInitialSeed(): Field {
+    return this.initialSeed;
+  }
+
+  setInitialSeed(initialSeed: Field): void {
+    this.initialSeed = initialSeed;
   }
 
   getSessionKey(): PublicKey {

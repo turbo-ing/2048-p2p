@@ -105,6 +105,7 @@ export class ZkClient {
         .getBoard()
         .cells.map((cell) => Number(cell.toBigInt()));
       const seedNums = boardState.getSeed().toBigInt();
+      const initialSeedNums = boardState.getInitialSeed().toBigInt();
 
       console.log("Generating proof for moves", moves);
       console.log("Moves left in cache", this.moveCache);
@@ -112,6 +113,7 @@ export class ZkClient {
       const [, proofJSON] = await this.remoteApi.generateProof(
         boardNums,
         seedNums,
+        initialSeedNums,
         moves,
       );
 

@@ -71,7 +71,7 @@ import { LeaderboardScore, DeployStatus } from "@/utils/types.ts";
 import { Deposit2048 } from "../app/mina/contracts/Deposit2048.ts";
 
 const SCORE_2048_ADDRESS =
-  "B62qpKD5UKqYG4fNmYioioK6Lh2o3q1TqrvMeiKqwedcxr5AMhdmFw1";
+  "B62qnpdkYEwSVEFBkifq6JeACAa839ikmvn86NTTB2FobSCNvBAo5st";
 
 let proofCache: Game2048ZKProgramProof | null = null;
 let sessionPrivateKey: PrivateKey | null = null;
@@ -110,6 +110,7 @@ export const zkWorkerAPI = {
     const zkBoardWithSeed = new GameBoardWithSeed({
       board: zkBoard,
       seed,
+      initialSeed: seed,
       sessionKey,
     });
 
@@ -158,6 +159,7 @@ export const zkWorkerAPI = {
   async generateProof(
     boardNums: Number[],
     seedNum: bigint,
+    initialSeedNum: bigint,
     moves: string[],
   ): Promise<[Proof<GameBoardWithSeed, void>, string]> {
     if (!proofCache || !sessionPrivateKey) {
@@ -175,9 +177,11 @@ export const zkWorkerAPI = {
     const boardFields = boardNums.map((cell) => Field(cell.valueOf()));
     const zkBoard = new GameBoard(boardFields);
     const seed = Field(seedNum);
+    const initialSeed = Field(initialSeedNum);
     const zkBoardWithSeed = new GameBoardWithSeed({
       board: zkBoard,
       seed,
+      initialSeed,
       sessionKey: sessionPrivateKey.toPublicKey(),
     });
 
@@ -249,6 +253,7 @@ export const zkWorkerAPI = {
     const publicKey = PublicKey.fromBase58(publicKey58);
 
     const signature = Signature.create(sessionPrivateKey!, [
+      proofCache.publicInput.initialSeed,
       proofCache.publicInput.seed,
       ...proofCache.publicInput.board.cells,
       ...publicKey.toFields(),

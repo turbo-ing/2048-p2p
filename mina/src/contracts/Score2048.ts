@@ -111,6 +111,7 @@ export class Score2048 extends SmartContract {
   ) {
     proof.verify();
     signature.verify(proof.publicInput.sessionKey, [
+      proof.publicInput.initialSeed,
       proof.publicInput.seed,
       ...proof.publicInput.board.cells,
       ...to.toFields(),

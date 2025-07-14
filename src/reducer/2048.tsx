@@ -461,6 +461,7 @@ export const initBoardWithSeed = (seed: bigint): [Grid, GameBoardWithSeed] => {
   const zkBoard = new GameBoardWithSeed({
     board: new GameBoard(new Array(16).fill(Field.from(0))),
     seed: Field.from(seed),
+    initialSeed: Field.from(seed),
     sessionKey: minaSessionKey().toPublicKey(),
   });
 
@@ -472,6 +473,7 @@ export const initBoardWithSeed = (seed: bigint): [Grid, GameBoardWithSeed] => {
   }
   zkBoard.setBoard(board);
   zkBoard.setSeed(seedField);
+  zkBoard.setInitialSeed(Field.from(seed));
 
   let grid = getEmptyGrid();
 
@@ -598,6 +600,7 @@ const game2048Reducer = (
           newZkBoards[boardKey] = new GameBoardWithSeed({
             board: currentZkBoard,
             seed: currentZkSeed,
+            initialSeed: state.zkBoard[boardKey].initialSeed,
             sessionKey: state.minaSessionKeys[boardKey],
           });
           newScores[boardKey] = state.score[boardKey] + score;
@@ -634,6 +637,7 @@ const game2048Reducer = (
       const payloadBoard = new GameBoardWithSeed({
         board: new GameBoard(zkBoard.board.cells.map(Field)),
         seed: Field.from(seed),
+        initialSeed: Field.from(seed),
         sessionKey: PublicKey.fromBase58(action.payload.minaSessionKey),
       });
 
@@ -738,6 +742,7 @@ const game2048Reducer = (
       const payloadBoard = new GameBoardWithSeed({
         board: new GameBoard(action.payload.zkBoard.board.cells.map(Field)),
         seed: Field.from(action.payload.zkBoard.seed),
+        initialSeed: Field.from(action.payload.zkBoard.initialSeed),
         sessionKey: PublicKey.fromBase58(action.payload.minaSessionKey),
       });
 
@@ -791,6 +796,7 @@ const game2048Reducer = (
         const ourPayloadBoard = new GameBoardWithSeed({
           board: new GameBoard(ourZkBoard.board.cells.map(Field)),
           seed: Field.from(seedBigInt),
+          initialSeed: Field.from(seedBigInt),
           sessionKey:
             newZkBoard[currentPeerId]?.sessionKey || PublicKey.empty(),
         });
