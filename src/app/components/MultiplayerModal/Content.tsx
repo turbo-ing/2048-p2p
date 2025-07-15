@@ -466,7 +466,7 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
       setIsSendingPayment(true);
       const { hash } = await (window as any).mina.sendPayment({
         to: depositAddress,
-        amount: Math.floor((minaAmount + 1.11) * 1000000) / 1000000,
+        amount: Math.floor((minaAmount + 1.21) * 1000000) / 1000000,
       });
       setIsSendingPayment(false);
 

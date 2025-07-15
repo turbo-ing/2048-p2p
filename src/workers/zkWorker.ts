@@ -310,6 +310,7 @@ export const zkWorkerAPI = {
     const publicKey = PublicKey.fromBase58(publicKey58);
 
     const signature = Signature.create(sessionPrivateKey!, [
+      proofCache.publicInput.initialSeed,
       proofCache.publicInput.seed,
       ...proofCache.publicInput.board.cells,
       ...publicKey.toFields(),
@@ -365,6 +366,7 @@ export const zkWorkerAPI = {
     );
 
     const signature = Signature.create(sessionPrivateKey!, [
+      proofCache.publicInput.initialSeed,
       proofCache.publicInput.seed,
       ...proofCache.publicInput.board.cells,
       ...publicKey.toFields(),
@@ -447,6 +449,8 @@ export const zkWorkerAPI = {
   async deployDepositContract(seed: bigint) {
     const depositPrivateKey = PrivateKey.random();
     const depositAddress = depositPrivateKey.toPublicKey();
+
+    console.log("DEPLOYING DEPOSIT CONTRACT WITH SEED", seed);
 
     deployStatus = DeployStatus.Compiling;
 

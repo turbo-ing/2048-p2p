@@ -11,7 +11,6 @@ import {
   state,
   UInt64,
   Field,
-  declareMethods,
 } from "o1js";
 
 export class Deposit2048 extends SmartContract {
@@ -123,7 +122,7 @@ export class Deposit2048 extends SmartContract {
 
     // Check same seed
     for (let i = 0; i < numPlayers; i++) {
-      seed.assertEquals(proofs[i].publicInput.seed);
+      seed.assertEquals(proofs[i].publicInput.initialSeed);
     }
 
     const playerFields = players.flatMap((player) => player.toFields());
@@ -131,6 +130,7 @@ export class Deposit2048 extends SmartContract {
     // Check signatures
     for (let i = 0; i < numPlayers; i++) {
       signatures[i].verify(proofs[i].publicInput.sessionKey, [
+        proofs[i].publicInput.initialSeed,
         proofs[i].publicInput.seed,
         ...proofs[i].publicInput.board.cells,
         ...players[i].toFields(),
@@ -152,13 +152,17 @@ export class Deposit2048 extends SmartContract {
 
       let score = this.score(proofs[i].publicInput.board.cells);
       maxScore = Provable.if(score.greaterThan(maxScore), score, maxScore);
+
+      scores.push(score);
+    }
+
+    for (let i = 0; i < numPlayers; i++) {
+      let score = scores[i];
       maxCount = Provable.if(
         score.equals(maxScore),
         maxCount.add(UInt64.one),
-        UInt64.one,
+        maxCount,
       );
-
-      scores.push(score);
     }
 
     hasOwner.assertTrue();

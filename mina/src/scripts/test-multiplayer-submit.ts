@@ -22,16 +22,16 @@ import p2 from "./proofs/p2.json" with { type: "json" };
 
 const amount = 1000000000n;
 const depositAddresses = [
-  "B62qkhuWm1z4vFJhaETW3MiipxQKCBaZ6AMSd8jrQNe6bAeh9DsqFoS",
-  "B62qigV1RxJquHPQp5A8zA8wMHDuYx625q5eu9freQfDtgT2QjkYVC9",
+  "B62qjXes7kY4SVbdv2d63MPzCoPzUfMYY4JbsC1iEKThk2LSwo1hNrs",
+  "B62qoKkXhbDvacKmppQ52y75X1DME5dixmpGovKVyeGkMLLRSRjHfu7",
 ];
 const players = [
   "B62qrgEkAAFxUufRcS9DNuDTV3yksHQn5MpGzM8f5CLJRNpRs27DdkS",
   "B62qrgEkAAFxUufRcS9DNuDTV3yksHQn5MpGzM8f5CLJRNpRs27DdkS",
 ];
 const signatures = [
-  "7mX4Asn1LdXnvfGVTZeDcoqoyiAU6n7YSX9P6MK2F1wkKxfv7pXT4rcwNP48H1nNJqG2TT82qY1tpwRGebFU8bpwdifZ9deA",
-  "7mXVfoaDkx6SB1hT6t1ScL21LKrHkt8yL9DsyxXmmSA5ni3AgyW36vYnPeKZJT4SVNf6NEbRgtpxeqMpzPfaxTiFNStvEmwj",
+  "7mWzQseZRhXQaSLJh78uswWYmh26YrqrWtprU5PeCYtyeeyCuhogUYgEkm6wRJwRebcANZkDCTNXLL8T5Kgs6FRvVZsFgjzf",
+  "7mXKQiEaZmGHmsDo9zBPkjKGpR4NVZKQ2sj84FxVKonQ7AdfMCwe6MaohzV7NzaP9MqzW6RYsmSgXqEPeXqWrKsWuFEqUECC",
 ];
 const proofs = [p1, p2];
 
