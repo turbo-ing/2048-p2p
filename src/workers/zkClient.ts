@@ -227,8 +227,8 @@ export class ZkClient {
     return await this.remoteApi.fetchLeaderboard();
   }
 
-  async deployDepositContract(seed: bigint) {
-    return await this.remoteApi.deployDepositContract(seed);
+  async deployDepositContract(seed: bigint, owner: string) {
+    return await this.remoteApi.deployDepositContract(seed, owner);
   }
 }
 

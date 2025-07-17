@@ -20,9 +20,6 @@ export class Deposit2048 extends SmartContract {
   async deploy() {
     super.deploy();
 
-    // Set owner to deployer
-    this.owner.set(this.sender.getAndRequireSignature());
-
     // make account non-upgradable forever
     this.account.permissions.set({
       ...Permissions.default(),
@@ -207,5 +204,12 @@ export class Deposit2048 extends SmartContract {
     let oldSeed = this.seed.getAndRequireEquals();
     oldSeed.assertEquals(0);
     this.seed.set(seed);
+  }
+
+  @method
+  async setOwner(owner: PublicKey) {
+    let oldOwner = this.owner.getAndRequireEquals();
+    oldOwner.isEmpty().assertTrue();
+    this.owner.set(owner);
   }
 }

@@ -457,6 +457,7 @@ export const ShowRoomCodeContent = ({ onClose }: { onClose: () => void }) => {
       setIsDeployingContract(true);
       const depositAddress = await zkClient.deployDepositContract(
         state2048.seed,
+        address,
       );
       setIsDeployingContract(false);
 

@@ -446,7 +446,7 @@ export const zkWorkerAPI = {
     return scores;
   },
 
-  async deployDepositContract(seed: bigint) {
+  async deployDepositContract(seed: bigint, owner: string) {
     const depositPrivateKey = PrivateKey.random();
     const depositAddress = depositPrivateKey.toPublicKey();
 
@@ -476,6 +476,8 @@ export const zkWorkerAPI = {
       const fee = 100_000_000;
       const deposit = new Deposit2048(depositAddress);
 
+      const ownerKey = PublicKey.fromBase58(owner);
+
       deployStatus = DeployStatus.Constructing;
       console.log("Constructing deploy transaction");
       const deployTx = await Mina.transaction(
@@ -485,6 +487,7 @@ export const zkWorkerAPI = {
         },
         async () => {
           await deposit.deploy();
+          await deposit.setOwner(ownerKey);
           await deposit.setSeed(Field(seed));
         },
       );
