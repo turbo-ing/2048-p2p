@@ -197,7 +197,7 @@ export class ZkClient {
     depositAddresses: string[],
     players: string[],
     signatures: string[],
-    proofs: string[],
+    proofs: any[],
   ) {
     console.log(
       "[zkClient] Submitting score multiplayer",

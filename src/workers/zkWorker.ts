@@ -75,6 +75,7 @@ const SCORE_2048_ADDRESS =
 
 let proofCache: Game2048ZKProgramProof | null = null;
 let sessionPrivateKey: PrivateKey | null = null;
+let lastDepositPrivateKey: PrivateKey | null = null;
 let score2048: Score2048 | null = null;
 
 let zkProgramCompiling = false;
@@ -278,7 +279,7 @@ export const zkWorkerAPI = {
     depositAddresses: string[],
     players: string[],
     signatures: string[],
-    proofs: string[],
+    proofs: any[],
   ) {
     console.log(
       "[zkWorker] Submitting score multiplayer",
@@ -319,6 +320,48 @@ export const zkWorkerAPI = {
     const deposit0 = new Deposit2048(PublicKey.fromBase58(depositAddresses[0]));
     const deposit1 = new Deposit2048(PublicKey.fromBase58(depositAddresses[1]));
 
+    // // Perform tx in the background from the lastDepositPrivateKey wallet
+    // const claimTx = await Mina.transaction(
+    //   {
+    //     sender: lastDepositPrivateKey!.toPublicKey(),
+    //     fee: 100_000_000,
+    //   },
+    //   async () => {
+    //     await deposit0.claim(
+    //       UInt64.from(amount),
+    //       PublicKey.fromBase58(players[0]),
+    //       PublicKey.fromBase58(players[1]),
+    //       Signature.fromBase58(signatures[0]),
+    //       Signature.fromBase58(signatures[1]),
+    //       await Game2048ZKProgramProof.fromJSON(proofs[0]),
+    //       await Game2048ZKProgramProof.fromJSON(proofs[1]),
+    //     );
+    //     await deposit1.claim(
+    //       UInt64.from(amount),
+    //       PublicKey.fromBase58(players[0]),
+    //       PublicKey.fromBase58(players[1]),
+    //       Signature.fromBase58(signatures[0]),
+    //       Signature.fromBase58(signatures[1]),
+    //       await Game2048ZKProgramProof.fromJSON(proofs[0]),
+    //       await Game2048ZKProgramProof.fromJSON(proofs[1]),
+    //     );
+    //   },
+    // );
+
+    // await claimTx.prove();
+
+    // console.log("Proof generated... claiming rewards");
+
+    // claimTx
+    //   .sign([lastDepositPrivateKey!])
+    //   .send()
+    //   .then(() => {
+    //     console.log("========= REWARD CLAIMED ==========");
+    //   })
+    //   .catch((error) => {
+    //     console.error("Error claiming rewards", error);
+    //   });
+
     const tx = await Mina.transaction(async () => {
       await score2048!.submit(proofCache!, publicKey, signature);
       await deposit0.claim(
@@ -327,8 +370,8 @@ export const zkWorkerAPI = {
         PublicKey.fromBase58(players[1]),
         Signature.fromBase58(signatures[0]),
         Signature.fromBase58(signatures[1]),
-        await Game2048ZKProgramProof.fromJSON(JSON.parse(proofs[0])),
-        await Game2048ZKProgramProof.fromJSON(JSON.parse(proofs[1])),
+        await Game2048ZKProgramProof.fromJSON(proofs[0]),
+        await Game2048ZKProgramProof.fromJSON(proofs[1]),
       );
       await deposit1.claim(
         UInt64.from(amount),
@@ -336,8 +379,8 @@ export const zkWorkerAPI = {
         PublicKey.fromBase58(players[1]),
         Signature.fromBase58(signatures[0]),
         Signature.fromBase58(signatures[1]),
-        await Game2048ZKProgramProof.fromJSON(JSON.parse(proofs[0])),
-        await Game2048ZKProgramProof.fromJSON(JSON.parse(proofs[1])),
+        await Game2048ZKProgramProof.fromJSON(proofs[0]),
+        await Game2048ZKProgramProof.fromJSON(proofs[1]),
       );
     });
 
@@ -449,6 +492,8 @@ export const zkWorkerAPI = {
   async deployDepositContract(seed: bigint, owner: string) {
     const depositPrivateKey = PrivateKey.random();
     const depositAddress = depositPrivateKey.toPublicKey();
+
+    lastDepositPrivateKey = depositPrivateKey;
 
     console.log("DEPLOYING DEPOSIT CONTRACT WITH SEED", seed);
 

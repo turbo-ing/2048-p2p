@@ -286,9 +286,9 @@ export const ResultModal = ({
           const signatures = state.playerId.map(
             (playerId) => state.minaDepositSignatures[playerId] ?? "",
           );
-          const proofs = state.playerId.map(
-            (playerId) => state.compiledProof[playerId] ?? "",
-          );
+          const proofs = state.playerId
+            .map((playerId) => state.compiledProof[playerId] ?? "")
+            .map((proof) => JSON.parse(proof).proof);
 
           const tx = await zkClient.submitScoreMultiplayer(
             address,
